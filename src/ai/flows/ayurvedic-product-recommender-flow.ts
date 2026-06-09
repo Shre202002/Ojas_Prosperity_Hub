@@ -14,14 +14,14 @@ const AyurvedicProductRecommenderInputSchema = z.object({
   healthConcern: z
     .string()
     .describe(
-      'A detailed description of the user\'s health concern or inquiry. For example, "I have frequent indigestion and bloating after meals" or "How can I boost my energy naturally?"
-    '),
+      'A detailed description of the user\'s health concern or inquiry. For example, "I have frequent indigestion and bloating after meals" or "How can I boost my energy naturally?"'
+    ),
   memberInquiry: z
     .string()
     .optional()
     .describe(
-      'Optional: Any specific business growth inquiry from the distributor, e.g., "How can I use this recommendation to enroll new members?"
-    '),
+      'Optional: Any specific business growth inquiry from the distributor, e.g., "How can I use this recommendation to enroll new members?"'
+    ),
 });
 export type AyurvedicProductRecommenderInput = z.infer<
   typeof AyurvedicProductRecommenderInputSchema
@@ -42,12 +42,12 @@ const AyurvedicProductRecommenderOutputSchema = z.object({
     .string()
     .describe(
       'A detailed Ayurvedic protocol including how to use the recommended products, dietary advice, and lifestyle changes.'
-    '),
+    ),
   businessGrowthTips: z
     .string()
     .describe(
       'Practical tips for the Ojas Care distributor on how to leverage these recommendations for customer sales and team growth.'
-    '),
+    ),
 });
 export type AyurvedicProductRecommenderOutput = z.infer<
   typeof AyurvedicProductRecommenderOutputSchema
