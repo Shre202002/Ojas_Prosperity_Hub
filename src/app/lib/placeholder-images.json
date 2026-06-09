@@ -1,0 +1,35 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-ayurveda",
+      "description": "Herbal products on a wooden table with leaves",
+      "imageUrl": "https://picsum.photos/seed/ojas-hero/1200/600",
+      "imageHint": "ayurveda herbs"
+    },
+    {
+      "id": "product-ashwagandha",
+      "description": "Natural herbal capsules",
+      "imageUrl": "https://picsum.photos/seed/ashwagandha/400/400",
+      "imageHint": "herbal supplements"
+    },
+    {
+      "id": "product-triphala",
+      "description": "Green herbal powder",
+      "imageUrl": "https://picsum.photos/seed/triphala/400/400",
+      "imageHint": "ayurvedic powder"
+    },
+    {
+      "id": "product-neem",
+      "description": "Fresh neem leaves and oil",
+      "imageUrl": "https://picsum.photos/seed/neem/400/400",
+      "imageHint": "neem health"
+    },
+    {
+      "id": "product-chyawanprash",
+      "description": "Herbal jam in a jar",
+      "imageUrl": "https://picsum.photos/seed/chyawanprash/400/400",
+      "imageHint": "herbal jam"
+    }
+  ]
+}
