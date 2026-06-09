@@ -1,9 +1,10 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { 
   Copy, 
   Share2, 
@@ -14,7 +15,8 @@ import {
   TrendingUp, 
   Award,
   CircleDot,
-  Network
+  Network,
+  ChevronRight
 } from 'lucide-react';
 import {
   LineChart,

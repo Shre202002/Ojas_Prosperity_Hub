@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, Leaf, TrendingUp, Send, Loader2, HeartPulse, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Leaf, TrendingUp, Send, Loader2, HeartPulse, ShieldCheck, CheckCircle2, Users, Award } from 'lucide-react';
 import { ayurvedicProductRecommender, AyurvedicProductRecommenderOutput } from '@/ai/flows/ayurvedic-product-recommender-flow';
 import { businessGrowthStrategist, BusinessGrowthStrategistOutput } from '@/ai/flows/business-growth-strategist-flow';
 
