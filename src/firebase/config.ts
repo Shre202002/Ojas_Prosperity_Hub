@@ -16,6 +16,15 @@ const config = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Debug logging for environment variables (Remove in production)
+if (process.env.NODE_ENV !== 'production') {
+  console.log("Firebase Config Initialization", {
+    apiKey: config.apiKey ? "PRESENT" : "MISSING",
+    authDomain: config.authDomain ? "PRESENT" : "MISSING",
+    projectId: config.projectId ? "PRESENT" : "MISSING",
+  });
+}
+
 // Audit environment variables
 const missingKeys = Object.entries(config)
   .filter(([_, value]) => !value)
