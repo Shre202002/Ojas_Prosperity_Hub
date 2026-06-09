@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -70,10 +71,13 @@ export default function RegisterPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Firebase Registration Error:", error);
+      console.error("Firebase Error Code:", error.code);
+      
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
-        description: error.message || 'Could not create account.',
+        description: `Error: ${error.code || 'unknown'}. ${error.message || 'Could not create account.'}`,
       });
     } finally {
       setLoading(false);
@@ -89,7 +93,7 @@ export default function RegisterPage() {
         <span className="font-headline font-bold text-2xl text-primary tracking-tight">OJAS CARE</span>
       </Link>
 
-      <Card className="w-full max-w-md shadow-2xl border-none">
+      <Card className="w-full max-md shadow-2xl border-none">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline font-bold">Join Ojas Care</CardTitle>
           <CardDescription>Start your journey to health and prosperity.</CardDescription>
