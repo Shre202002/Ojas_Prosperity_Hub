@@ -38,14 +38,20 @@ export default function LoginPage() {
       
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Firebase Login Error:", error);
-      console.error("Firebase Error Code:", error.code);
-      console.error("Firebase Error Message:", error.message);
+      let message = 'Invalid email or password.';
       
+      if (error.code === 'auth/invalid-credential') {
+        message = 'Invalid credentials. Please check your email/password or register if you are new.';
+      } else if (error.code === 'auth/user-not-found') {
+        message = 'No account found with this email. Please register.';
+      } else if (error.code === 'auth/wrong-password') {
+        message = 'Incorrect password. Please try again.';
+      }
+
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: `Error: ${error.code || 'unknown'}. ${error.message || 'Invalid credentials.'}`,
+        description: message,
       });
     } finally {
       setLoading(false);
@@ -81,13 +87,10 @@ export default function LoginPage() {
 
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Firebase Google Login Error:", error);
-      console.error("Firebase Error Code:", error.code);
-      
       toast({
         variant: 'destructive',
         title: 'Google Login Failed',
-        description: `Error: ${error.code || 'unknown'}. Could not sign in with Google.`,
+        description: error.message || 'Could not sign in with Google.',
       });
     } finally {
       setGoogleLoading(false);

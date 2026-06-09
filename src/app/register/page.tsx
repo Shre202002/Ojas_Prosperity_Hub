@@ -71,13 +71,19 @@ export default function RegisterPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Firebase Registration Error:", error);
-      console.error("Firebase Error Code:", error.code);
-      
+      let message = 'Could not create account.';
+      if (error.code === 'auth/email-already-in-use') {
+        message = 'This email is already registered. Please login instead.';
+      } else if (error.code === 'auth/weak-password') {
+        message = 'The password is too weak.';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'The email address is invalid.';
+      }
+
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
-        description: `Error: ${error.code || 'unknown'}. ${error.message || 'Could not create account.'}`,
+        description: message,
       });
     } finally {
       setLoading(false);
