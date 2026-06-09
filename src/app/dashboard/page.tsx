@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useAuth, useUser, useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { 
   Copy, 
   Share2, 
   ArrowUpRight, 
-  ArrowDownRight, 
   Wallet, 
   Users, 
   TrendingUp, 
   Award,
   CircleDot,
   Network,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -41,6 +41,20 @@ const data = [
 ];
 
 export default function Dashboard() {
+  const auth = useAuth();
+  const { user } = useUser(auth);
+  const db = useFirestore();
+  const userRef = user && db ? doc(db, 'users', user.uid) : null;
+  const { data: profileData, loading } = useDoc(userRef);
+
+  if (loading) {
+    return (
+      <div className="h-96 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Welcome Card */}
@@ -50,11 +64,11 @@ export default function Dashboard() {
           <CardHeader className="relative">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <CardTitle className="text-3xl font-headline">Welcome back, Rajesh!</CardTitle>
+                <CardTitle className="text-3xl font-headline">Welcome back, {profileData?.name || 'Member'}!</CardTitle>
                 <CardDescription className="text-white/70 text-lg">You are just 150 BV away from Gold Rank.</CardDescription>
               </div>
               <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
-                <Award className="w-4 h-4" /> Silver Member
+                <Award className="w-4 h-4" /> {profileData?.role?.toUpperCase() || 'USER'}
               </div>
             </div>
           </CardHeader>
@@ -70,7 +84,7 @@ export default function Dashboard() {
                <div className="flex-1 bg-white/10 p-4 rounded-2xl">
                 <div className="text-xs opacity-60 uppercase font-bold tracking-wider mb-1">Referral Link</div>
                 <div className="flex items-center justify-between gap-2">
-                  <code className="text-xs truncate">ojascare.pro/join?ref=RAJ882</code>
+                  <code className="text-xs truncate">ojascare.pro/join?ref={user?.uid.slice(0, 6)}</code>
                   <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/20">
                     <Copy className="w-4 h-4" />
                   </Button>
