@@ -3,16 +3,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, ShieldCheck, HeartPulse, TrendingUp, ArrowRight, UserPlus } from 'lucide-react';
+import { Leaf, ShieldCheck, HeartPulse, TrendingUp, ArrowRight, UserPlus, ShoppingCart } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-ayurveda');
   const products = [
-    { id: 'product-ashwagandha', name: 'Ojas Ashwagandha', tag: 'Stress & Energy' },
-    { id: 'product-triphala', name: 'Ojas Triphala', tag: 'Digestion' },
-    { id: 'product-neem', name: 'Ojas Neem Care', tag: 'Skin & Immunity' },
-    { id: 'product-chyawanprash', name: 'Ojas Vital Jam', tag: 'Vitality' },
+    { id: 'product-veershakti', name: 'Ojas Veer Shakti', tag: 'Best Seller', desc: 'Ayurvedic Vitality Tonic for Men', price: '₹899' },
+    { id: 'product-narishakti', name: 'Ojas Nari Shakti', tag: 'Women Care', desc: "Women's Wellness & Vitality Tonic", price: '₹899' },
+    { id: 'product-seathorn', name: 'Ojas Sea Thorn', tag: 'Daily Nutrition', desc: 'Herbal Nutritional Supplement', price: '₹899' },
+    { id: 'product-liveramrit', name: 'Ojas Liver Amrit', tag: 'Liver Care', desc: 'Herbal Liver Detox & Wellness Tonic', price: '₹899' },
   ];
 
   return (
@@ -37,35 +37,36 @@ export default function LandingPage() {
 
       <main className="pt-24">
         {/* Hero Section */}
-        <section className="px-6 py-12 md:py-24 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+        <section className="px-6 py-12 md:py-24 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8 animate-in fade-in slide-in-from-left duration-1000">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/20 text-secondary-foreground font-semibold text-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
               </span>
-              India's Premier Ayurvedic MLM
+              सेहत से समृद्धि - Health to Prosperity
             </div>
-            <h1 className="font-headline text-5xl md:text-7xl font-bold text-primary leading-tight">
-              सेहत से समृद्धि <br />
-              <span className="text-secondary italic">Ojas Care</span>
+            <h1 className="font-headline text-5xl md:text-6xl font-bold text-primary leading-tight">
+              Natural Care, <br />
+              <span className="text-secondary">Trusted Results</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Experience the ancient wisdom of Ayurveda combined with a powerful business opportunity. 
-              Join a community dedicated to holistic health and financial freedom.
+              100% Herbal formulations crafted for your health and wellness. Experience the power of pure Ayurveda with Ojas Care.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/join">
                 <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-bold gap-2">
-                  <UserPlus className="w-5 h-5" /> Start Your Journey
+                  <UserPlus className="w-5 h-5" /> Join Prosperity Hub
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg font-bold border-primary text-primary hover:bg-primary/5">
-                Explore Products
-              </Button>
+              <Link href="#products">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg font-bold border-primary text-primary hover:bg-primary/5">
+                  View Products
+                </Button>
+              </Link>
             </div>
           </div>
-          <div className="relative aspect-square md:aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right duration-1000">
+          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right duration-1000 border-4 border-white">
             {heroImage && (
               <Image 
                 src={heroImage.imageUrl} 
@@ -75,7 +76,7 @@ export default function LandingPage() {
                 data-ai-hint={heroImage.imageHint}
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         </section>
 
@@ -99,33 +100,39 @@ export default function LandingPage() {
         {/* Featured Products */}
         <section id="products" className="py-24 max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="font-headline text-4xl font-bold text-primary">Nature's Best For You</h2>
+            <h2 className="font-headline text-4xl font-bold text-primary">Our Trusted Herbal Solutions</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our products are crafted using 100% natural herbs, following traditional Ayurvedic formulations.
+              Scientifically proven Ayurvedic tonics designed for modern lifestyle needs.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.map((product) => {
               const imgData = PlaceHolderImages.find(img => img.id === product.id);
               return (
-                <Card key={product.id} className="overflow-hidden border-none shadow-xl hover:-translate-y-2 transition-transform duration-300">
+                <Card key={product.id} className="overflow-hidden border-none shadow-xl hover:-translate-y-2 transition-transform duration-300 bg-white">
                   <div className="relative aspect-square">
                     {imgData && (
                       <Image 
                         src={imgData.imageUrl} 
                         alt={imgData.description} 
                         fill 
-                        className="object-cover"
+                        className="object-cover p-4"
                         data-ai-hint={imgData.imageHint}
                       />
                     )}
+                    <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm uppercase tracking-wider">
+                      {product.tag}
+                    </div>
                   </div>
-                  <CardContent className="p-6 space-y-2">
-                    <span className="text-xs font-bold text-secondary tracking-widest uppercase">{product.tag}</span>
-                    <h3 className="font-headline text-lg font-bold">{product.name}</h3>
-                    <Button variant="link" className="p-0 h-auto text-primary font-bold group">
-                      Learn More <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="font-headline text-lg font-bold text-primary">{product.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{product.desc}</p>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-xl font-bold text-secondary">{product.price}</span>
+                      <Button size="sm" className="h-9 gap-2">
+                        <ShoppingCart className="w-3 h-3" /> Add
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );
