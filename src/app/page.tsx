@@ -250,7 +250,9 @@ export default function LandingPage() {
             <div className="space-y-8 animate-in fade-in slide-in-from-right duration-700">
               <div>
                 <h2 className="font-headline text-4xl font-bold text-primary mb-4">Our Location</h2>
-                <p className="text-muted-foreground">Visit us at our central Jaipur center for expert Ayurvedic care.</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Visit us at our center in Jaipur for authentic Ayurvedic care and Neuropathy treatments.
+                </p>
               </div>
               <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white h-[450px]">
                 <iframe
@@ -266,20 +268,25 @@ export default function LandingPage() {
               <div className="grid sm:grid-cols-2 gap-4">
                  <div className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-border/50">
                     <div className="bg-primary/10 p-3 rounded-full h-fit">
-                      <Phone className="w-5 h-5 text-primary" />
+                      <MapPin className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-primary">Call Us</h4>
-                      <p className="text-sm text-muted-foreground">+91 94142 56321</p>
+                      <h4 className="font-bold text-primary">Visit Us</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Shiv mandir ke pas,<br />
+                        Night and day Cafe ke aage,<br />
+                        Goner Rd, Keshar Vihar, Chatarpura,<br />
+                        Jaipur, Rajasthan 303012
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-border/50">
                     <div className="bg-secondary/10 p-3 rounded-full h-fit">
-                      <Mail className="w-5 h-5 text-secondary" />
+                      <Phone className="w-5 h-5 text-secondary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-primary">Email</h4>
-                      <p className="text-sm text-muted-foreground">support@ayurvedickendra.pro</p>
+                      <h4 className="font-bold text-primary">Call Us</h4>
+                      <p className="text-sm text-muted-foreground">+91 94142 56321</p>
                     </div>
                   </div>
               </div>
@@ -310,13 +317,13 @@ export default function LandingPage() {
           </div>
           <div className="space-y-4">
             <h4 className="font-headline font-bold text-lg">Contact Info</h4>
-            <p className="opacity-70 flex items-start gap-2">
+            <p className="opacity-70 flex items-start gap-2 text-sm leading-relaxed">
               <MapPin className="w-4 h-4 shrink-0 mt-1" />
-              Ayurved and Neurotherapy Kendra,<br />
-              Pratap Nagar, Jaipur,<br />
-              Rajasthan, India
+              Shiv mandir ke pas, Night and day Cafe ke aage,<br />
+              Goner Rd, Keshar Vihar, Chatarpura,<br />
+              Jaipur, Rajasthan 303012
             </p>
-            <p className="opacity-70 flex items-center gap-2">
+            <p className="opacity-70 flex items-center gap-2 mt-2">
               <Phone className="w-4 h-4" /> +91 94142 56321
             </p>
           </div>
