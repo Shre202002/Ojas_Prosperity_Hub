@@ -36,23 +36,25 @@ export default function LoginPage() {
       const userRef = doc(db, 'users', user.uid);
       await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
       
+      toast({
+        title: 'Login Successful',
+        description: 'Welcome back to Ojas Care!',
+      });
       router.push('/dashboard');
     } catch (error: any) {
-      let message = 'Invalid email or password.';
-      
-      if (error.code === 'auth/invalid-credential') {
-        message = 'Invalid credentials. Please check your email/password or register if you are new.';
-      } else if (error.code === 'auth/user-not-found') {
-        message = 'No account found with this email. Please register.';
-      } else if (error.code === 'auth/wrong-password') {
-        message = 'Incorrect password. Please try again.';
+      if (error.code !== 'auth/invalid-credential') {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: error.code || 'Invalid email or password.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: 'Incorrect email or password. Please try again.',
+        });
       }
-
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: message,
-      });
     } finally {
       setLoading(false);
     }
@@ -85,13 +87,19 @@ export default function LoginPage() {
         await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
       }
 
+      toast({
+        title: 'Login Successful',
+        description: `Welcome back, ${user.displayName || 'Member'}!`,
+      });
       router.push('/dashboard');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Google Login Failed',
-        description: error.message || 'Could not sign in with Google.',
-      });
+      if (error.code !== 'auth/popup-closed-by-user') {
+        toast({
+          variant: 'destructive',
+          title: 'Google Login Failed',
+          description: error.code || 'Could not sign in with Google.',
+        });
+      }
     } finally {
       setGoogleLoading(false);
     }
@@ -106,7 +114,7 @@ export default function LoginPage() {
         <span className="font-headline font-bold text-2xl text-primary tracking-tight">OJAS CARE</span>
       </Link>
 
-      <Card className="w-full max-md shadow-2xl border-none">
+      <Card className="w-full max-w-md shadow-2xl border-none">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline font-bold">Welcome Back</CardTitle>
           <CardDescription>Login to manage your Ojas Care business.</CardDescription>
@@ -120,7 +128,7 @@ export default function LoginPage() {
                 <Input 
                   id="email" 
                   type="email" 
-                  className="pl-10" 
+                  className="pl-10 rounded-xl" 
                   placeholder="name@example.com" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -137,14 +145,14 @@ export default function LoginPage() {
                 <Input 
                   id="password" 
                   type="password" 
-                  className="pl-10" 
+                  className="pl-10 rounded-xl" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full h-12 font-bold" disabled={loading}>
+            <Button type="submit" className="w-full h-12 font-bold rounded-xl" disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : 'Login'}
             </Button>
           </form>
@@ -158,7 +166,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button variant="outline" className="w-full h-12 font-bold" onClick={handleGoogleLogin} disabled={googleLoading}>
+          <Button variant="outline" className="w-full h-12 font-bold rounded-xl" onClick={handleGoogleLogin} disabled={googleLoading}>
             {googleLoading ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
             ) : (

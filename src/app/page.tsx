@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, ShieldCheck, HeartPulse, TrendingUp, UserPlus, ShoppingCart } from 'lucide-react';
+import { Leaf, ShieldCheck, HeartPulse, TrendingUp, ArrowRight, UserPlus, ShoppingCart } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LandingPage() {
@@ -66,16 +66,14 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
-          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right duration-1000 border-4 border-white bg-muted/20">
+          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right duration-1000 border-4 border-white">
             {heroImage && (
               <Image 
                 src={heroImage.imageUrl} 
                 alt={heroImage.description} 
                 fill 
                 className="object-cover"
-                priority
-                unoptimized
-                data-ai-hint="ayurveda products"
+                data-ai-hint={heroImage.imageHint}
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -119,7 +117,6 @@ export default function LandingPage() {
                         alt={imgData.description} 
                         fill 
                         className="object-cover p-4"
-                        unoptimized={imgData.imageUrl.startsWith('/')}
                         data-ai-hint={imgData.imageHint}
                       />
                     )}
