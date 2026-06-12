@@ -66,7 +66,7 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
-          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right duration-1000 border-4 border-white">
+          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right duration-1000 border-4 border-white bg-muted/20">
             {heroImage && (
               <Image 
                 src={heroImage.imageUrl} 
@@ -74,6 +74,8 @@ export default function LandingPage() {
                 fill 
                 className="object-cover"
                 priority
+                unoptimized
+                data-ai-hint="ayurveda products"
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -117,6 +119,8 @@ export default function LandingPage() {
                         alt={imgData.description} 
                         fill 
                         className="object-cover p-4"
+                        unoptimized={imgData.imageUrl.startsWith('/')}
+                        data-ai-hint={imgData.imageHint}
                       />
                     )}
                     <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm uppercase tracking-wider">
