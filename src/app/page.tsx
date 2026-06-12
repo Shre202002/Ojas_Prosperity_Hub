@@ -47,22 +47,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             {logoImage ? (
-              <Image 
-                src={logoImage.imageUrl} 
-                alt="Ayurvedic Kendra Logo" 
-                width={48} 
-                height={48} 
-                className="object-contain"
-                unoptimized
-              />
+              <Image src="/assets/Logo.png" alt="Logo" width={48} height={48} unoptimized />
             ) : (
-              <div className="bg-primary p-2 rounded-full text-white">
-                <Leaf className="w-6 h-6" />
+              <div className=" p-2 rounded-full text-white">
+                <Image src="/assets/Logo.png" alt="Logo" width={48} height={48} unoptimized />
               </div>
-            )}
-            <span className="font-headline font-bold text-lg md:text-xl text-primary tracking-tight uppercase hidden sm:block">
-              Ayurvedic Kendra & Neuropathy
-            </span>
+            )
+            }
           </Link>
 
           {/* Desktop Nav */}
@@ -156,7 +147,7 @@ export default function LandingPage() {
         <section className="bg-primary py-20 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/10 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl"></div>
-          
+
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center relative z-10">
             {[
               { label: 'Active Members', value: '10K+', icon: Users },
@@ -232,7 +223,7 @@ export default function LandingPage() {
                     Our unique business plan ensures that as you share the gift of health, you also build a legacy of sustainable wealth.
                   </p>
                 </div>
-                
+
                 <div className="grid gap-6">
                   {[
                     { icon: ShieldCheck, title: 'Safe & Proven Plan', desc: 'Secure binary structure with automated spillover logic for maximum team support.' },
@@ -386,17 +377,9 @@ export default function LandingPage() {
           <div className="space-y-8 col-span-1 lg:col-span-1">
             <Link href="/" className="flex items-center gap-3">
               {logoImage ? (
-                <Image
-                  src={logoImage.imageUrl}
-                  alt="Ayurvedic Kendra Logo"
-                  width={40}
-                  height={40}
-                  className="brightness-0 invert object-contain"
-                  unoptimized
-                />
+                <Image src="/assets/Logo.png" width={40} height={40} alt="test" />
               ) : (
-                <Leaf className="w-8 h-8 text-secondary" />
-              )}
+                <Image src="/assets/Logo.png" width={40} height={40} alt="test" />)}
               <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra</span>
             </Link>
             <p className="opacity-70 leading-relaxed text-sm">
