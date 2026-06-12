@@ -2,7 +2,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, ShieldCheck, HeartPulse, TrendingUp, ArrowRight, UserPlus, ShoppingCart } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { 
+  Leaf, 
+  ShieldCheck, 
+  HeartPulse, 
+  TrendingUp, 
+  UserPlus, 
+  ShoppingCart, 
+  Mail, 
+  Phone, 
+  Send,
+  MapPin
+} from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LandingPage() {
@@ -27,11 +41,14 @@ export default function LandingPage() {
         <nav className="hidden md:flex gap-8 font-medium">
           <Link href="#products" className="hover:text-primary transition-colors">Products</Link>
           <Link href="#plan" className="hover:text-primary transition-colors">Business Plan</Link>
+          <Link href="#contact" className="hover:text-primary transition-colors">Contact</Link>
           <Link href="/login" className="hover:text-primary transition-colors">Login</Link>
         </nav>
-        <Link href="/join">
-          <Button className="font-semibold shadow-lg shadow-primary/20">Join Now</Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/join">
+            <Button className="font-semibold shadow-lg shadow-primary/20">Join Now</Button>
+          </Link>
+        </div>
       </header>
 
       <main className="pt-24">
@@ -50,7 +67,7 @@ export default function LandingPage() {
               <span className="text-secondary">Trusted Results</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              100% Herbal formulations crafted for your health and wellness. Experience the power of pure Ayurveda with Ayurvedic Kendra.
+              100% Herbal formulations crafted for your health and wellness. Experience the power of pure Ayurveda with Ayurvedic Kendra & Neuropathy.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/join">
@@ -194,6 +211,81 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Contact & Map Section */}
+        <section id="contact" className="py-24 max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Contact Form */}
+            <div className="space-y-8 animate-in fade-in slide-in-from-left duration-700">
+              <div>
+                <h2 className="font-headline text-4xl font-bold text-primary mb-4">Get in Touch</h2>
+                <p className="text-muted-foreground">Have questions about our treatments or business plan? Reach out to our expert team.</p>
+              </div>
+              <form className="space-y-4 p-8 bg-white rounded-3xl shadow-xl border border-primary/10">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-name">Full Name</Label>
+                    <Input id="contact-name" placeholder="John Doe" className="rounded-xl h-12" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-email">Email Address</Label>
+                    <Input id="contact-email" type="email" placeholder="john@example.com" className="rounded-xl h-12" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-phone">Phone Number</Label>
+                  <Input id="contact-phone" type="tel" placeholder="+91 XXXXX XXXXX" className="rounded-xl h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-message">Message</Label>
+                  <Textarea id="contact-message" placeholder="How can we help you?" className="min-h-[120px] rounded-xl" />
+                </div>
+                <Button className="w-full h-14 font-bold gap-2 text-lg shadow-lg shadow-primary/20">
+                  <Send className="w-4 h-4" /> Send Message
+                </Button>
+              </form>
+            </div>
+
+            {/* Map & Info */}
+            <div className="space-y-8 animate-in fade-in slide-in-from-right duration-700">
+              <div>
+                <h2 className="font-headline text-4xl font-bold text-primary mb-4">Our Location</h2>
+                <p className="text-muted-foreground">Visit us at our central Jaipur center for expert Ayurvedic care.</p>
+              </div>
+              <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white h-[450px]">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3560.175364156085!2d75.8968982!3d26.834374099999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x396dc922de47ff65%3A0x65988b46ab7db175!2sAyurved%20and%20Neurotherapy%20Kendra!5e0!3m2!1sen!2sin!4v1781255680119!5m2!1sen!2sin"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                 <div className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-border/50">
+                    <div className="bg-primary/10 p-3 rounded-full h-fit">
+                      <Phone className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-primary">Call Us</h4>
+                      <p className="text-sm text-muted-foreground">+91 94142 56321</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm border border-border/50">
+                    <div className="bg-secondary/10 p-3 rounded-full h-fit">
+                      <Mail className="w-5 h-5 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-primary">Email</h4>
+                      <p className="text-sm text-muted-foreground">support@ayurvedickendra.pro</p>
+                    </div>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="bg-primary text-white py-12 px-6 border-t border-white/10">
@@ -213,15 +305,19 @@ export default function LandingPage() {
               <li><Link href="/">Home</Link></li>
               <li><Link href="/join">Join Now</Link></li>
               <li><Link href="/login">Login</Link></li>
-              <li><Link href="/terms">Terms & Conditions</Link></li>
+              <li><Link href="#contact">Contact Us</Link></li>
             </ul>
           </div>
           <div className="space-y-4">
-            <h4 className="font-headline font-bold text-lg">Contact Us</h4>
-            <p className="opacity-70">
-              Ayurvedic Kendra Center, MG Road,<br />
-              New Delhi, India - 110001<br />
-              Email: support@ayurvedickendra.pro
+            <h4 className="font-headline font-bold text-lg">Contact Info</h4>
+            <p className="opacity-70 flex items-start gap-2">
+              <MapPin className="w-4 h-4 shrink-0 mt-1" />
+              Ayurved and Neurotherapy Kendra,<br />
+              Pratap Nagar, Jaipur,<br />
+              Rajasthan, India
+            </p>
+            <p className="opacity-70 flex items-center gap-2">
+              <Phone className="w-4 h-4" /> +91 94142 56321
             </p>
           </div>
         </div>
