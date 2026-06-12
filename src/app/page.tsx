@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,8 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-ayurveda');
+  const logoImage = PlaceHolderImages.find(img => img.id === 'site-logo');
+  
   const products = [
     { id: 'product-veershakti', name: 'Ojas Veer Shakti', tag: 'Best Seller', desc: 'Ayurvedic Vitality Tonic for Men', price: '₹899' },
     { id: 'product-narishakti', name: 'Ojas Nari Shakti', tag: 'Women Care', desc: "Women's Wellness & Vitality Tonic", price: '₹899' },
@@ -32,13 +35,20 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-primary/10 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="bg-primary text-white p-2 rounded-full">
-            <Leaf className="w-6 h-6" />
-          </div>
-          <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
-        </div>
-        <nav className="hidden md:flex gap-8 font-medium">
+        <Link href="/" className="flex items-center gap-3">
+          {logoImage && (
+            <Image 
+              src={logoImage.imageUrl} 
+              alt="Ayurvedic Kendra Logo" 
+              width={48} 
+              height={48} 
+              className="object-contain"
+              unoptimized
+            />
+          )}
+          <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase hidden sm:inline-block">Ayurvedic Kendra & Neuropathy</span>
+        </Link>
+        <nav className="hidden lg:flex gap-8 font-medium">
           <Link href="#products" className="hover:text-primary transition-colors">Products</Link>
           <Link href="#plan" className="hover:text-primary transition-colors">Business Plan</Link>
           <Link href="#contact" className="hover:text-primary transition-colors">Contact</Link>
@@ -298,10 +308,19 @@ export default function LandingPage() {
       <footer className="bg-primary text-white py-12 px-6 border-t border-white/10">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Leaf className="w-6 h-6" />
+            <Link href="/" className="flex items-center gap-3">
+              {logoImage && (
+                <Image 
+                  src={logoImage.imageUrl} 
+                  alt="Ayurvedic Kendra Logo" 
+                  width={40} 
+                  height={40} 
+                  className="brightness-0 invert object-contain"
+                  unoptimized
+                />
+              )}
               <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
-            </div>
+            </Link>
             <p className="opacity-70">
               Ayurvedic Kendra & Neuropathy is dedicated to restoring global health through the authentic wisdom of Ayurveda and Natural Healing.
             </p>

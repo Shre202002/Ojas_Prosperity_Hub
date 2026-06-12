@@ -1,8 +1,10 @@
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
@@ -10,8 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Leaf, Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,6 +25,8 @@ export default function LoginPage() {
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+
+  const logoImage = PlaceHolderImages.find(img => img.id === 'site-logo');
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,14 +103,21 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]">
-      <Link href="/" className="inline-flex items-center gap-2 mb-8">
-        <div className="bg-primary text-white p-2 rounded-full">
-          <Leaf className="w-6 h-6" />
-        </div>
+      <Link href="/" className="flex flex-col items-center gap-3 mb-8">
+        {logoImage && (
+          <Image 
+            src={logoImage.imageUrl} 
+            alt="Logo" 
+            width={80} 
+            height={80} 
+            className="object-contain"
+            unoptimized
+          />
+        )}
         <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
       </Link>
 
-      <Card className="w-full max-md shadow-2xl border-none">
+      <Card className="w-full max-w-md shadow-2xl border-none">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline font-bold">Welcome Back</CardTitle>
           <CardDescription>Login to manage your business.</CardDescription>

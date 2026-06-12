@@ -1,7 +1,9 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { 
@@ -11,7 +13,6 @@ import {
   User, 
   ChevronRight, 
   LogOut, 
-  Leaf, 
   Search,
   Bell,
   Sparkles,
@@ -23,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -41,6 +43,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   
   const userRef = user && db ? doc(db, 'users', user.uid) : null;
   const { data: profileData } = useDoc(userRef);
+
+  const logoImage = PlaceHolderImages.find(img => img.id === 'site-logo');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -69,12 +73,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen bg-muted/30">
       {/* Sidebar */}
       <aside className="w-64 border-r bg-white hidden md:flex flex-col">
-        <div className="p-6 flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-primary text-white p-2 rounded-full">
-              <Leaf className="w-6 h-6" />
-            </div>
-            <span className="font-headline font-bold text-lg text-primary tracking-tight uppercase">Ayurvedic Kendra</span>
+        <div className="p-6">
+          <Link href="/" className="flex flex-col items-center gap-3">
+            {logoImage && (
+              <Image 
+                src={logoImage.imageUrl} 
+                alt="Logo" 
+                width={60} 
+                height={60} 
+                className="object-contain"
+                unoptimized
+              />
+            )}
+            <span className="font-headline font-bold text-sm text-primary tracking-tight uppercase text-center">Ayurvedic Kendra</span>
           </Link>
         </div>
         

@@ -2,9 +2,15 @@
 {
   "placeholderImages": [
     {
+      "id": "site-logo",
+      "description": "Ayurvedic Kendra & Neuropathy official logo",
+      "imageUrl": "/assets/logo.png",
+      "imageHint": "wellness logo"
+    },
+    {
       "id": "hero-ayurveda",
       "description": "Ojas Care complete product line showcase banner",
-      "imageUrl": "Public/assets/Hero_image.png",
+      "imageUrl": "/assets/Hero_image.png",
       "imageHint": "ayurveda products"
     },
     {
