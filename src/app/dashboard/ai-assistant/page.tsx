@@ -25,7 +25,7 @@ export default function AIAssistantPage() {
       const res = await ayurvedicProductRecommender({ healthConcern, memberInquiry });
       setHealthResult(res);
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ export default function AIAssistantPage() {
       });
       setBusinessResult(res);
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export default function AIAssistantPage() {
           <Sparkles className="w-8 h-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary">Ojas AI Assistant</h1>
+          <h1 className="text-3xl font-headline font-bold text-primary">Ayurvedic Kendra AI Assistant</h1>
           <p className="text-muted-foreground">Personalized Ayurvedic advice and business growth strategies powered by AI.</p>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function AIAssistantPage() {
                 <Card className="border-none shadow-xl bg-primary/5 animate-pulse">
                   <CardContent className="p-12 text-center space-y-4">
                     <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary" />
-                    <p className="font-bold text-primary">Ojas AI is analyzing traditional texts...</p>
+                    <p className="font-bold text-primary">AI is analyzing traditional texts...</p>
                   </CardContent>
                 </Card>
               )}
@@ -163,7 +163,7 @@ export default function AIAssistantPage() {
 
                     <div className="p-4 bg-secondary/10 rounded-2xl border border-secondary/20">
                       <h4 className="font-headline font-bold text-secondary-foreground flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-4 h-4" /> Business Growth Tip
+                        <TrendingUp className="w-4 h-4" /> Growth Tip
                       </h4>
                       <p className="text-sm text-secondary-foreground/80 italic">{healthResult.businessGrowthTips}</p>
                     </div>
@@ -181,7 +181,7 @@ export default function AIAssistantPage() {
                 <CardContent className="p-8 space-y-6 relative">
                   <div className="space-y-2">
                     <h2 className="text-3xl font-headline font-bold">Level Up Your Business</h2>
-                    <p className="opacity-80 text-lg">Our AI analyzes your downline performance and rank status to provide custom growth path.</p>
+                    <p className="opacity-80 text-lg">Our AI analyzes your performance to provide a custom growth path.</p>
                   </div>
                   <Button onClick={handleBusinessSubmit} variant="outline" className="h-14 px-8 font-bold border-white/20 bg-white/10 hover:bg-white/20 text-white" disabled={loading}>
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate Growth Strategy"}
@@ -202,7 +202,7 @@ export default function AIAssistantPage() {
 
                  <Card className="border-none shadow-lg">
                    <CardHeader>
-                     <CardTitle className="text-lg flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Team Growth Tips</CardTitle>
+                     <CardTitle className="text-lg flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Growth Tips</CardTitle>
                    </CardHeader>
                    <CardContent>
                      <ul className="space-y-3">

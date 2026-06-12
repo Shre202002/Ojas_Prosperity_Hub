@@ -74,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="bg-primary text-white p-2 rounded-full">
               <Leaf className="w-6 h-6" />
             </div>
-            <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">OJAS CARE</span>
+            <span className="font-headline font-bold text-lg text-primary tracking-tight uppercase">Ayurvedic Kendra</span>
           </Link>
         </div>
         

@@ -4,7 +4,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Ojas Care - सेहत से समृद्धि',
+  title: 'Ayurvedic Kendra & Neuropathy - सेहत से समृद्धि',
   description: 'Ayurvedic Health Products and Prosperity Platform',
 };
 

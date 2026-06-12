@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ export default function LandingPage() {
           <div className="bg-primary text-white p-2 rounded-full">
             <Leaf className="w-6 h-6" />
           </div>
-          <span className="font-headline font-bold text-2xl text-primary tracking-tight">OJAS CARE</span>
+          <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
         </div>
         <nav className="hidden md:flex gap-8 font-medium">
           <Link href="#products" className="hover:text-primary transition-colors">Products</Link>
@@ -51,12 +50,12 @@ export default function LandingPage() {
               <span className="text-secondary">Trusted Results</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              100% Herbal formulations crafted for your health and wellness. Experience the power of pure Ayurveda with Ojas Care.
+              100% Herbal formulations crafted for your health and wellness. Experience the power of pure Ayurveda with Ayurvedic Kendra.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/join">
                 <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-bold gap-2">
-                  <UserPlus className="w-5 h-5" /> Join Prosperity Hub
+                  <UserPlus className="w-5 h-5" /> Start Your Journey
                 </Button>
               </Link>
               <Link href="#products">
@@ -72,6 +71,7 @@ export default function LandingPage() {
                 src={heroImage.imageUrl} 
                 alt={heroImage.description} 
                 fill 
+                unoptimized
                 className="object-cover"
                 data-ai-hint={heroImage.imageHint}
               />
@@ -201,10 +201,10 @@ export default function LandingPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Leaf className="w-6 h-6" />
-              <span className="font-headline font-bold text-2xl tracking-tight">OJAS CARE</span>
+              <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
             </div>
             <p className="opacity-70">
-              Ojas Care Private Limited is dedicated to restoring global health through the authentic wisdom of Ayurveda.
+              Ayurvedic Kendra & Neuropathy is dedicated to restoring global health through the authentic wisdom of Ayurveda and Natural Healing.
             </p>
           </div>
           <div className="space-y-4">
@@ -219,14 +219,14 @@ export default function LandingPage() {
           <div className="space-y-4">
             <h4 className="font-headline font-bold text-lg">Contact Us</h4>
             <p className="opacity-70">
-              Ojas Prosperity Hub, MG Road,<br />
+              Ayurvedic Kendra Center, MG Road,<br />
               New Delhi, India - 110001<br />
-              Email: support@ojascare.pro
+              Email: support@ayurvedickendra.pro
             </p>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-12 mt-12 border-t border-white/10 text-center opacity-40 text-sm">
-          © {new Date().getFullYear()} Ojas Care Private Limited. All Rights Reserved.
+          © {new Date().getFullYear()} Ayurvedic Kendra & Neuropathy. All Rights Reserved.
         </div>
       </footer>
     </div>

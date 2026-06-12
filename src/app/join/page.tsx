@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -33,9 +32,9 @@ export default function JoinPage() {
           <div className="bg-primary text-white p-2 rounded-full">
             <Leaf className="w-6 h-6" />
           </div>
-          <span className="font-headline font-bold text-2xl text-primary tracking-tight">OJAS CARE</span>
+          <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
         </Link>
-        <h1 className="text-3xl font-headline font-bold text-primary">Join the Prosperity Hub</h1>
+        <h1 className="text-3xl font-headline font-bold text-primary">Join our Community</h1>
         {sponsorId && (
           <div className="inline-flex items-center gap-2 bg-secondary/10 px-4 py-2 rounded-full text-secondary-foreground font-medium text-sm border border-secondary/20">
             <User className="w-4 h-4" /> You were referred by: <span className="font-bold">Member #{sponsorId.slice(0, 6)}</span>
@@ -63,7 +62,7 @@ export default function JoinPage() {
           <CardDescription>
             {step === 1 && "Start your journey by providing your information."}
             {step === 2 && "Select a starter kit that fits your goals."}
-            {step === 3 && "Decide your position in the binary structure."}
+            {step === 3 && "Decide your position in the structure."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -145,31 +144,25 @@ export default function JoinPage() {
           {step === 3 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
               <div className="space-y-4">
-                <Label>Select Your Leg</Label>
+                <Label>Select Your Placement</Label>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
                     <input type="radio" name="leg" id="left" className="peer sr-only" defaultChecked />
-                    <Label 
-                      htmlFor="left" 
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5"
-                    >
+                    <Label htmlFor="left" className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5">
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-primary font-bold">L</div>
                       <span className="font-bold">Left Team</span>
                     </Label>
                   </div>
                   <div className="relative">
                     <input type="radio" name="leg" id="right" className="peer sr-only" />
-                    <Label 
-                      htmlFor="right" 
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5"
-                    >
+                    <Label htmlFor="right" className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5">
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-primary font-bold">R</div>
                       <span className="font-bold">Right Team</span>
                     </Label>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  *If your chosen leg is full, our smart spillover system will place you in the next available slot to support your sponsor's team growth.
+                  *Our smart system will place you optimally to support your sponsor's team growth.
                 </p>
               </div>
               <div className="flex gap-4">
