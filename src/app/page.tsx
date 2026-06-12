@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, ShieldCheck, HeartPulse, TrendingUp, ArrowRight, UserPlus, ShoppingCart } from 'lucide-react';
+import { Leaf, ShieldCheck, HeartPulse, TrendingUp, UserPlus, ShoppingCart } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LandingPage() {
@@ -73,7 +73,7 @@ export default function LandingPage() {
                 alt={heroImage.description} 
                 fill 
                 className="object-cover"
-                data-ai-hint={heroImage.imageHint}
+                priority
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -117,7 +117,6 @@ export default function LandingPage() {
                         alt={imgData.description} 
                         fill 
                         className="object-cover p-4"
-                        data-ai-hint={imgData.imageHint}
                       />
                     )}
                     <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm uppercase tracking-wider">

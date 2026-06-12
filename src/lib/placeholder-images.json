@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-ayurveda",
+      "description": "Ojas Care complete product line showcase banner",
+      "imageUrl": "/assets/Hero_image.png",
+      "imageHint": "ayurveda products"
+    },
+    {
+      "id": "product-veershakti",
+      "description": "Ojas Veer Shakti - Ayurvedic Vitality Tonic for Men",
+      "imageUrl": "https://picsum.photos/seed/veershakti/400/400",
+      "imageHint": "herbal tonic"
+    },
+    {
+      "id": "product-narishakti",
+      "description": "Ojas Nari Shakti - Women's Wellness & Vitality Tonic",
+      "imageUrl": "https://picsum.photos/seed/narishakti/400/400",
+      "imageHint": "women health"
+    },
+    {
+      "id": "product-seathorn",
+      "description": "Ojas Sea Thorn - Herbal Nutritional Supplement",
+      "imageUrl": "https://picsum.photos/seed/seathorn/400/400",
+      "imageHint": "nutrition supplement"
+    },
+    {
+      "id": "product-liveramrit",
+      "description": "Ojas Liver Amrit - Herbal Liver Detox & Wellness Tonic",
+      "imageUrl": "https://picsum.photos/seed/liveramrit/400/400",
+      "imageHint": "liver detox"
+    }
+  ]
 }
