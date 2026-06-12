@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -16,21 +15,16 @@ import {
   Mail, 
   Phone, 
   Send,
-  MapPin
+  MapPin,
+  ChevronRight
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { PRODUCTS } from '@/lib/products';
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-ayurveda');
   const logoImage = PlaceHolderImages.find(img => img.id === 'site-logo');
   
-  const products = [
-    { id: 'product-veershakti', name: 'Ojas Veer Shakti', tag: 'Best Seller', desc: 'Ayurvedic Vitality Tonic for Men', price: '₹899' },
-    { id: 'product-narishakti', name: 'Ojas Nari Shakti', tag: 'Women Care', desc: "Women's Wellness & Vitality Tonic", price: '₹899' },
-    { id: 'product-seathorn', name: 'Ojas Sea Thorn', tag: 'Daily Nutrition', desc: 'Herbal Nutritional Supplement', price: '₹899' },
-    { id: 'product-liveramrit', name: 'Ojas Liver Amrit', tag: 'Liver Care', desc: 'Herbal Liver Detox & Wellness Tonic', price: '₹899' },
-  ];
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
@@ -133,35 +127,37 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.map((product) => {
+            {PRODUCTS.map((product) => {
               const imgData = PlaceHolderImages.find(img => img.id === product.id);
               return (
-                <Card key={product.id} className="overflow-hidden border-none shadow-xl hover:-translate-y-2 transition-transform duration-300 bg-white">
-                  <div className="relative aspect-square">
-                    {imgData && (
-                      <Image 
-                        src={imgData.imageUrl} 
-                        alt={imgData.description} 
-                        fill 
-                        className="object-cover p-4"
-                        data-ai-hint={imgData.imageHint}
-                      />
-                    )}
-                    <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm uppercase tracking-wider">
-                      {product.tag}
+                <Link key={product.id} href={`/products/${product.id}`}>
+                  <Card className="h-full overflow-hidden border-none shadow-xl hover:-translate-y-2 transition-transform duration-300 bg-white group">
+                    <div className="relative aspect-square">
+                      {imgData && (
+                        <Image 
+                          src={imgData.imageUrl} 
+                          alt={product.name} 
+                          fill 
+                          className="object-cover p-4"
+                          unoptimized
+                        />
+                      )}
+                      <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm uppercase tracking-wider">
+                        {product.tag}
+                      </div>
                     </div>
-                  </div>
-                  <CardContent className="p-6 space-y-3">
-                    <h3 className="font-headline text-lg font-bold text-primary">{product.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{product.desc}</p>
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xl font-bold text-secondary">{product.price}</span>
-                      <Button size="sm" className="h-9 gap-2">
-                        <ShoppingCart className="w-3 h-3" /> Add
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <CardContent className="p-6 space-y-3">
+                      <h3 className="font-headline text-lg font-bold text-primary group-hover:text-secondary transition-colors">{product.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{product.shortDesc}</p>
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-xl font-bold text-secondary">{product.price}</span>
+                        <div className="text-primary font-bold flex items-center text-sm gap-1 group-hover:translate-x-1 transition-transform">
+                          Details <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>
