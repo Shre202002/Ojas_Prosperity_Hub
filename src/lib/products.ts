@@ -1,78 +1,149 @@
 export interface Product {
-  id: string;
+  id: string; // We'll use the slug as the ID for routing
   name: string;
+  category: string;
   tag: string;
-  shortDesc: string;
-  fullDesc: string;
   price: string;
+  currency: string;
+  rating: number;
+  reviews: number;
+  packSize: string;
+  shortDescription: string;
+  description: string;
   benefits: string[];
-  howToUse: string;
+  features: string[];
+  usage: string;
   ingredients: string[];
 }
 
 export const PRODUCTS: Product[] = [
   {
-    id: 'product-veershakti',
-    name: 'Ojas Veer Shakti',
-    tag: 'Best Seller',
-    shortDesc: 'Ayurvedic Vitality Tonic for Men',
-    fullDesc: 'Ojas Veer Shakti is a premium Ayurvedic formulation specifically designed to enhance male vitality, stamina, and overall wellness. Crafted with potent traditional herbs, it helps in restoring energy levels and maintaining optimal physical performance.',
-    price: '₹899',
+    id: "ojas-veer-shakti",
+    name: "Ojas Veer Shakti",
+    category: "Men's Wellness",
+    tag: "Best Seller",
+    price: "₹899",
+    currency: "INR",
+    rating: 4.8,
+    reviews: 128,
+    packSize: "500ml",
+    shortDescription: "Ayurvedic vitality tonic crafted to support men's wellness, stamina, and daily vitality.",
+    description: "Ojas Veer Shakti is a premium Ayurvedic vitality tonic formulated with carefully selected herbal ingredients to support men's overall wellness, energy, stamina, and active lifestyle.",
     benefits: [
-      'Boosts physical stamina and endurance',
-      'Enhances energy levels and vitality',
-      'Supports natural hormonal balance',
-      'Reduces fatigue and stress'
+      "Supports overall vitality and wellness",
+      "Helps maintain daily energy levels",
+      "Supports physical strength and stamina",
+      "Promotes an active lifestyle",
+      "Made from herbal ingredients",
+      "Suitable for daily wellness routines"
     ],
-    howToUse: 'Take 10-15ml twice a day with water or as directed by a healthcare professional.',
-    ingredients: ['Ashwagandha', 'Shilajit', 'Safed Musli', 'Gokshura']
+    features: [
+      "100% Herbal Formula",
+      "Ayurvedic Wellness Tonic",
+      "No Artificial Preservatives",
+      "Easy Liquid Formulation",
+      "Daily Use Product"
+    ],
+    usage: "Take 15ml twice daily with warm milk or lukewarm water.",
+    ingredients: [
+      "Ayurvedic Herbal Blend",
+      "Natural Plant Extracts"
+    ]
   },
   {
-    id: 'product-narishakti',
-    name: 'Ojas Nari Shakti',
-    tag: 'Women Care',
-    shortDesc: "Women's Wellness & Vitality Tonic",
-    fullDesc: 'Ojas Nari Shakti is a holistic health tonic for women of all ages. It addresses unique nutritional needs, supports hormonal balance, and promotes radiant skin and hair health from within.',
-    price: '₹899',
+    id: "ojas-nari-shakti",
+    name: "Ojas Nari Shakti",
+    category: "Women's Wellness",
+    tag: "Women Care",
+    price: "₹899",
+    currency: "INR",
+    rating: 4.7,
+    reviews: 96,
+    packSize: "500ml",
+    shortDescription: "Women's wellness tonic designed to support energy, vitality, and overall health.",
+    description: "Ojas Nari Shakti is a specially crafted Ayurvedic wellness tonic designed to support women's overall health, vitality, and wellness.",
     benefits: [
-      'Supports female reproductive health',
-      'Maintains natural hormonal balance',
-      'Improves energy and reduces anemia risk',
-      'Promotes healthy skin and hair'
+      "Supports women's wellness",
+      "Helps maintain daily energy",
+      "Supports overall vitality",
+      "Supports hormonal wellness",
+      "Supports reproductive wellness",
+      "Suitable for regular use"
     ],
-    howToUse: 'Take 10-15ml twice a day with water after meals.',
-    ingredients: ['Shatavari', 'Ashoka', 'Lodhra', 'Dashmool']
+    features: [
+      "Women-Specific Ayurvedic Formula",
+      "Traditional Herbal Ingredients",
+      "Daily Wellness Support",
+      "Easy Liquid Form"
+    ],
+    usage: "Take 15ml twice daily with fresh water.",
+    ingredients: [
+      "Ayurvedic Herbal Blend",
+      "Natural Plant Extracts"
+    ]
   },
   {
-    id: 'product-seathorn',
-    name: 'Ojas Sea Thorn',
-    tag: 'Daily Nutrition',
-    shortDesc: 'Herbal Nutritional Supplement',
-    fullDesc: 'Sea Buckthorn (Ojas Sea Thorn) is a powerhouse of nutrients, containing over 190 bioactive compounds. It is exceptionally rich in Vitamin C, Omega fatty acids, and antioxidants, making it an essential daily supplement for modern lifestyle.',
-    price: '₹899',
+    id: "ojas-sea-thorn",
+    name: "Ojas Sea Thorn",
+    category: "Nutrition & Immunity",
+    tag: "Daily Nutrition",
+    price: "₹899",
+    currency: "INR",
+    rating: 4.9,
+    reviews: 142,
+    packSize: "500ml",
+    shortDescription: "Nutritional supplement rich in antioxidants, vitamins, and omega fatty acids.",
+    description: "Ojas Sea Thorn is a nutritional wellness supplement enriched with Sea Buckthorn, a natural source of vitamins, antioxidants, and essential fatty acids.",
     benefits: [
-      'Rich source of Omega 3, 6, 7, and 9',
-      'Powerful antioxidant support',
-      'Boosts natural immunity',
-      'Supports cardiovascular health'
+      "Rich in antioxidants",
+      "Supports immune health",
+      "Supports skin wellness",
+      "Supports hair wellness",
+      "Contains Omega 3, 6, 7 & 9",
+      "Suitable for men and women"
     ],
-    howToUse: 'Mix 15ml in a glass of water and consume on an empty stomach in the morning.',
-    ingredients: ['Sea Buckthorn Berry Extract', 'Vitamin E']
+    features: [
+      "Sea Buckthorn Based Formula",
+      "Rich in Vitamins A, C & E",
+      "Natural Antioxidants",
+      "Omega Fatty Acids"
+    ],
+    usage: "Take 15ml twice daily with water.",
+    ingredients: [
+      "Sea Buckthorn Extract",
+      "Natural Herbal Ingredients"
+    ]
   },
   {
-    id: 'product-liveramrit',
-    name: 'Ojas Liver Amrit',
-    tag: 'Liver Care',
-    shortDesc: 'Herbal Liver Detox & Wellness Tonic',
-    fullDesc: 'Ojas Liver Amrit is formulated to protect and rejuvenate the liver. It aids in detoxification, improves digestion, and protects liver cells from damage caused by toxins and unhealthy dietary habits.',
-    price: '₹899',
+    id: "ojas-liver-amrit",
+    name: "Ojas Liver Amrit",
+    category: "Digestive & Liver Wellness",
+    tag: "Liver Care",
+    price: "₹899",
+    currency: "INR",
+    rating: 4.8,
+    reviews: 85,
+    packSize: "500ml",
+    shortDescription: "Herbal wellness tonic formulated to support digestive and liver health.",
+    description: "Ojas Liver Amrit is an Ayurvedic herbal wellness tonic formulated to support digestive wellness and overall health.",
     benefits: [
-      'Promotes liver detoxification',
-      'Improves digestion and appetite',
-      'Protects liver against environmental toxins',
-      'Supports healthy metabolism'
+      "Supports digestive wellness",
+      "Supports liver health maintenance",
+      "Supports overall wellness",
+      "Supports natural body functions",
+      "Herbal nutritional support",
+      "Suitable for daily use"
     ],
-    howToUse: 'Take 10ml twice a day before meals.',
-    ingredients: ['Bhumyamalaki', 'Punarnava', 'Kalmegh', 'Kutki']
+    features: [
+      "Traditional Ayurvedic Formula",
+      "Herbal Wellness Support",
+      "Easy Liquid Formulation",
+      "Daily Health Supplement"
+    ],
+    usage: "Take 15ml twice daily with fresh water.",
+    ingredients: [
+      "Ayurvedic Herbal Blend",
+      "Natural Plant Extracts"
+    ]
   }
 ];

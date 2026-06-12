@@ -47,13 +47,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             {logoImage ? (
-              <Image src="/assets/Logo.png" alt="Logo" width={48} height={48} unoptimized />
+              <Image src={logoImage.imageUrl} alt="Logo" width={48} height={48} unoptimized />
             ) : (
-              <div className=" p-2 rounded-full text-white">
-                <Image src="/assets/Logo.png" alt="Logo" width={48} height={48} unoptimized />
+              <div className="bg-primary p-2 rounded-full text-white">
+                <Leaf className="w-6 h-6" />
               </div>
-            )
-            }
+            )}
+            <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase hidden sm:inline-block">Ayurvedic Kendra</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -197,7 +197,7 @@ export default function LandingPage() {
                     </div>
                     <CardContent className="p-8 space-y-4 flex-1 flex flex-col">
                       <h3 className="font-headline text-xl font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1">{product.shortDesc}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1">{product.shortDescription}</p>
                       <div className="flex items-center justify-between pt-6 border-t border-muted/50">
                         <span className="text-2xl font-bold text-secondary font-headline">{product.price}</span>
                         <div className="bg-primary/5 p-2 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-colors">
@@ -376,18 +376,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10">
           <div className="space-y-8 col-span-1 lg:col-span-1">
             <Link href="/" className="flex items-center gap-3">
-              {logoImage ? (
-                <Image src="/assets/Logo.png" width={40} height={40} alt="test" />
-              ) : (
-                <Image src="/assets/Logo.png" width={40} height={40} alt="test" />)}
+              {logoImage && (
+                <Image src={logoImage.imageUrl} width={40} height={40} alt="Logo" unoptimized />
+              )}
               <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra</span>
             </Link>
             <p className="opacity-70 leading-relaxed text-sm">
               Dedicated to restoring global health through the authentic wisdom of Ayurveda and Natural Healing since 2012.
             </p>
-            <div className="flex gap-4">
-              {/* Social placeholders could go here */}
-            </div>
           </div>
 
           <div className="space-y-6">

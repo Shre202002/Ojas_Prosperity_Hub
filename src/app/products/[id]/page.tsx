@@ -15,7 +15,7 @@ import {
   Info, 
   Leaf,
   Phone,
-  MessageSquare
+  Star
 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/products';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -52,7 +52,7 @@ export default function ProductDetailsPage() {
               unoptimized
             />
           )}
-          <span className="font-headline font-bold text-lg text-primary tracking-tight uppercase hidden sm:inline-block">Ayurvedic Kendra & Neuropathy</span>
+          <span className="font-headline font-bold text-lg text-primary tracking-tight uppercase hidden sm:inline-block">Ayurvedic Kendra</span>
         </Link>
         <Link href="/">
           <Button variant="ghost" className="gap-2">
@@ -103,9 +103,20 @@ export default function ProductDetailsPage() {
           {/* Product Info */}
           <div className="space-y-8">
             <div className="space-y-4">
+              <div className="flex items-center gap-2 text-secondary">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                  ))}
+                </div>
+                <span className="text-sm font-bold">({product.reviews} Reviews)</span>
+              </div>
               <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">{product.name}</h1>
-              <p className="text-lg text-muted-foreground leading-relaxed italic">{product.shortDesc}</p>
-              <div className="text-3xl font-bold text-secondary">{product.price}</div>
+              <p className="text-lg text-muted-foreground leading-relaxed italic">{product.shortDescription}</p>
+              <div className="flex items-baseline gap-4">
+                <div className="text-3xl font-bold text-secondary">{product.price}</div>
+                <div className="text-sm text-muted-foreground">Pack Size: {product.packSize}</div>
+              </div>
             </div>
 
             <Separator />
@@ -115,7 +126,7 @@ export default function ProductDetailsPage() {
                 <Info className="w-5 h-5 text-primary" /> About Product
               </h3>
               <p className="text-muted-foreground leading-relaxed">
-                {product.fullDesc}
+                {product.description}
               </p>
             </div>
 
@@ -135,7 +146,7 @@ export default function ProductDetailsPage() {
               <h3 className="font-bold text-primary flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" /> How to Use
               </h3>
-              <p className="text-sm leading-relaxed">{product.howToUse}</p>
+              <p className="text-sm leading-relaxed">{product.usage}</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -153,23 +164,36 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        {/* Ingredients Section */}
-        <section className="mt-24 text-center space-y-12">
-          <div className="space-y-4">
+        {/* Features & Ingredients */}
+        <div className="mt-24 grid md:grid-cols-2 gap-12">
+          <section className="space-y-8">
+            <h2 className="text-3xl font-headline font-bold text-primary">Product Features</h2>
+            <ul className="grid gap-4">
+              {product.features.map((feature, i) => (
+                <li key={i} className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-sm border border-border/50">
+                  <div className="w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center text-secondary">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="space-y-8">
             <h2 className="text-3xl font-headline font-bold text-primary">Key Ingredients</h2>
-            <div className="h-1 w-24 bg-secondary mx-auto rounded-full"></div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {product.ingredients.map((ing, i) => (
-              <div key={i} className="p-6 bg-white rounded-2xl shadow-lg border border-border/50 hover:border-primary transition-colors group">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                  <Leaf className="w-6 h-6" />
+            <div className="grid grid-cols-2 gap-4">
+              {product.ingredients.map((ing, i) => (
+                <div key={i} className="p-6 bg-white rounded-2xl shadow-lg border border-border/50 hover:border-primary transition-colors group text-center">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                    <Leaf className="w-6 h-6" />
+                  </div>
+                  <div className="font-bold text-primary">{ing}</div>
                 </div>
-                <div className="font-bold text-primary">{ing}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        </div>
       </main>
 
       {/* Footer */}
@@ -186,7 +210,7 @@ export default function ProductDetailsPage() {
                 unoptimized
               />
             )}
-            <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
+            <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra</span>
           </Link>
           <p className="opacity-70 max-w-2xl mx-auto">
             Experience the healing power of nature with our scientifically verified Ayurvedic solutions.
