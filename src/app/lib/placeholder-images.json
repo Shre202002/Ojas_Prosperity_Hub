@@ -13,27 +13,27 @@
       "imageHint": "ayurveda products"
     },
     {
-      "id": "ojas-veer-shakti",
-      "description": "Ojas Veer Shakti - Ayurvedic Vitality Tonic for Men",
-      "imageUrl": "/assets/products/ojas-veer-shakti.png",
+      "id": "veer-shakti",
+      "description": "Ayurvedic Kendra Veer Shakti",
+      "imageUrl": "/assets/products/veer-shakti.png",
       "imageHint": "herbal tonic"
     },
     {
-      "id": "ojas-nari-shakti",
-      "description": "Ojas Nari Shakti - Women's Wellness & Vitality Tonic",
-      "imageUrl": "/assets/products/ojas-nari-shakti.png",
+      "id": "nari-shakti",
+      "description": "Ayurvedic Kendra Nari Shakti",
+      "imageUrl": "/assets/products/nari-shakti.png",
       "imageHint": "women health"
     },
     {
-      "id": "ojas-sea-thorn",
-      "description": "Ojas Sea Thorn - Herbal Nutritional Supplement",
-      "imageUrl": "/assets/products/ojas-sea-thorn.png",
+      "id": "sea-thorn",
+      "description": "Ayurvedic Kendra Sea Thorn",
+      "imageUrl": "/assets/products/sea-thorn.png",
       "imageHint": "nutrition supplement"
     },
     {
-      "id": "ojas-liver-amrit",
-      "description": "Ojas Liver Amrit - Herbal Liver Detox & Wellness Tonic",
-      "imageUrl": "/assets/products/ojas-liver-amrit.png",
+      "id": "liver-amrit",
+      "description": "Ayurvedic Kendra Liver Amrit",
+      "imageUrl": "/assets/products/liver-amrit.png",
       "imageHint": "liver detox"
     }
   ]

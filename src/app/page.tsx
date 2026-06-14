@@ -25,7 +25,8 @@ import {
   Menu,
   CheckCircle2,
   Award,
-  Users
+  Users,
+  Star
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { PRODUCTS } from '@/lib/products';
@@ -176,39 +177,52 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {PRODUCTS.map((product) => {
-              const imgData = PlaceHolderImages.find(img => img.id === product.id);
-              return (
-                <Link key={product.id} href={`/products/${product.id}`} className="group">
-                  <Card className="h-full overflow-hidden border-none shadow-lg hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 bg-white flex flex-col">
-                    <div className="relative aspect-square overflow-hidden bg-muted/20">
-                      {imgData && (
-                        <Image
-                          src={imgData.imageUrl}
-                          alt={product.name}
-                          fill
-                          className="object-cover p-6 group-hover:scale-110 transition-transform duration-500"
-                          unoptimized
-                        />
+            {PRODUCTS.map((product) => (
+              <Link key={product.slug} href={`/products/${product.slug}`} className="group">
+                <Card className="h-full overflow-hidden border-none shadow-lg hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 bg-white flex flex-col">
+                  <div className="relative aspect-square overflow-hidden bg-muted/20">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover p-6 group-hover:scale-110 transition-transform duration-500"
+                      unoptimized
+                    />
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {product.isBestSeller && (
+                        <div className="bg-secondary text-secondary-foreground text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                          Best Seller
+                        </div>
                       )}
-                      <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider">
-                        {product.tag}
+                      {product.discount > 0 && (
+                        <div className="bg-destructive text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                          {product.discount}% OFF
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <CardContent className="p-8 space-y-4 flex-1 flex flex-col">
+                    <div className="flex items-center gap-1 text-secondary">
+                      <Star className="w-3 h-3 fill-current" />
+                      <span className="text-xs font-bold">{product.rating} ({product.reviews})</span>
+                    </div>
+                    <h3 className="font-headline text-xl font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed flex-1">{product.shortDescription}</p>
+                    <div className="flex items-center justify-between pt-6 border-t border-muted/50">
+                      <div className="flex flex-col">
+                        <span className="text-2xl font-bold text-secondary font-headline">₹{product.salePrice}</span>
+                        {product.salePrice < product.price && (
+                          <span className="text-xs text-muted-foreground line-through">₹{product.price}</span>
+                        )}
+                      </div>
+                      <div className="bg-primary/5 p-2 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <ChevronRight className="w-5 h-5" />
                       </div>
                     </div>
-                    <CardContent className="p-8 space-y-4 flex-1 flex flex-col">
-                      <h3 className="font-headline text-xl font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1">{product.shortDescription}</p>
-                      <div className="flex items-center justify-between pt-6 border-t border-muted/50">
-                        <span className="text-2xl font-bold text-secondary font-headline">{product.price}</span>
-                        <div className="bg-primary/5 p-2 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                          <ChevronRight className="w-5 h-5" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -400,7 +414,7 @@ export default function LandingPage() {
             <h4 className="font-headline font-bold text-lg border-b border-white/10 pb-4">Product Care</h4>
             <ul className="space-y-4 opacity-70 text-sm">
               {PRODUCTS.slice(0, 4).map(p => (
-                <li key={p.id}><Link href={`/products/${p.id}`} className="hover:text-secondary transition-colors">{p.name}</Link></li>
+                <li key={p.slug}><Link href={`/products/${p.slug}`} className="hover:text-secondary transition-colors">{p.name}</Link></li>
               ))}
             </ul>
           </div>

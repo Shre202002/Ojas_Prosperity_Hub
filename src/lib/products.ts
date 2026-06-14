@@ -1,149 +1,159 @@
 export interface Product {
-  id: string; // We'll use the slug as the ID for routing
+  id: number;
+  slug: string;
   name: string;
+  brand: string;
   category: string;
-  tag: string;
-  price: string;
+  price: number;
+  salePrice: number;
   currency: string;
+  discount: number;
+  stock: number;
+  sku: string;
+  packSize: string;
+  image: string;
+  gallery: string[];
   rating: number;
   reviews: number;
-  packSize: string;
   shortDescription: string;
   description: string;
   benefits: string[];
-  features: string[];
   usage: string;
-  ingredients: string[];
+  isFeatured: boolean;
+  isBestSeller: boolean;
 }
 
 export const PRODUCTS: Product[] = [
   {
-    id: "ojas-veer-shakti",
-    name: "Ojas Veer Shakti",
+    id: 1,
+    slug: "veer-shakti",
+    name: "Ayurvedic Kendra Veer Shakti",
+    brand: "Ayurvedic Kendra",
     category: "Men's Wellness",
-    tag: "Best Seller",
-    price: "₹899",
+    price: 1499,
+    salePrice: 1199,
     currency: "INR",
+    discount: 20,
+    stock: 100,
+    sku: "AK-VS-500",
+    packSize: "500ml",
+    image: "/assets/products/veer-shakti.png",
+    gallery: [
+      "/assets/products/veer-shakti.png"
+    ],
     rating: 4.8,
     reviews: 128,
-    packSize: "500ml",
-    shortDescription: "Ayurvedic vitality tonic crafted to support men's wellness, stamina, and daily vitality.",
-    description: "Ojas Veer Shakti is a premium Ayurvedic vitality tonic formulated with carefully selected herbal ingredients to support men's overall wellness, energy, stamina, and active lifestyle.",
+    shortDescription: "Premium Ayurvedic wellness tonic for men's vitality, stamina, and overall wellness.",
+    description: "Ayurvedic Kendra Veer Shakti is a carefully crafted herbal wellness tonic designed to support men's active lifestyle, energy levels, and overall well-being.",
     benefits: [
-      "Supports overall vitality and wellness",
-      "Helps maintain daily energy levels",
-      "Supports physical strength and stamina",
-      "Promotes an active lifestyle",
-      "Made from herbal ingredients",
-      "Suitable for daily wellness routines"
-    ],
-    features: [
-      "100% Herbal Formula",
-      "Ayurvedic Wellness Tonic",
-      "No Artificial Preservatives",
-      "Easy Liquid Formulation",
-      "Daily Use Product"
-    ],
-    usage: "Take 15ml twice daily with warm milk or lukewarm water.",
-    ingredients: [
-      "Ayurvedic Herbal Blend",
-      "Natural Plant Extracts"
-    ]
-  },
-  {
-    id: "ojas-nari-shakti",
-    name: "Ojas Nari Shakti",
-    category: "Women's Wellness",
-    tag: "Women Care",
-    price: "₹899",
-    currency: "INR",
-    rating: 4.7,
-    reviews: 96,
-    packSize: "500ml",
-    shortDescription: "Women's wellness tonic designed to support energy, vitality, and overall health.",
-    description: "Ojas Nari Shakti is a specially crafted Ayurvedic wellness tonic designed to support women's overall health, vitality, and wellness.",
-    benefits: [
-      "Supports women's wellness",
-      "Helps maintain daily energy",
-      "Supports overall vitality",
-      "Supports hormonal wellness",
-      "Supports reproductive wellness",
+      "Supports strength and stamina",
+      "Promotes vitality and wellness",
+      "Supports physical performance",
+      "Supports daily energy",
+      "100% herbal formulation",
       "Suitable for regular use"
     ],
-    features: [
-      "Women-Specific Ayurvedic Formula",
-      "Traditional Herbal Ingredients",
-      "Daily Wellness Support",
-      "Easy Liquid Form"
-    ],
-    usage: "Take 15ml twice daily with fresh water.",
-    ingredients: [
-      "Ayurvedic Herbal Blend",
-      "Natural Plant Extracts"
-    ]
+    usage: "Take 15ml twice daily with milk or lukewarm water.",
+    isFeatured: true,
+    isBestSeller: true
   },
   {
-    id: "ojas-sea-thorn",
-    name: "Ojas Sea Thorn",
-    category: "Nutrition & Immunity",
-    tag: "Daily Nutrition",
-    price: "₹899",
+    id: 2,
+    slug: "nari-shakti",
+    name: "Ayurvedic Kendra Nari Shakti",
+    brand: "Ayurvedic Kendra",
+    category: "Women's Wellness",
+    price: 1499,
+    salePrice: 1199,
     currency: "INR",
+    discount: 20,
+    stock: 100,
+    sku: "AK-NS-500",
+    packSize: "500ml",
+    image: "/assets/products/nari-shakti.png",
+    gallery: [
+      "/assets/products/nari-shakti.png"
+    ],
+    rating: 4.9,
+    reviews: 96,
+    shortDescription: "Herbal wellness tonic formulated to support women's health, vitality, and daily wellness.",
+    description: "Ayurvedic Kendra Nari Shakti is an Ayurvedic wellness tonic designed to support women's overall health, vitality, and active lifestyle.",
+    benefits: [
+      "Supports women's wellness",
+      "Supports daily vitality",
+      "Supports hormonal wellness",
+      "Promotes overall well-being",
+      "Supports active lifestyle",
+      "Traditional Ayurvedic formulation"
+    ],
+    usage: "Take 15ml twice daily with water.",
+    isFeatured: true,
+    isBestSeller: false
+  },
+  {
+    id: 3,
+    slug: "sea-thorn",
+    name: "Ayurvedic Kendra Sea Thorn",
+    brand: "Ayurvedic Kendra",
+    category: "Nutrition & Immunity",
+    price: 1699,
+    salePrice: 1299,
+    currency: "INR",
+    discount: 24,
+    stock: 100,
+    sku: "AK-ST-500",
+    packSize: "500ml",
+    image: "/assets/products/sea-thorn.png",
+    gallery: [
+      "/assets/products/sea-thorn.png"
+    ],
     rating: 4.9,
     reviews: 142,
-    packSize: "500ml",
-    shortDescription: "Nutritional supplement rich in antioxidants, vitamins, and omega fatty acids.",
-    description: "Ojas Sea Thorn is a nutritional wellness supplement enriched with Sea Buckthorn, a natural source of vitamins, antioxidants, and essential fatty acids.",
+    shortDescription: "Sea Buckthorn nutritional supplement rich in antioxidants, vitamins, and omega fatty acids.",
+    description: "Ayurvedic Kendra Sea Thorn is a premium nutritional wellness supplement enriched with Sea Buckthorn to support immunity, skin health, and overall wellness.",
     benefits: [
       "Rich in antioxidants",
-      "Supports immune health",
+      "Supports immunity",
       "Supports skin wellness",
       "Supports hair wellness",
       "Contains Omega 3, 6, 7 & 9",
       "Suitable for men and women"
     ],
-    features: [
-      "Sea Buckthorn Based Formula",
-      "Rich in Vitamins A, C & E",
-      "Natural Antioxidants",
-      "Omega Fatty Acids"
-    ],
     usage: "Take 15ml twice daily with water.",
-    ingredients: [
-      "Sea Buckthorn Extract",
-      "Natural Herbal Ingredients"
-    ]
+    isFeatured: true,
+    isBestSeller: true
   },
   {
-    id: "ojas-liver-amrit",
-    name: "Ojas Liver Amrit",
+    id: 4,
+    slug: "liver-amrit",
+    name: "Ayurvedic Kendra Liver Amrit",
+    brand: "Ayurvedic Kendra",
     category: "Digestive & Liver Wellness",
-    tag: "Liver Care",
-    price: "₹899",
+    price: 1599,
+    salePrice: 1249,
     currency: "INR",
+    discount: 22,
+    stock: 100,
+    sku: "AK-LA-500",
+    packSize: "500ml",
+    image: "/assets/products/liver-amrit.png",
+    gallery: [
+      "/assets/products/liver-amrit.png"
+    ],
     rating: 4.8,
     reviews: 85,
-    packSize: "500ml",
-    shortDescription: "Herbal wellness tonic formulated to support digestive and liver health.",
-    description: "Ojas Liver Amrit is an Ayurvedic herbal wellness tonic formulated to support digestive wellness and overall health.",
+    shortDescription: "Herbal wellness tonic designed to support digestive wellness and overall health.",
+    description: "Ayurvedic Kendra Liver Amrit is a traditional herbal wellness tonic formulated to support digestive wellness and maintain overall well-being.",
     benefits: [
       "Supports digestive wellness",
-      "Supports liver health maintenance",
+      "Supports liver health",
       "Supports overall wellness",
       "Supports natural body functions",
       "Herbal nutritional support",
       "Suitable for daily use"
     ],
-    features: [
-      "Traditional Ayurvedic Formula",
-      "Herbal Wellness Support",
-      "Easy Liquid Formulation",
-      "Daily Health Supplement"
-    ],
-    usage: "Take 15ml twice daily with fresh water.",
-    ingredients: [
-      "Ayurvedic Herbal Blend",
-      "Natural Plant Extracts"
-    ]
+    usage: "Take 15ml twice daily with water.",
+    isFeatured: false,
+    isBestSeller: true
   }
 ];
