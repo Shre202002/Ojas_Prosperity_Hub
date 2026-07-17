@@ -2,9 +2,10 @@
 
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import { 
   Wallet, 
   TrendingUp, 
@@ -15,7 +16,9 @@ import {
   AlertCircle,
   ArrowUpRight,
   Target,
-  Trophy
+  Trophy,
+  UserPlus,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,18 +32,50 @@ export default function DashboardPage() {
     user && db ? doc(db, 'distributors', user.uid) : null
   ), [db, user?.uid]);
   
-  const { data: distributor, loading } = useDoc(distributorRef);
+  const { data: distributor, loading, error } = useDoc(distributorRef);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="text-center space-y-4">
-        <TrendingUp className="w-12 h-12 animate-pulse text-primary mx-auto" />
+        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
         <p className="text-muted-foreground font-medium">Loading your business metrics...</p>
       </div>
     </div>
   );
 
-  if (!distributor) return null;
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md border-destructive/20 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" /> Connection Error
+            </CardTitle>
+            <CardDescription>We couldn't retrieve your data. Please check your network or permissions.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!distributor) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Card className="max-w-md text-center p-8 space-y-6 border-none shadow-2xl rounded-[2.5rem]">
+        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary">
+          <UserPlus className="w-10 h-10" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-headline font-bold">Profile Not Found</h2>
+          <p className="text-muted-foreground">It looks like you haven't completed your distributor registration yet.</p>
+        </div>
+        <Link href="/register" className="block">
+          <Button className="w-full h-12 font-bold gap-2">
+            Complete Registration <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+      </Card>
+    </div>
+  );
 
   const copyRefLink = () => {
     const link = `${window.location.origin}/register?ref=${distributor.referralCode}`;
@@ -54,23 +89,23 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl">
-            {distributor.name[0]}
+            {distributor.name?.[0] || 'U'}
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-headline font-bold">{distributor.name}</h1>
               <Badge className={distributor.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}>
-                {distributor.status.toUpperCase()}
+                {distributor.status?.toUpperCase()}
               </Badge>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground font-mono-data">
-              <span>ID: {distributor.uid.slice(0, 8).toUpperCase()}</span>
+              <span>ID: {distributor.uid?.slice(0, 8).toUpperCase()}</span>
               <span className="flex items-center gap-1">
                 <ShieldCheck className={`w-4 h-4 ${distributor.kycStatus === 'verified' ? 'text-emerald-500' : 'text-slate-400'}`} />
-                KYC: {distributor.kycStatus.toUpperCase()}
+                KYC: {distributor.kycStatus?.toUpperCase()}
               </span>
               <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 font-bold">
-                {distributor.rank.toUpperCase()}
+                {distributor.rank?.toUpperCase()}
               </Badge>
             </div>
           </div>
@@ -228,5 +263,26 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Helper icon for missing distributor state
+function ArrowRight(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
   );
 }
