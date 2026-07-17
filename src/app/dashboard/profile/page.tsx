@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth, useUser, useFirestore, useDoc } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -18,7 +18,10 @@ export default function ProfilePage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const userRef = user && db ? doc(db, 'users', user.uid) : null;
+  const userRef = useMemoFirebase(() => (
+    user && db ? doc(db, 'users', user.uid) : null
+  ), [db, user?.uid]);
+  
   const { data: profileData, loading } = useDoc(userRef);
 
   const [name, setName] = useState('');
@@ -88,7 +91,7 @@ export default function ProfilePage() {
               <Shield className="w-3 h-3" /> {profileData?.role?.toUpperCase() || 'USER'}
             </CardDescription>
             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
-              <Calendar className="w-3 h-3" /> Joined {profileData?.createdAt ? new Date(profileData.createdAt.seconds * 1000).toLocaleDateString() : 'Recently'}
+              <Calendar className="w-3 h-3" /> Joined {profileData?.createdAt ? (profileData.createdAt.seconds ? new Date(profileData.createdAt.seconds * 1000).toLocaleDateString() : 'Recently') : 'Recently'}
             </div>
           </div>
         </CardHeader>
