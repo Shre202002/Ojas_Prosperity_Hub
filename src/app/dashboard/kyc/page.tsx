@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser, useFirestore, useDoc, useCollection } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, query, collection, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,8 @@ import {
   Camera,
   FileText,
   MapPin,
-  Loader2
+  Loader2,
+  UserPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,11 +28,17 @@ export default function KYCPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const distributorRef = user && db ? doc(db, 'distributors', user.uid) : null;
+  const distributorRef = useMemoFirebase(() => (
+    user && db ? doc(db, 'distributors', user.uid) : null
+  ), [db, user?.uid]);
+  
   const { data: distributor } = useDoc(distributorRef);
 
   // Check for existing submission
-  const kycQuery = db && user ? query(collection(db, 'kycSubmissions'), where('distributorId', '==', user.uid)) : null;
+  const kycQuery = useMemoFirebase(() => (
+    db && user ? query(collection(db, 'kycSubmissions'), where('distributorId', '==', user.uid)) : null
+  ), [db, user?.uid]);
+  
   const { data: submissions, loading: loadingSubmissions } = useCollection(kycQuery);
   const latestSubmission = submissions?.[0];
 
@@ -222,5 +229,3 @@ export default function KYCPage() {
     </div>
   );
 }
-
-import { UserPlus } from 'lucide-react';

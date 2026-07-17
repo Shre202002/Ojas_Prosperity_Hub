@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useDoc, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,8 +11,6 @@ import {
   UserPlus, 
   ChevronRight, 
   ChevronDown, 
-  User, 
-  TrendingUp,
   MoreVertical,
   PlusCircle
 } from 'lucide-react';
@@ -28,13 +25,18 @@ interface TreeNodeProps {
 function TreeNode({ id, mode, level }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 1);
   const db = useFirestore();
-  const distributorRef = db ? doc(db, 'distributors', id) : null;
+  
+  const distributorRef = useMemoFirebase(() => (
+    db ? doc(db, 'distributors', id) : null
+  ), [db, id]);
+  
   const { data: node, loading } = useDoc(distributorRef);
 
   // For Sponsor mode, fetch all direct referrals
-  const childrenQuery = db && mode === 'sponsor' 
-    ? query(collection(db, 'distributors'), where('sponsorId', '==', id))
-    : null;
+  const childrenQuery = useMemoFirebase(() => (
+    db && mode === 'sponsor' ? query(collection(db, 'distributors'), where('sponsorId', '==', id)) : null
+  ), [db, id, mode]);
+  
   const { data: sponsorChildren } = useCollection(childrenQuery);
 
   if (loading) return <div className="p-4 animate-pulse bg-slate-100 rounded-xl w-64 h-32" />;

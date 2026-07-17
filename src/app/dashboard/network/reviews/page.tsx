@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser, useFirestore, useCollection } from '@/firebase';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   Clock, 
   ExternalLink,
   Search,
-  AlertCircle,
+  MapPin,
   Loader2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -31,9 +31,10 @@ export default function KYCReviewQueue() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch all submissions where current user is the sponsor
-  const submissionsQuery = db && user 
-    ? query(collection(db, 'kycSubmissions'), where('sponsorId', '==', user.uid))
-    : null;
+  const submissionsQuery = useMemoFirebase(() => (
+    db && user ? query(collection(db, 'kycSubmissions'), where('sponsorId', '==', user.uid)) : null
+  ), [db, user?.uid]);
+  
   const { data: submissions, loading } = useCollection(submissionsQuery);
 
   const pendingSubmissions = submissions?.filter(s => s.status === 'pending') || [];

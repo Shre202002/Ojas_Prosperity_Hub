@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useAuth, useUser, useFirestore, useDoc } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,10 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const distributorRef = user && db ? doc(db, 'distributors', user.uid) : null;
+  const distributorRef = useMemoFirebase(() => (
+    user && db ? doc(db, 'distributors', user.uid) : null
+  ), [db, user?.uid]);
+  
   const { data: distributor, loading } = useDoc(distributorRef);
 
   if (loading) return (
