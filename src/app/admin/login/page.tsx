@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,11 +41,27 @@ export default function AdminLoginPage() {
 
     setLoading(true);
     try {
+      let user;
       if (isSetupMode) {
         // Initialize Super Admin Account
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        user = userCredential.user;
         
+        toast({
+          title: 'Admin Created',
+          description: 'Your Super Admin account has been initialized.',
+        });
+      } else {
+        // Standard Admin Login
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        user = userCredential.user;
+      }
+
+      // Self-healing: Ensure Admin Profile exists in Firestore
+      const distRef = doc(db, 'distributors', user.uid);
+      const distSnap = await getDoc(distRef);
+
+      if (!distSnap.exists()) {
         const newRefCode = "ADMIN-" + Math.random().toString(36).substring(2, 7).toUpperCase();
         
         // Create User Profile
@@ -59,7 +75,7 @@ export default function AdminLoginPage() {
         });
 
         // Create Distributor Profile
-        await setDoc(doc(db, 'distributors', user.uid), {
+        await setDoc(distRef, {
           uid: user.uid,
           name: 'Super Admin',
           email: user.email,
@@ -79,36 +95,32 @@ export default function AdminLoginPage() {
 
         // Register Ref Code
         await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
-
-        toast({
-          title: 'Admin Initialized',
-          description: 'Your Super Admin account has been created successfully.',
-        });
       } else {
-        // Standard Admin Login
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
+        // Just update last login
         await setDoc(doc(db, 'users', user.uid), { 
           lastLogin: serverTimestamp(),
           role: 'admin'
         }, { merge: true });
-        
-        toast({
-          title: 'Welcome, Super Admin',
-          description: 'Platform management mode activated.',
-        });
       }
+
+      toast({
+        title: 'Welcome, Super Admin',
+        description: 'Platform management mode activated.',
+      });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error(error);
       let message = 'Invalid credentials for admin portal.';
-      if (error.code === 'auth/email-already-in-use') message = 'Admin account already exists. Please login instead.';
+      if (error.code === 'auth/email-already-in-use') {
+        message = 'Account already exists. Please login instead.';
+        setIsSetupMode(false);
+      }
       if (error.code === 'auth/weak-password') message = 'Password should be at least 6 characters.';
+      if (error.code === 'auth/user-not-found') message = 'Admin account not found. Please use Setup mode first.';
+      if (error.code === 'auth/wrong-password') message = 'Incorrect password for admin portal.';
       
       toast({
         variant: 'destructive',
-        title: 'Authentication Failed',
+        title: 'Authentication Error',
         description: message,
       });
     } finally {
@@ -118,7 +130,6 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Decorative Background */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary rounded-full blur-[120px]"></div>
