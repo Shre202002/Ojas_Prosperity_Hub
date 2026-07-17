@@ -18,7 +18,8 @@ import {
   Target,
   Trophy,
   UserPlus,
-  Loader2
+  Loader2,
+  Crown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -83,13 +84,16 @@ export default function DashboardPage() {
     toast({ title: 'Referral link copied!', description: 'Share this to grow your network.' });
   };
 
+  const isAdmin = distributor.rank === 'Admin';
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto py-8 px-4">
       {/* Header Band */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl">
+          <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl relative">
             {distributor.name?.[0] || 'U'}
+            {isAdmin && <Crown className="w-6 h-6 text-yellow-500 absolute -top-2 -right-2 drop-shadow-md" />}
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-3">
@@ -104,7 +108,7 @@ export default function DashboardPage() {
                 <ShieldCheck className={`w-4 h-4 ${distributor.kycStatus === 'verified' ? 'text-emerald-500' : 'text-slate-400'}`} />
                 KYC: {distributor.kycStatus?.toUpperCase()}
               </span>
-              <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 font-bold">
+              <Badge variant="outline" className={`${isAdmin ? 'text-yellow-600 border-yellow-200 bg-yellow-50' : 'text-primary border-primary/20 bg-primary/5'} font-bold`}>
                 {distributor.rank?.toUpperCase()}
               </Badge>
             </div>

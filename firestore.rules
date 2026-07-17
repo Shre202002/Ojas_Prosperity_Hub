@@ -13,17 +13,19 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && 
-        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.rank == 'Admin';
+      return isSignedIn() && (
+        request.auth.token.email == 'sriyanshgupta24@gmail.com' ||
+        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.rank == 'Admin'
+      );
     }
 
     // Distributors collection
     match /distributors/{distributorId} {
       allow read: if isSignedIn();
-      // Only server/admin can update critical tree fields
-      allow update: if isOwner(distributorId) && 
-        !request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny(['parentId', 'leftChildId', 'rightChildId', 'leftCount', 'rightCount', 'rank']);
+      // Admin or Owner can update, but critical tree fields are protected
+      allow update: if (isOwner(distributorId) || isAdmin()) && 
+        (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['parentId', 'leftChildId', 'rightChildId', 'leftCount', 'rightCount', 'rank', 'sponsorId']));
       allow create: if isSignedIn(); 
     }
 
@@ -41,10 +43,8 @@ service cloud.firestore {
 
     // KYC Submissions
     match /kycSubmissions/{submissionId} {
-      // Distributor can read and create their own
       allow read, create: if isSignedIn() && request.resource.data.distributorId == request.auth.uid;
       
-      // Sponsor can read and update status for their referrals
       allow read: if isSignedIn() && resource.data.sponsorId == request.auth.uid;
       allow update: if isSignedIn() && resource.data.sponsorId == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys()
@@ -55,7 +55,7 @@ service cloud.firestore {
     
     // Users fallback for standard profile data
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if isOwner(userId) || isAdmin();
     }
   }
 }

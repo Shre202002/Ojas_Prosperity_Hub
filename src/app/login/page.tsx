@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -15,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+
+const ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -68,6 +69,8 @@ export default function LoginPage() {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
 
+      const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
+
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           uid: user.uid,
@@ -75,12 +78,15 @@ export default function LoginPage() {
           email: user.email,
           photoURL: user.photoURL || '',
           provider: 'google',
-          role: 'user',
+          role: isAdmin ? 'admin' : 'user',
           createdAt: serverTimestamp(),
           lastLogin: serverTimestamp(),
         });
       } else {
-        await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
+        await setDoc(userRef, { 
+          lastLogin: serverTimestamp(),
+          role: isAdmin ? 'admin' : userSnap.data().role || 'user'
+        }, { merge: true });
       }
 
       toast({

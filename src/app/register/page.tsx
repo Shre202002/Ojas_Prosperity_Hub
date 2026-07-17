@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const PACKAGES = [
@@ -20,6 +19,8 @@ const PACKAGES = [
   { id: 'growth', name: 'Growth DS', price: 15000, bv: 8000, description: 'Balanced mid-tier for growth' },
   { id: 'platinum', name: 'Platinum DS', price: 40000, bv: 22000, description: 'Highest rank track unlocked' },
 ];
+
+const ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -41,11 +42,15 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
 
+  const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL;
+
   useEffect(() => {
-    if (refCode.length >= 6) {
+    if (refCode.length >= 6 && !isAdminEmail) {
       validateReferral(refCode);
+    } else if (isAdminEmail) {
+      setSponsorData({ name: 'System (Admin Mode)', uid: 'system' });
     }
-  }, [refCode]);
+  }, [refCode, isAdminEmail]);
 
   async function validateReferral(code: string) {
     if (!db) return;
@@ -73,7 +78,8 @@ export default function RegisterPage() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth || !db || !selectedPackage || !sponsorData) return;
+    if (!auth || !db || !selectedPackage) return;
+    if (!isAdminEmail && !sponsorData) return;
 
     setLoading(true);
     try {
@@ -82,10 +88,7 @@ export default function RegisterPage() {
       const user = userCredential.user;
       await updateProfile(user, { displayName: name });
 
-      // 2. Mock Payment Success (In production, use Razorpay)
-      const pkg = PACKAGES.find(p => p.id === selectedPackage);
-      
-      // 3. Create Distributor Doc
+      // 2. Create Distributor Doc
       const newRefCode = Math.random().toString(36).substring(2, 9).toUpperCase();
       const distributorData = {
         uid: user.uid,
@@ -93,10 +96,10 @@ export default function RegisterPage() {
         email,
         phone,
         referralCode: newRefCode,
-        sponsorId: sponsorData.uid,
+        sponsorId: isAdminEmail ? null : sponsorData.uid,
         packageId: selectedPackage,
-        rank: 'Distributor',
-        kycStatus: 'none',
+        rank: isAdminEmail ? 'Admin' : 'Distributor',
+        kycStatus: isAdminEmail ? 'verified' : 'none',
         leftCount: 0,
         rightCount: 0,
         leftBV: 0,
@@ -109,9 +112,18 @@ export default function RegisterPage() {
 
       await setDoc(doc(db, 'distributors', user.uid), distributorData);
       await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
+      
+      // Also create a basic user doc
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        name,
+        email,
+        role: isAdminEmail ? 'admin' : 'user',
+        createdAt: serverTimestamp(),
+      });
 
       toast({
-        title: 'Welcome aboard!',
+        title: isAdminEmail ? 'Admin account created!' : 'Welcome aboard!',
         description: 'Your distributor account has been activated.',
       });
 
@@ -145,20 +157,38 @@ export default function RegisterPage() {
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  placeholder="email@example.com" 
+                  className="h-12" 
+                />
+                {isAdminEmail && (
+                  <p className="text-xs font-bold text-primary flex items-center gap-1 mt-1">
+                    <ShieldCheck className="w-3 h-3" /> Admin Registration Mode Detected
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="refCode">Referral Code</Label>
                 <div className="relative">
                   <Input 
                     id="refCode"
                     value={refCode}
                     onChange={(e) => setRefCode(e.target.value.toUpperCase())}
-                    placeholder="Enter Sponsor Code"
+                    placeholder={isAdminEmail ? "Bypassed for Admin" : "Enter Sponsor Code"}
                     className="h-12 uppercase font-mono-data"
+                    disabled={isAdminEmail}
                   />
                   {validatingRef && <Loader2 className="absolute right-3 top-3 w-6 h-6 animate-spin text-muted-foreground" />}
                 </div>
               </div>
 
-              {sponsorData ? (
+              {!isAdminEmail && sponsorData ? (
                 <Alert className="bg-emerald-50 border-emerald-200">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                   <AlertTitle className="text-emerald-800">Valid Sponsor</AlertTitle>
@@ -166,12 +196,21 @@ export default function RegisterPage() {
                     You are being referred by <strong>{sponsorData.name}</strong>.
                   </AlertDescription>
                 </Alert>
-              ) : refCode.length >= 6 && !validatingRef ? (
+              ) : !isAdminEmail && refCode.length >= 6 && !validatingRef ? (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Invalid Code</AlertTitle>
                   <AlertDescription>
                     This referral code doesn't exist. You must have a valid sponsor to join.
+                  </AlertDescription>
+                </Alert>
+              ) : isAdminEmail ? (
+                <Alert className="bg-primary/5 border-primary/20">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary font-bold">Admin Privileges</AlertTitle>
+                  <AlertDescription className="text-primary/80">
+                    The referral code requirement is waived for the primary administrator account.
+                    You will be the root of the network.
                   </AlertDescription>
                 </Alert>
               ) : null}
@@ -188,18 +227,13 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" className="h-12" />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-12" />
               </div>
 
               <Button 
                 onClick={() => setStep(2)} 
-                disabled={!sponsorData || !email || !password || !name} 
+                disabled={(!isAdminEmail && !sponsorData) || !email || !password || !name} 
                 className="w-full h-14 text-lg font-bold gap-2"
               >
                 Choose Package <ArrowRight className="w-5 h-5" />
