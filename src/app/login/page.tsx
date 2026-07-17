@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -33,6 +33,16 @@ export default function LoginPage() {
     e.preventDefault();
     if (!auth || !db) return;
 
+    // Redirect Super Admin to their dedicated portal if they try standard login
+    if (email.toLowerCase() === ADMIN_EMAIL) {
+      toast({
+        title: 'Admin Detected',
+        description: 'Redirecting to Super Admin portal...',
+      });
+      router.push('/admin/login');
+      return;
+    }
+
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -50,7 +60,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.code || 'Invalid email or password.',
+        description: 'Invalid email or password.',
       });
     } finally {
       setLoading(false);
@@ -125,8 +135,8 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md shadow-2xl border-none">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline font-bold">Welcome Back</CardTitle>
-          <CardDescription>Login to manage your business.</CardDescription>
+          <CardTitle className="text-2xl font-headline font-bold">Member Login</CardTitle>
+          <CardDescription>Enter your credentials to access your downline.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleEmailLogin} className="space-y-4">
@@ -189,12 +199,20 @@ export default function LoginPage() {
             Continue with Google
           </Button>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
+        <CardFooter className="flex flex-col space-y-4">
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account? <Link href="/register" className="text-primary font-bold hover:underline">Register now</Link>
           </p>
+          <Separator />
+          <Link href="/admin/login" className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+            <ShieldCheck className="w-3 h-3" /> Staff & Administrator Portal
+          </Link>
         </CardFooter>
       </Card>
     </div>
   );
+}
+
+function Separator() {
+  return <div className="h-px w-full bg-slate-100" />;
 }
