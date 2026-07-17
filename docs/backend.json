@@ -1,29 +1,90 @@
+
 {
   "entities": {
-    "User": {
-      "title": "User Profile",
-      "description": "Information about an Ojas Care member.",
+    "Distributor": {
+      "title": "Distributor",
+      "description": "A member of the MLM network.",
       "type": "object",
       "properties": {
-        "uid": { "type": "string", "description": "The unique Firebase Auth UID." },
-        "name": { "type": "string", "description": "Full name of the user." },
-        "email": { "type": "string", "format": "email", "description": "User's email address." },
-        "photoURL": { "type": "string", "description": "URL to the user's profile picture." },
-        "provider": { "type": "string", "description": "The auth provider used (e.g., google, password)." },
-        "role": { "type": "string", "enum": ["user", "admin"], "description": "User's role in the platform." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "When the account was created." },
-        "lastLogin": { "type": "string", "format": "date-time", "description": "Timestamp of the last login." }
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "sponsorId": { "type": "string" },
+        "sponsorChildIds": { "type": "array", "items": { "type": "string" } },
+        "parentId": { "type": "string" },
+        "position": { "type": "string", "enum": ["left", "right"] },
+        "leftChildId": { "type": "string" },
+        "rightChildId": { "type": "string" },
+        "packageId": { "type": "string" },
+        "rank": { "type": "string" },
+        "kycStatus": { "type": "string", "enum": ["none", "pending", "verified", "rejected"] },
+        "leftCount": { "type": "number" },
+        "rightCount": { "type": "number" },
+        "leftBV": { "type": "number" },
+        "rightBV": { "type": "number" },
+        "incentiveBalance": { "type": "number" },
+        "shoppingBalance": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "ancestorIds": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["uid", "email", "name"]
+      "required": ["uid", "email", "name", "referralCode"]
+    },
+    "Package": {
+      "title": "Package",
+      "description": "MLM entry packages.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "bvCredited": { "type": "number" },
+        "active": { "type": "boolean" }
+      }
+    },
+    "KYCSubmission": {
+      "title": "KYC Submission",
+      "description": "Member identity verification data.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "distributorId": { "type": "string" },
+        "sponsorId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "idProofUrl": { "type": "string" },
+        "addressProofUrl": { "type": "string" },
+        "selfieUrl": { "type": "string" },
+        "rejectionReason": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
-    "providers": ["google", "password"]
+    "providers": ["password"]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": "User",
-      "description": "Collection of user profiles indexed by their Auth UID."
+    "/distributors/{distributorId}": {
+      "schema": "Distributor",
+      "description": "Main distributor profiles."
+    },
+    "/packages/{packageId}": {
+      "schema": "Package",
+      "description": "Available entry packages."
+    },
+    "/kycSubmissions/{submissionId}": {
+      "schema": "KYCSubmission",
+      "description": "Member identity verification data."
+    },
+    "/referralCodes/{code}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "ownerId": { "type": "string" }
+        }
+      },
+      "description": "Fast lookup for referral codes."
     }
   }
 }

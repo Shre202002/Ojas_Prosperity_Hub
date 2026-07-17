@@ -1,208 +1,255 @@
+
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useFirestore } from '@/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Leaf, User, Mail, Lock, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const PACKAGES = [
+  { id: 'starter', name: 'Starter DS', price: 5000, bv: 2500, description: 'Entry tier for new sellers' },
+  { id: 'growth', name: 'Growth DS', price: 15000, bv: 8000, description: 'Balanced mid-tier for growth' },
+  { id: 'platinum', name: 'Platinum DS', price: 40000, bv: 22000, description: 'Highest rank track unlocked' },
+];
+
 export default function RegisterPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  
-  const auth = useAuth();
-  const db = useFirestore();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [refCode, setRefCode] = useState(searchParams.get('ref') || '');
+  const [sponsorData, setSponsorData] = useState<any>(null);
+  const [validatingRef, setValidatingRef] = useState(false);
+
+  // Form states
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (refCode.length >= 6) {
+      validateReferral(refCode);
+    }
+  }, [refCode]);
+
+  async function validateReferral(code: string) {
+    if (!db) return;
+    setValidatingRef(true);
+    try {
+      const refRef = doc(db, 'referralCodes', code);
+      const refSnap = await getDoc(refRef);
+      if (refSnap.exists()) {
+        const ownerId = refSnap.data().ownerId;
+        const ownerSnap = await getDoc(doc(db, 'distributors', ownerId));
+        if (ownerSnap.exists()) {
+          setSponsorData(ownerSnap.data());
+        } else {
+          setSponsorData(null);
+        }
+      } else {
+        setSponsorData(null);
+      }
+    } catch (e) {
+      setSponsorData(null);
+    } finally {
+      setValidatingRef(false);
+    }
+  }
+
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth || !db) return;
-
-    if (password !== confirmPassword) {
-      return toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Passwords do not match.',
-      });
-    }
-
-    if (password.length < 8) {
-      return toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Password must be at least 8 characters long.',
-      });
-    }
+    if (!auth || !db || !selectedPackage || !sponsorData) return;
 
     setLoading(true);
     try {
+      // 1. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
       await updateProfile(user, { displayName: name });
 
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, {
+      // 2. Mock Payment Success (In production, use Razorpay)
+      const pkg = PACKAGES.find(p => p.id === selectedPackage);
+      
+      // 3. Create Distributor Doc
+      const newRefCode = Math.random().toString(36).substring(2, 9).toUpperCase();
+      const distributorData = {
         uid: user.uid,
-        name: name,
-        email: email,
-        photoURL: '',
-        provider: 'password',
-        role: 'user',
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp(),
-      });
+        name,
+        email,
+        phone,
+        referralCode: newRefCode,
+        sponsorId: sponsorData.uid,
+        packageId: selectedPackage,
+        rank: 'Distributor',
+        kycStatus: 'none',
+        leftCount: 0,
+        rightCount: 0,
+        leftBV: 0,
+        rightBV: 0,
+        incentiveBalance: 0,
+        shoppingBalance: 0,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'distributors', user.uid), distributorData);
+      await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
 
       toast({
-        title: 'Registration Successful',
-        description: 'Welcome to Ayurvedic Kendra!',
+        title: 'Welcome aboard!',
+        description: 'Your distributor account has been activated.',
       });
+
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (e: any) {
       toast({
         variant: 'destructive',
-        title: 'Registration Failed',
-        description: error.code || 'Could not create account.',
+        title: 'Registration failed',
+        description: e.message,
       });
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleGoogleLogin = async () => {
-    if (!auth || !db) return;
-
-    setGoogleLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          name: user.displayName || 'Anonymous',
-          email: user.email,
-          photoURL: user.photoURL || '',
-          provider: 'google',
-          role: 'user',
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-        });
-      } else {
-        await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
-      }
-
-      toast({
-        title: 'Registration Successful',
-        description: `Welcome, ${user.displayName || 'Member'}!`,
-      });
-      router.push('/dashboard');
-    } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user') {
-        toast({
-          variant: 'destructive',
-          title: 'Google Auth Failed',
-          description: error.code || 'Could not sign in with Google.',
-        });
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
+  if (!db) return null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]">
-      <Link href="/" className="inline-flex items-center gap-2 mb-8">
-        <div className="bg-primary text-white p-2 rounded-full">
-          <Leaf className="w-6 h-6" />
-        </div>
-        <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
-      </Link>
-
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline font-bold">Join Ayurvedic Kendra</CardTitle>
-          <CardDescription>Start your journey to health and prosperity.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input id="name" className="pl-10 rounded-xl" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input id="email" type="email" className="pl-10 rounded-xl" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input id="password" type="password" className="pl-10 rounded-xl" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input id="confirmPassword" type="password" className="pl-10 rounded-xl" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-              </div>
-            </div>
-            <Button type="submit" className="w-full h-12 font-bold rounded-xl" disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : 'Create Account'}
-            </Button>
-          </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or register with</span>
-            </div>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl border-none shadow-2xl">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+            <Package className="w-6 h-6" />
           </div>
+          <div className="space-y-1">
+            <CardTitle className="text-3xl font-headline font-bold">Join the Network</CardTitle>
+            <CardDescription>Step into your future in direct selling.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="p-8">
+          {step === 1 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-2">
+                <Label htmlFor="refCode">Referral Code</Label>
+                <div className="relative">
+                  <Input 
+                    id="refCode"
+                    value={refCode}
+                    onChange={(e) => setRefCode(e.target.value.toUpperCase())}
+                    placeholder="Enter Sponsor Code"
+                    className="h-12 uppercase font-mono-data"
+                  />
+                  {validatingRef && <Loader2 className="absolute right-3 top-3 w-6 h-6 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
 
-          <Button variant="outline" className="w-full h-12 font-bold rounded-xl" onClick={handleGoogleLogin} disabled={googleLoading}>
-            {googleLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-            )}
-            Continue with Google
-          </Button>
+              {sponsorData ? (
+                <Alert className="bg-emerald-50 border-emerald-200">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <AlertTitle className="text-emerald-800">Valid Sponsor</AlertTitle>
+                  <AlertDescription className="text-emerald-700">
+                    You are being referred by <strong>{sponsorData.name}</strong>.
+                  </AlertDescription>
+                </Alert>
+              ) : refCode.length >= 6 && !validatingRef ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Invalid Code</AlertTitle>
+                  <AlertDescription>
+                    This referral code doesn't exist. You must have a valid sponsor to join.
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91..." className="h-12" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" className="h-12" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-12" />
+              </div>
+
+              <Button 
+                onClick={() => setStep(2)} 
+                disabled={!sponsorData || !email || !password || !name} 
+                className="w-full h-14 text-lg font-bold gap-2"
+              >
+                Choose Package <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {PACKAGES.map((pkg) => (
+                  <div 
+                    key={pkg.id}
+                    onClick={() => setSelectedPackage(pkg.id)}
+                    className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      selectedPackage === pkg.id 
+                        ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    {selectedPackage === pkg.id && (
+                      <CheckCircle2 className="absolute top-4 right-4 w-6 h-6 text-primary" />
+                    )}
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="font-headline font-bold text-xl">{pkg.name}</h4>
+                        <p className="text-xs text-muted-foreground">{pkg.description}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-3xl font-mono-data font-bold">₹{pkg.price.toLocaleString()}</div>
+                        <Badge variant="secondary" className="font-mono-data">{pkg.bv} BV</Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                <Button variant="ghost" onClick={() => setStep(1)} className="h-14 px-8 font-bold">Back</Button>
+                <Button 
+                  onClick={handleRegister} 
+                  disabled={loading || !selectedPackage} 
+                  className="flex-1 h-14 text-lg font-bold gap-2"
+                >
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Activate Account & Dashboard</>}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <p className="text-sm text-center text-muted-foreground">
-            Already have an account? <Link href="/login" className="text-primary font-bold hover:underline">Login here</Link>
-          </p>
-        </CardFooter>
       </Card>
     </div>
   );

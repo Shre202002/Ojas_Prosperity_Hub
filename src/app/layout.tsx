@@ -1,11 +1,17 @@
-import type {Metadata} from 'next';
+
+import type { Metadata } from 'next';
 import './globals.css';
+import { Playfair_Display, JetBrains_Mono, DM_Sans } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' });
+const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
+
 export const metadata: Metadata = {
-  title: 'Ayurvedic Kendra & Neuropathy - सेहत से समृद्धि',
-  description: 'Ayurvedic Health Products and Prosperity Platform',
+  title: 'Direct Seller Portal',
+  description: 'Premium Binary MLM Platform',
 };
 
 export default function RootLayout({
@@ -15,12 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased selection:bg-primary/20">
+      <body className={`${dmSans.variable} ${playfair.variable} ${jetbrains.variable} font-sans antialiased`}>
         <FirebaseClientProvider>
           {children}
           <Toaster />
