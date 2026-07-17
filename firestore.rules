@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -12,7 +13,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
+    function isSuperAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'sriyanshgupta24@gmail.com' ||
         get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.rank == 'Admin'
@@ -22,17 +23,21 @@ service cloud.firestore {
     // Distributors collection
     match /distributors/{distributorId} {
       allow read: if isSignedIn();
-      // Admin or Owner can update, but critical tree fields are protected
-      allow update: if (isOwner(distributorId) || isAdmin()) && 
-        (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys()
+      // Super Admin can read all distributors
+      allow read: if isSuperAdmin();
+      
+      // Admin or Owner can update, but critical tree fields are protected for non-admins
+      allow update: if (isOwner(distributorId) || isSuperAdmin()) && 
+        (isSuperAdmin() || !request.resource.data.diff(resource.data).affectedKeys()
         .hasAny(['parentId', 'leftChildId', 'rightChildId', 'leftCount', 'rightCount', 'rank', 'sponsorId']));
+      
       allow create: if isSignedIn(); 
     }
 
     // Packages collection
     match /packages/{packageId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin();
     }
 
     // Referral Codes lookup
@@ -50,12 +55,23 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason']);
         
-      allow read, write: if isAdmin();
+      allow read, write: if isSuperAdmin();
+    }
+
+    // Transactions collection
+    match /transactions/{transactionId} {
+      // Owners can read their own transactions
+      allow read: if isSignedIn() && resource.data.distributorId == request.auth.uid;
+      // Super Admin can read and update (for refunds/audit) all transactions
+      allow read, update: if isSuperAdmin();
+      // Mutations to status/payment details should generally be Cloud Function only,
+      // but we allow Super Admin for manual reconciliation if needed.
+      allow create: if isSignedIn(); 
     }
     
     // Users fallback for standard profile data
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId) || isSuperAdmin();
     }
   }
 }

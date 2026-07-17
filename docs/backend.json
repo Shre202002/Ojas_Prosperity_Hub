@@ -44,6 +44,24 @@
         "active": { "type": "boolean" }
       }
     },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial records of package purchases and payouts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "distributorId": { "type": "string" },
+        "packageId": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["created", "paid", "failed", "refunded"] },
+        "razorpayOrderId": { "type": "string" },
+        "razorpayPaymentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "failureReason": { "type": "string" }
+      }
+    },
     "KYCSubmission": {
       "title": "KYC Submission",
       "description": "Member identity verification data.",
@@ -85,6 +103,10 @@
         }
       },
       "description": "Fast lookup for referral codes."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Financial ledger for the platform."
     }
   }
 }

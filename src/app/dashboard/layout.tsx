@@ -1,10 +1,12 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 import { 
   LayoutDashboard, 
   Network, 
@@ -16,7 +18,10 @@ import {
   TrendingUp,
   Package,
   ClipboardCheck,
-  Sparkles
+  Sparkles,
+  History,
+  Globe,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -36,7 +41,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { user, loading } = useUser(auth);
+
+  const distributorRef = useMemoFirebase(() => (
+    user && db ? doc(db, 'distributors', user.uid) : null
+  ), [db, user?.uid]);
+  
+  const { data: distributor } = useDoc(distributorRef);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -51,6 +63,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   if (!user) return null;
+
+  const isAdmin = distributor?.rank === 'Admin' || user.email === 'sriyanshgupta24@gmail.com';
 
   return (
     <div className="flex h-screen bg-slate-50/50">
@@ -81,23 +95,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
               </Link>
             ))}
+
+            {isAdmin && (
+              <div className="pt-8 space-y-1.5">
+                <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Management</p>
+                <Link href="/dashboard/admin/transactions">
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                    pathname === '/dashboard/admin/transactions' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                  )}>
+                    <History className="w-5 h-5" />
+                    <span className="font-bold text-sm tracking-tight">Ledger Audit</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard/admin/trees">
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                    pathname === '/dashboard/admin/trees' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                  )}>
+                    <Globe className="w-5 h-5" />
+                    <span className="font-bold text-sm tracking-tight">Global Trees</span>
+                  </div>
+                </Link>
+              </div>
+            )}
           </nav>
         </ScrollArea>
 
         <div className="p-6 border-t mt-auto">
-          <div className="bg-slate-900 p-6 rounded-[2rem] mb-6 relative overflow-hidden group shadow-2xl">
-            <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors"></div>
-            <div className="space-y-3 relative z-10">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Next Achievement</p>
-                <TrendingUp className="w-3 h-3 text-primary" />
-              </div>
-              <p className="text-white font-headline font-bold text-sm">Target: Gold Rank</p>
-              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-primary w-[65%] shadow-[0_0_8px_rgba(255,87,1,0.5)]" />
-              </div>
-            </div>
-          </div>
           <Button 
             variant="ghost" 
             className="w-full justify-start gap-3 text-slate-500 hover:text-red-500 hover:bg-red-50 h-14 rounded-2xl transition-all"

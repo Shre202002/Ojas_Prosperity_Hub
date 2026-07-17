@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,7 +13,8 @@ import {
   ChevronRight, 
   ChevronDown, 
   MoreVertical,
-  PlusCircle
+  PlusCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,9 +22,10 @@ interface TreeNodeProps {
   id: string;
   mode: 'sponsor' | 'placement';
   level: number;
+  unrestricted?: boolean;
 }
 
-function TreeNode({ id, mode, level }: TreeNodeProps) {
+function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 1);
   const db = useFirestore();
   
@@ -45,9 +48,10 @@ function TreeNode({ id, mode, level }: TreeNodeProps) {
   return (
     <div className="flex flex-col items-center">
       <Card className={cn(
-        "w-64 border-none shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl",
+        "w-64 border-none shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl relative",
         node.status === 'inactive' ? 'opacity-60' : ''
       )}>
+        {unrestricted && <ShieldCheck className="absolute top-2 right-2 w-3 h-3 text-primary opacity-50" />}
         <div className={cn("h-1.5 w-full", mode === 'placement' ? 'bg-primary' : 'bg-slate-900')} />
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-3">
@@ -59,9 +63,6 @@ function TreeNode({ id, mode, level }: TreeNodeProps) {
               <p className="text-sm font-bold truncate">{node.name}</p>
               <p className="text-[10px] font-mono-data text-muted-foreground uppercase">{node.uid.slice(0, 8)}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-              <MoreVertical className="w-4 h-4" />
-            </Button>
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t">
@@ -103,22 +104,21 @@ function TreeNode({ id, mode, level }: TreeNodeProps) {
 
       {isExpanded && (
         <div className="mt-8 flex gap-8 relative">
-          {/* Connector lines - simplified for the pass */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200" />
           
           {mode === 'sponsor' ? (
             sponsorChildren?.map((child: any) => (
-              <TreeNode key={child.uid} id={child.uid} mode={mode} level={level + 1} />
+              <TreeNode key={child.uid} id={child.uid} mode={mode} level={level + 1} unrestricted={unrestricted} />
             ))
           ) : (
             <>
               {node.leftChildId ? (
-                <TreeNode id={node.leftChildId} mode={mode} level={level + 1} />
+                <TreeNode id={node.leftChildId} mode={mode} level={level + 1} unrestricted={unrestricted} />
               ) : (
                 <EmptyNode position="Left" />
               )}
               {node.rightChildId ? (
-                <TreeNode id={node.rightChildId} mode={mode} level={level + 1} />
+                <TreeNode id={node.rightChildId} mode={mode} level={level + 1} unrestricted={unrestricted} />
               ) : (
                 <EmptyNode position="Right" />
               )}
@@ -140,18 +140,15 @@ function EmptyNode({ position }: { position: string }) {
         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{position} Slot Open</p>
         <p className="text-[10px] text-slate-400">Invite someone to fill this leg</p>
       </div>
-      <Button variant="outline" size="sm" className="h-9 font-bold text-[10px] uppercase gap-2">
-        <UserPlus className="w-3 h-3" /> Copy Invite
-      </Button>
     </Card>
   );
 }
 
-export function GenealogyTree({ rootId, mode }: { rootId: string; mode: 'sponsor' | 'placement' }) {
+export function GenealogyTree({ rootId, mode, unrestricted }: { rootId: string; mode: 'sponsor' | 'placement'; unrestricted?: boolean }) {
   return (
     <div className="p-8 overflow-x-auto">
       <div className="min-w-max flex justify-center pb-20">
-        <TreeNode id={rootId} mode={mode} level={0} />
+        <TreeNode id={rootId} mode={mode} level={0} unrestricted={unrestricted} />
       </div>
     </div>
   );
