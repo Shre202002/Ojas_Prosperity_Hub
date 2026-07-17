@@ -3,10 +3,11 @@
 
 import { useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit, where } from 'firebase/firestore';
+import { collection, query, limit } from 'firebase/firestore';
 import { GenealogyTree } from '@/components/network/GenealogyTree';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Network, Users, Search, ShieldCheck, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
