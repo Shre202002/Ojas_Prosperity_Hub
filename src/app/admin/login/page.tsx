@@ -3,17 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft, Crown } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft, Crown, UserPlus, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const SUPER_ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
 
@@ -21,47 +19,97 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSetupMode, setIsSetupMode] = useState(false);
+  
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
-  const logoImage = PlaceHolderImages.find(img => img.id === 'site-logo');
-
-  const handleAdminLogin = async (e: React.FormEvent) => {
+  const handleAdminAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !db) return;
 
     if (email.toLowerCase() !== SUPER_ADMIN_EMAIL) {
       toast({
         variant: 'destructive',
-        title: 'Access Denied',
-        description: 'This portal is restricted to the Super Administrator.',
+        title: 'Unauthorized Email',
+        description: 'Only the designated Super Admin email can access this gateway.',
       });
       return;
     }
 
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { 
-        lastLogin: serverTimestamp(),
-        role: 'admin'
-      }, { merge: true });
-      
-      toast({
-        title: 'Welcome, Super Admin',
-        description: 'Platform management mode activated.',
-      });
+      if (isSetupMode) {
+        // Initialize Super Admin Account
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        const newRefCode = "ADMIN-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+        
+        // Create User Profile
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          name: 'Super Admin',
+          email: user.email,
+          role: 'admin',
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+        });
+
+        // Create Distributor Profile
+        await setDoc(doc(db, 'distributors', user.uid), {
+          uid: user.uid,
+          name: 'Super Admin',
+          email: user.email,
+          referralCode: newRefCode,
+          sponsorId: null,
+          rank: 'Admin',
+          kycStatus: 'verified',
+          status: 'active',
+          incentiveBalance: 0,
+          shoppingBalance: 0,
+          leftCount: 0,
+          rightCount: 0,
+          leftBV: 0,
+          rightBV: 0,
+          createdAt: new Date().toISOString(),
+        });
+
+        // Register Ref Code
+        await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
+
+        toast({
+          title: 'Admin Initialized',
+          description: 'Your Super Admin account has been created successfully.',
+        });
+      } else {
+        // Standard Admin Login
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        await setDoc(doc(db, 'users', user.uid), { 
+          lastLogin: serverTimestamp(),
+          role: 'admin'
+        }, { merge: true });
+        
+        toast({
+          title: 'Welcome, Super Admin',
+          description: 'Platform management mode activated.',
+        });
+      }
       router.push('/dashboard');
     } catch (error: any) {
+      console.error(error);
+      let message = 'Invalid credentials for admin portal.';
+      if (error.code === 'auth/email-already-in-use') message = 'Admin account already exists. Please login instead.';
+      if (error.code === 'auth/weak-password') message = 'Password should be at least 6 characters.';
+      
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
-        description: 'Invalid credentials for admin portal.',
+        description: message,
       });
     } finally {
       setLoading(false);
@@ -82,7 +130,9 @@ export default function AdminLoginPage() {
             <Crown className="w-10 h-10" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-3xl font-headline font-bold text-white">Super Admin</h1>
+            <h1 className="text-3xl font-headline font-bold text-white">
+              {isSetupMode ? 'Admin Setup' : 'Super Admin'}
+            </h1>
             <p className="text-slate-400 font-medium">Ayurvedic Kendra Management Portal</p>
           </div>
         </div>
@@ -90,11 +140,16 @@ export default function AdminLoginPage() {
         <Card className="border-none shadow-2xl bg-white/10 backdrop-blur-xl border border-white/10 text-white">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl font-headline font-bold flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-primary" /> Secure Gateway
+              <ShieldCheck className="w-5 h-5 text-primary" /> {isSetupMode ? 'Initialize Master Account' : 'Secure Gateway'}
             </CardTitle>
+            <CardDescription className="text-slate-400">
+              {isSetupMode 
+                ? 'Configure your master password to begin.' 
+                : 'Enter your credentials to access the management tools.'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
-            <form onSubmit={handleAdminLogin} className="space-y-4">
+            <form onSubmit={handleAdminAuth} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-300">Admin Email</Label>
                 <div className="relative">
@@ -111,7 +166,9 @@ export default function AdminLoginPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" title="Password" className="text-slate-300">Secret Key</Label>
+                <Label htmlFor="password" title="Password" className="text-slate-300">
+                  {isSetupMode ? 'Create Password' : 'Secret Key'}
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                   <Input 
@@ -125,9 +182,21 @@ export default function AdminLoginPage() {
                 </div>
               </div>
               <Button type="submit" className="w-full h-14 font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 mt-4" disabled={loading}>
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enter Management Portal'}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <span className="flex items-center gap-2">
+                    {isSetupMode ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                    {isSetupMode ? 'Initialize Admin' : 'Enter Management Portal'}
+                  </span>
+                )}
               </Button>
             </form>
+
+            <button 
+              onClick={() => setIsSetupMode(!isSetupMode)}
+              className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors mt-2"
+            >
+              {isSetupMode ? 'Already have an account? Login here' : 'First time? Setup master account'}
+            </button>
           </CardContent>
           <CardFooter>
             <Link href="/login" className="w-full">
