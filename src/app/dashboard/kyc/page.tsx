@@ -53,10 +53,15 @@ export default function KYCPage() {
     setUploading(true);
     try {
       const submissionId = `KYC_${user.uid}_${Date.now()}`;
+      
+      // Determine if this is an individual registration or has a sponsor
+      const reviewerType = distributor.sponsorId ? 'sponsor' : 'admin';
+
       const submissionData = {
         id: submissionId,
         distributorId: user.uid,
-        sponsorId: distributor.sponsorId,
+        sponsorId: distributor.sponsorId || null,
+        reviewerType,
         status: 'pending',
         submittedAt: new Date().toISOString(),
         idProofUrl: 'https://picsum.photos/seed/id/400/300',
@@ -73,7 +78,9 @@ export default function KYCPage() {
       
       toast({
         title: 'KYC Submitted',
-        description: 'Your sponsor will review your documents shortly.',
+        description: reviewerType === 'admin' 
+          ? 'Your documents will be verified by the Admin team.' 
+          : 'Your sponsor will review your documents shortly.',
       });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Submission failed', description: e.message });
@@ -123,7 +130,7 @@ export default function KYCPage() {
           <div className="space-y-2">
             <h2 className="text-3xl font-headline font-bold text-primary">Trust Verified</h2>
             <p className="max-w-md mx-auto text-muted-foreground font-medium">
-              Your identity has been confirmed by your sponsor. You now have full access to all incentives and network features.
+              Your identity has been confirmed. You now have full access to all incentives, network features, and can now refer others.
             </p>
           </div>
         </Card>
@@ -135,7 +142,7 @@ export default function KYCPage() {
           <div className="space-y-2">
             <h2 className="text-3xl font-headline font-bold text-primary">Awaiting Approval</h2>
             <p className="max-w-md mx-auto text-muted-foreground font-medium">
-              Your documents are in the review queue of your sponsor. This process typically takes 24-48 business hours.
+              Your documents are in the review queue. This process typically takes 24-48 business hours.
             </p>
           </div>
         </Card>

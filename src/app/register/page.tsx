@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package, ShieldCheck, CreditCard } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package, ShieldCheck, CreditCard, User, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder } from '@/lib/razorpay-actions';
 
@@ -30,11 +30,15 @@ export default function RegisterPage() {
   const auth = useAuth();
   const db = useFirestore();
 
+  const registrationType = searchParams.get('type') || 'referral';
+  const isIndividual = registrationType === 'individual';
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [refCode, setRefCode] = useState(searchParams.get('ref') || '');
   const [sponsorData, setSponsorData] = useState<any>(null);
+  const [kycError, setKycError] = useState<string | null>(null);
   const [validatingRef, setValidatingRef] = useState(false);
   const [activeOrderId, setOrderId] = useState<string | null>(null);
 
@@ -60,12 +64,13 @@ export default function RegisterPage() {
     script.async = true;
     document.body.appendChild(script);
 
-    // If no ref in URL, check localStorage (Captured from landing page)
-    const storedRef = localStorage.getItem('sponsorId');
-    if (!searchParams.get('ref') && storedRef) {
-      setRefCode(storedRef);
+    if (!isIndividual) {
+      const storedRef = localStorage.getItem('sponsorId');
+      if (!searchParams.get('ref') && storedRef) {
+        setRefCode(storedRef);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, isIndividual]);
 
   useEffect(() => {
     if (transaction?.status === 'paid' && verifying) {
@@ -73,12 +78,11 @@ export default function RegisterPage() {
     }
   }, [transaction?.status, verifying]);
 
-  // Fixed validation effect with proper dependencies
   useEffect(() => {
-    if (!db) return;
+    if (!db || isIndividual) return;
 
     if (isAdminEmail) {
-      setSponsorData({ name: 'System (Admin Mode)', uid: 'system' });
+      setSponsorData({ name: 'System (Admin Mode)', uid: 'system', kycStatus: 'verified' });
       return;
     }
 
@@ -86,12 +90,14 @@ export default function RegisterPage() {
       validateReferral(refCode);
     } else {
       setSponsorData(null);
+      setKycError(null);
     }
-  }, [refCode, isAdminEmail, db]);
+  }, [refCode, isAdminEmail, db, isIndividual]);
 
   async function validateReferral(code: string) {
     if (!db) return;
     setValidatingRef(true);
+    setKycError(null);
     try {
       const refRef = doc(db, 'referralCodes', code);
       const refSnap = await getDoc(refRef);
@@ -99,7 +105,14 @@ export default function RegisterPage() {
         const ownerId = refSnap.data().ownerId;
         const ownerSnap = await getDoc(doc(db, 'distributors', ownerId));
         if (ownerSnap.exists()) {
-          setSponsorData(ownerSnap.data());
+          const owner = ownerSnap.data();
+          // Mandatory KYC Gate for Sponsoring
+          if (owner.kycStatus === 'verified' || owner.rank === 'Admin') {
+            setSponsorData(owner);
+          } else {
+            setSponsorData(null);
+            setKycError("This referral code is not active yet. The sponsor must complete KYC verification first.");
+          }
         } else {
           setSponsorData(null);
         }
@@ -132,7 +145,7 @@ export default function RegisterPage() {
         amount: orderRes.amount,
         currency: orderRes.currency,
         name: 'Wellness Kendra',
-        description: `Enrollment: ${selectedPackage.name}`,
+        description: `${isIndividual ? 'Individual' : 'Referred'} Enrollment: ${selectedPackage.name}`,
         order_id: orderRes.orderId,
         handler: async function (response: any) {
           setVerifying(true);
@@ -170,7 +183,9 @@ export default function RegisterPage() {
         email,
         phone,
         referralCode: newRefCode,
-        sponsorId: isAdminEmail ? null : sponsorData?.uid,
+        sponsorId: isIndividual ? null : (isAdminEmail ? null : sponsorData?.uid),
+        registrationType: isIndividual ? 'individual' : 'referral',
+        treeRootId: isIndividual ? user.uid : (sponsorData?.treeRootId || 'system'),
         packageId: selectedPackage.id,
         rank: isAdminEmail ? 'Admin' : 'Distributor',
         kycStatus: isAdminEmail ? 'verified' : 'none',
@@ -212,11 +227,15 @@ export default function RegisterPage() {
       <Card className="w-full max-w-2xl border-muted shadow-2xl overflow-hidden rounded-[2.5rem] bg-white">
         <CardHeader className="text-center space-y-4 p-10 bg-background border-b border-muted">
           <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20 rotate-3">
-            <Package className="w-8 h-8" />
+             {isIndividual ? <User className="w-8 h-8" /> : <Users className="w-8 h-8" />}
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-4xl font-headline font-bold text-primary">Join the Network</CardTitle>
-            <CardDescription className="text-lg font-medium text-muted-foreground">Step into your future in natural healthcare.</CardDescription>
+            <CardTitle className="text-4xl font-headline font-bold text-primary">
+              {isIndividual ? 'Individual Partner' : 'Join the Network'}
+            </CardTitle>
+            <CardDescription className="text-lg font-medium text-muted-foreground">
+              {isIndividual ? 'Start your own independent wellness legacy.' : 'Step into your future in natural healthcare.'}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="p-10">
@@ -249,51 +268,68 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="refCode" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Code</Label>
-                <div className="relative">
-                  <Input 
-                    id="refCode"
-                    value={refCode}
-                    onChange={(e) => setRefCode(e.target.value.toUpperCase().trim())}
-                    placeholder={isAdminEmail ? "Bypassed for Admin" : "Enter Sponsor Code"}
-                    className="h-14 uppercase font-mono-data rounded-xl border-muted bg-background"
-                    disabled={isAdminEmail}
-                  />
-                  {validatingRef && <Loader2 className="absolute right-4 top-4 w-6 h-6 animate-spin text-muted-foreground" />}
+              {!isIndividual && (
+                <div className="space-y-2">
+                  <Label htmlFor="refCode" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Code</Label>
+                  <div className="relative">
+                    <Input 
+                      id="refCode"
+                      value={refCode}
+                      onChange={(e) => setRefCode(e.target.value.toUpperCase().trim())}
+                      placeholder={isAdminEmail ? "Bypassed for Admin" : "Enter Sponsor Code"}
+                      className="h-14 uppercase font-mono-data rounded-xl border-muted bg-background"
+                      disabled={isAdminEmail}
+                    />
+                    {validatingRef && <Loader2 className="absolute right-4 top-4 w-6 h-6 animate-spin text-muted-foreground" />}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {!isAdminEmail && sponsorData ? (
-                <Alert className="bg-primary/5 border-primary/20 rounded-2xl">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <AlertTitle className="text-primary font-bold">Valid Sponsor</AlertTitle>
-                  <AlertDescription className="text-primary/80">
-                    You are being referred by <strong>{sponsorData.name}</strong>.
+              {isIndividual ? (
+                <Alert className="bg-secondary/5 border-secondary/20 rounded-2xl">
+                  <ShieldCheck className="h-4 w-4 text-secondary" />
+                  <AlertTitle className="text-secondary font-bold">Independent Registration</AlertTitle>
+                  <AlertDescription className="text-secondary/80">
+                    You are registering without a sponsor. You will build your own root team.
                   </AlertDescription>
                 </Alert>
-              ) : !isAdminEmail && refCode.length >= 5 && !validatingRef ? (
-                <Alert variant="destructive" className="rounded-2xl shadow-lg shadow-destructive/10">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle className="font-bold">Sponsor Required</AlertTitle>
-                  <AlertDescription>
-                    A valid referral code is mandatory to join the wellness network.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
+              ) : (
+                <>
+                  {!isAdminEmail && sponsorData ? (
+                    <Alert className="bg-primary/5 border-primary/20 rounded-2xl">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                      <AlertTitle className="text-primary font-bold">Valid Sponsor</AlertTitle>
+                      <AlertDescription className="text-primary/80">
+                        You are being referred by <strong>{sponsorData.name}</strong>.
+                      </AlertDescription>
+                    </Alert>
+                  ) : !isAdminEmail && (refCode.length >= 5 || kycError) && !validatingRef ? (
+                    <Alert variant="destructive" className="rounded-2xl shadow-lg shadow-destructive/10">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle className="font-bold">Invalid Referral</AlertTitle>
+                      <AlertDescription>
+                        {kycError || "A valid referral code is mandatory to join via this path."}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
                 <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-xl border-muted bg-background" />
               </div>
 
-              <Button 
-                onClick={() => setStep(2)} 
-                disabled={(!isAdminEmail && !sponsorData) || !email || !password || !name || validatingRef} 
-                className="w-full h-16 text-lg font-bold gap-2 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90"
-              >
-                Choose Package <ArrowRight className="w-5 h-5" />
-              </Button>
+              <div className="flex gap-4">
+                <Button variant="ghost" onClick={() => router.push('/join')} className="h-16 px-8 rounded-2xl">Back</Button>
+                <Button 
+                  onClick={() => setStep(2)} 
+                  disabled={(!isIndividual && !isAdminEmail && !sponsorData) || !email || !password || !name || validatingRef} 
+                  className="flex-1 h-16 text-lg font-bold gap-2 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90"
+                >
+                  Choose Package <ArrowRight className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">

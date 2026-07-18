@@ -1,184 +1,91 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Leaf, User, Mail, Phone, Lock, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Leaf, User, Users, ChevronRight, ShieldCheck, Zap } from 'lucide-react';
 
-export default function JoinPage() {
-  const searchParams = useSearchParams();
-  const [sponsorId, setSponsorId] = useState<string | null>(null);
-  const [step, setStep] = useState(1);
-
-  useEffect(() => {
-    const ref = searchParams.get('ref');
-    if (ref) {
-      setSponsorId(ref);
-      localStorage.setItem('sponsorId', ref);
-    } else {
-      setSponsorId(localStorage.getItem('sponsorId'));
-    }
-  }, [searchParams]);
+export default function JoinSelectionPage() {
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]">
-      <div className="mb-8 text-center space-y-2">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <div className="bg-primary text-white p-2 rounded-full">
-            <Leaf className="w-6 h-6" />
+      <div className="mb-12 text-center space-y-4">
+        <Link href="/" className="inline-flex items-center gap-3 mb-4">
+          <div className="bg-primary text-white p-2.5 rounded-2xl shadow-xl shadow-primary/20 rotate-3">
+            <Leaf className="w-8 h-8" />
           </div>
-          <span className="font-headline font-bold text-xl text-primary tracking-tight uppercase">Ayurvedic Kendra & Neuropathy</span>
+          <span className="font-headline font-bold text-2xl text-primary tracking-tight uppercase">Ayurvedic Kendra</span>
         </Link>
-        <h1 className="text-3xl font-headline font-bold text-primary">Join our Community</h1>
-        {sponsorId && (
-          <div className="inline-flex items-center gap-2 bg-secondary/10 px-4 py-2 rounded-full text-secondary-foreground font-medium text-sm border border-secondary/20">
-            <User className="w-4 h-4" /> You were referred by: <span className="font-bold">Member #{sponsorId.slice(0, 6)}</span>
-          </div>
-        )}
+        <div className="space-y-2">
+          <h1 className="text-4xl font-headline font-bold text-foreground">Choose Your Path</h1>
+          <p className="text-muted-foreground text-lg font-medium">Join our global community of natural health practitioners.</p>
+        </div>
       </div>
 
-      <Card className="w-full max-w-xl shadow-2xl border-none">
-        <CardHeader className="text-center">
-          <div className="flex justify-between items-center mb-6">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
-                  {step > s ? <CheckCircle2 className="w-5 h-5" /> : s}
-                </div>
-                {s < 3 && <div className={`h-1 w-12 rounded ${step > s ? 'bg-primary' : 'bg-muted'}`} />}
-              </div>
-            ))}
-          </div>
-          <CardTitle className="text-2xl font-headline">
-            {step === 1 && "Personal Details"}
-            {step === 2 && "Choose Your Package"}
-            {step === 3 && "Binary Placement"}
-          </CardTitle>
-          <CardDescription>
-            {step === 1 && "Start your journey by providing your information."}
-            {step === 2 && "Select a starter kit that fits your goals."}
-            {step === 3 && "Decide your position in the structure."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {step === 1 && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                    <Input id="firstName" className="pl-10" placeholder="John" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input id="email" type="email" className="pl-10" placeholder="john@example.com" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input id="phone" type="tel" className="pl-10" placeholder="+91 XXXXX XXXXX" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input id="password" type="password" className="pl-10" />
-                </div>
-              </div>
-              <Button onClick={() => setStep(2)} className="w-full h-12 font-bold gap-2">
-                Next Step <ChevronRight className="w-4 h-4" />
-              </Button>
+      <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
+        {/* Referral Path */}
+        <Card className="group border-2 border-transparent hover:border-primary transition-all duration-500 shadow-2xl rounded-[2.5rem] bg-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
+          <CardHeader className="p-10 pb-6 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6 group-hover:bg-primary group-hover:text-white transition-all">
+              <Users className="w-8 h-8" />
             </div>
-          )}
+            <CardTitle className="text-2xl font-headline font-bold">I have a Referral Code</CardTitle>
+            <CardDescription className="text-base pt-2">Join an existing team and grow under an experienced mentor.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-10 pt-0 space-y-8">
+            <ul className="space-y-4 text-sm font-medium text-muted-foreground">
+              <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-secondary" /> Mentorship and team support</li>
+              <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-secondary" /> Part of an established binary tree</li>
+              <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-secondary" /> Immediate placement into a network</li>
+            </ul>
+            <Button 
+              onClick={() => router.push('/register')}
+              className="w-full h-14 rounded-2xl font-bold text-lg gap-2 shadow-xl shadow-primary/10"
+            >
+              Start with Code <ChevronRight className="w-5 h-5" />
+            </Button>
+          </CardContent>
+        </Card>
 
-          {step === 2 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
-              <RadioGroup defaultValue="1400" className="space-y-4">
-                {[
-                  { id: "1400", title: "Basic Starter", price: "1,400", bv: "2 BV", benefits: "8% Matching Bonus" },
-                  { id: "2800", title: "Executive Kit", price: "2,800", bv: "4 BV", benefits: "9% Matching Bonus" },
-                  { id: "7000", title: "Business Builder", price: "7,000", bv: "10 BV", benefits: "10% Matching Bonus" },
-                ].map((item) => (
-                  <div key={item.id} className="relative">
-                    <RadioGroupItem value={item.id} id={item.id} className="peer sr-only" />
-                    <Label
-                      htmlFor={item.id}
-                      className="flex items-center justify-between p-4 rounded-xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
-                    >
-                      <div className="space-y-1">
-                        <div className="font-bold text-lg">{item.title}</div>
-                        <div className="text-sm text-muted-foreground">{item.benefits}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xl font-headline font-bold text-primary">₹{item.price}</div>
-                        <div className="text-xs font-bold text-secondary uppercase tracking-wider">{item.bv}</div>
-                      </div>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 font-bold">Back</Button>
-                <Button onClick={() => setStep(3)} className="flex-[2] h-12 font-bold gap-2">Next Step <ChevronRight className="w-4 h-4" /></Button>
-              </div>
+        {/* Individual Path */}
+        <Card className="group border-2 border-transparent hover:border-secondary transition-all duration-500 shadow-2xl rounded-[2.5rem] bg-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
+          <CardHeader className="p-10 pb-6 text-center">
+            <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary mx-auto mb-6 group-hover:bg-secondary group-hover:text-white transition-all">
+              <User className="w-8 h-8" />
             </div>
-          )}
+            <CardTitle className="text-2xl font-headline font-bold">Register as Individual</CardTitle>
+            <CardDescription className="text-base pt-2">Start your own independent tree and build your own legacy.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-10 pt-0 space-y-8">
+            <ul className="space-y-4 text-sm font-medium text-muted-foreground">
+              <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-primary" /> Root of your own organization</li>
+              <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-primary" /> KYC verified directly by Admin</li>
+              <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-primary" /> Independent business management</li>
+            </ul>
+            <Button 
+              variant="outline"
+              onClick={() => router.push('/register?type=individual')}
+              className="w-full h-14 rounded-2xl font-bold text-lg gap-2 border-secondary text-secondary hover:bg-secondary/5"
+            >
+              Start Independent <ChevronRight className="w-5 h-5" />
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
-          {step === 3 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
-              <div className="space-y-4">
-                <Label>Select Your Placement</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <input type="radio" name="leg" id="left" className="peer sr-only" defaultChecked />
-                    <Label htmlFor="left" className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5">
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-primary font-bold">L</div>
-                      <span className="font-bold">Left Team</span>
-                    </Label>
-                  </div>
-                  <div className="relative">
-                    <input type="radio" name="leg" id="right" className="peer sr-only" />
-                    <Label htmlFor="right" className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-muted bg-popover hover:bg-accent cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5">
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-primary font-bold">R</div>
-                      <span className="font-bold">Right Team</span>
-                    </Label>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  *Our smart system will place you optimally to support your sponsor's team growth.
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 font-bold">Back</Button>
-                <Link href="/dashboard" className="flex-[2]">
-                   <Button className="w-full h-12 font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg shadow-secondary/20">Complete Registration</Button>
-                </Link>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <p className="mt-8 text-sm text-muted-foreground">
-        Already have an account? <Link href="/login" className="text-primary font-bold hover:underline">Login here</Link>
-      </p>
+      <div className="mt-12 flex flex-col items-center gap-4">
+        <p className="text-muted-foreground font-medium flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-primary" /> All members must undergo KYC verification
+        </p>
+        <p className="text-sm">
+          Already a member? <Link href="/login" className="text-primary font-bold hover:underline">Login to Dashboard</Link>
+        </p>
+      </div>
     </div>
   );
 }

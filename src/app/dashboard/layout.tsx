@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -20,7 +19,8 @@ import {
   History,
   Globe,
   UserPlus,
-  ShoppingBag
+  ShoppingBag,
+  Fingerprint
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -103,6 +103,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {isAdmin && (
               <div className="pt-8 space-y-1.5">
                 <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Management</p>
+                <Link href="/dashboard/admin/kyc">
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                    pathname === '/dashboard/admin/kyc' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                  )}>
+                    <Fingerprint className="w-5 h-5" />
+                    <span className="font-bold text-sm tracking-tight">KYC Review Hub</span>
+                  </div>
+                </Link>
                 <Link href="/dashboard/admin/products">
                   <div className={cn(
                     "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
