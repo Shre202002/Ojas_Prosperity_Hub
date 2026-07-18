@@ -90,24 +90,21 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // 1. Create order on server
       const orderRes = await createRazorpayOrder({
         packageId: selectedPackage.id,
-        amount: selectedPackage.price * 100, // paise
+        amount: selectedPackage.price * 100,
       });
 
       if (!orderRes.success) throw new Error(orderRes.error);
 
-      // 2. Open Razorpay Checkout
       const options = {
         key: orderRes.keyId,
         amount: orderRes.amount,
         currency: orderRes.currency,
-        name: 'Ojas Care',
+        name: 'Wellness Kendra',
         description: `Enrollment: ${selectedPackage.name}`,
         order_id: orderRes.orderId,
         handler: async function (response: any) {
-          // Success Callback
           await handleRegistrationSuccess(response);
         },
         prefill: {
@@ -116,7 +113,7 @@ export default function RegisterPage() {
           contact: phone,
         },
         theme: {
-          color: '#2563eb', // Medical Blue
+          color: '#3F5D43', // Deep Sage
         },
       };
 
@@ -134,12 +131,10 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // 1. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       await updateProfile(user, { displayName: name });
 
-      // 2. Log Transaction
       const transactionId = paymentResponse.razorpay_order_id;
       await setDoc(doc(db, 'transactions', transactionId), {
         id: transactionId,
@@ -153,7 +148,6 @@ export default function RegisterPage() {
         capturedAt: serverTimestamp(),
       });
 
-      // 3. Create Distributor Doc
       const newRefCode = Math.random().toString(36).substring(2, 9).toUpperCase();
       const distributorData = {
         uid: user.uid,
@@ -198,15 +192,15 @@ export default function RegisterPage() {
   if (!db) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl border-none shadow-2xl overflow-hidden rounded-[2.5rem]">
-        <CardHeader className="text-center space-y-4 p-10 bg-white">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 selection:bg-primary/20">
+      <Card className="w-full max-w-2xl border-muted shadow-2xl overflow-hidden rounded-[2.5rem] bg-white">
+        <CardHeader className="text-center space-y-4 p-10 bg-background border-b border-muted">
           <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20 rotate-3">
             <Package className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-4xl font-headline font-bold text-slate-900">Join the Network</CardTitle>
-            <CardDescription className="text-lg font-medium">Step into your future in health management.</CardDescription>
+            <CardTitle className="text-4xl font-headline font-bold text-primary">Join the Network</CardTitle>
+            <CardDescription className="text-lg font-medium text-muted-foreground">Step into your future in natural healthcare.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="p-10">
@@ -214,34 +208,34 @@ export default function RegisterPage() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-slate-400">Full Name</Label>
-                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="h-14 rounded-xl border-slate-200" />
+                  <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
+                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="h-14 rounded-xl border-muted bg-background" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-slate-400">Phone</Label>
-                  <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91..." className="h-14 rounded-xl border-slate-200" />
+                  <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone</Label>
+                  <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91..." className="h-14 rounded-xl border-muted bg-background" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-slate-400">Email Address</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" className="h-14 rounded-xl border-slate-200" />
+                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" className="h-14 rounded-xl border-muted bg-background" />
                 {isAdminEmail && (
-                  <p className="text-xs font-bold text-primary flex items-center gap-1 mt-1">
+                  <p className="text-xs font-bold text-accent flex items-center gap-1 mt-1">
                     <ShieldCheck className="w-3 h-3" /> Admin Registration Mode Detected
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="refCode" className="text-xs font-bold uppercase tracking-widest text-slate-400">Referral Code</Label>
+                <Label htmlFor="refCode" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Code</Label>
                 <div className="relative">
                   <Input 
                     id="refCode"
                     value={refCode}
                     onChange={(e) => setRefCode(e.target.value.toUpperCase())}
                     placeholder={isAdminEmail ? "Bypassed for Admin" : "Enter Sponsor Code"}
-                    className="h-14 uppercase font-mono-data rounded-xl border-slate-200"
+                    className="h-14 uppercase font-mono-data rounded-xl border-muted bg-background"
                     disabled={isAdminEmail}
                   />
                   {validatingRef && <Loader2 className="absolute right-4 top-4 w-6 h-6 animate-spin text-muted-foreground" />}
@@ -249,26 +243,26 @@ export default function RegisterPage() {
               </div>
 
               {!isAdminEmail && sponsorData ? (
-                <Alert className="bg-emerald-50 border-emerald-100 rounded-2xl">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <AlertTitle className="text-emerald-800 font-bold">Valid Sponsor</AlertTitle>
-                  <AlertDescription className="text-emerald-700">
+                <Alert className="bg-primary/5 border-primary/20 rounded-2xl">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary font-bold">Valid Sponsor</AlertTitle>
+                  <AlertDescription className="text-primary/80">
                     You are being referred by <strong>{sponsorData.name}</strong>.
                   </AlertDescription>
                 </Alert>
               ) : !isAdminEmail && refCode.length >= 6 && !validatingRef ? (
-                <Alert variant="destructive" className="rounded-2xl">
+                <Alert variant="destructive" className="rounded-2xl shadow-lg shadow-destructive/10">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle className="font-bold">Sponsor Required</AlertTitle>
                   <AlertDescription>
-                    A valid referral code is mandatory to join the healthcare network.
+                    A valid referral code is mandatory to join the wellness network.
                   </AlertDescription>
                 </Alert>
               ) : null}
 
               <div className="space-y-2">
-                <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-widest text-slate-400">Password</Label>
-                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-xl border-slate-200" />
+                <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
+                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-xl border-muted bg-background" />
               </div>
 
               <Button 
@@ -291,7 +285,7 @@ export default function RegisterPage() {
                     className={`relative p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 ${
                       selectedPackage?.id === pkg.id 
                         ? 'border-primary bg-primary/5 shadow-2xl shadow-primary/10' 
-                        : 'border-slate-100 hover:border-slate-200 bg-white'
+                        : 'border-muted hover:border-primary/20 bg-background'
                     }`}
                   >
                     {selectedPackage?.id === pkg.id && (
@@ -299,12 +293,12 @@ export default function RegisterPage() {
                     )}
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <h4 className="font-headline font-bold text-xl">{pkg.name}</h4>
+                        <h4 className="font-headline font-bold text-xl text-primary">{pkg.name}</h4>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{pkg.description}</p>
                       </div>
-                      <div className="space-y-2 pt-4 border-t border-dashed">
-                        <div className="text-3xl font-mono-data font-bold text-primary">₹{pkg.price.toLocaleString()}</div>
-                        <Badge variant="secondary" className="font-mono-data text-[10px] rounded-full px-3">
+                      <div className="space-y-2 pt-4 border-t border-dashed border-muted">
+                        <div className="text-3xl font-mono-data font-bold text-accent">₹{pkg.price.toLocaleString()}</div>
+                        <Badge variant="secondary" className="font-mono-data text-[10px] rounded-full px-3 bg-secondary/20 text-foreground">
                           {pkg.bv} BV
                         </Badge>
                       </div>
@@ -314,11 +308,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="ghost" onClick={() => setStep(1)} className="h-16 px-8 font-bold rounded-2xl">Back</Button>
+                <Button variant="ghost" onClick={() => setStep(1)} className="h-16 px-8 font-bold rounded-2xl hover:bg-background">Back</Button>
                 <Button 
                   onClick={initializePayment} 
                   disabled={loading || !selectedPackage} 
-                  className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-2xl"
+                  className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-2xl"
                 >
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                     <>

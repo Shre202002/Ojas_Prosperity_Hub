@@ -21,6 +21,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function KYCPage() {
   const auth = useAuth();
@@ -34,7 +35,6 @@ export default function KYCPage() {
   
   const { data: distributor } = useDoc(distributorRef);
 
-  // Check for existing submission
   const kycQuery = useMemoFirebase(() => (
     db && user ? query(collection(db, 'kycSubmissions'), where('distributorId', '==', user.uid)) : null
   ), [db, user?.uid]);
@@ -59,9 +59,9 @@ export default function KYCPage() {
         sponsorId: distributor.sponsorId,
         status: 'pending',
         submittedAt: new Date().toISOString(),
-        idProofUrl: 'https://picsum.photos/seed/id/400/300', // Mock upload
-        addressProofUrl: 'https://picsum.photos/seed/addr/400/300', // Mock upload
-        selfieUrl: 'https://picsum.photos/seed/selfie/400/300', // Mock upload
+        idProofUrl: 'https://picsum.photos/seed/id/400/300',
+        addressProofUrl: 'https://picsum.photos/seed/addr/400/300',
+        selfieUrl: 'https://picsum.photos/seed/selfie/400/300',
         idNumber: formData.idNumber,
         address: formData.address,
         reviewedBy: null,
@@ -92,48 +92,48 @@ export default function KYCPage() {
     <div className="max-w-4xl mx-auto py-8 space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <h1 className="text-4xl font-headline font-bold text-slate-900">Identity Verification</h1>
+          <h1 className="text-4xl font-headline font-bold text-primary">Identity Verification</h1>
           <p className="text-muted-foreground font-medium">Verify your account to unlock full benefits and withdrawals.</p>
         </div>
         
         {latestSubmission?.status === 'verified' ? (
-          <Badge className="bg-emerald-500 hover:bg-emerald-600 h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-emerald-200">
+          <Badge className="bg-primary hover:bg-primary/90 h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-primary/20">
             <CheckCircle2 className="w-4 h-4" /> VERIFIED
           </Badge>
         ) : latestSubmission?.status === 'pending' ? (
-          <Badge className="bg-amber-500 hover:bg-amber-600 h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-amber-200">
+          <Badge className="bg-[hsl(var(--status-pending))] text-white h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-amber-200">
             <Clock className="w-4 h-4" /> PENDING REVIEW
           </Badge>
         ) : latestSubmission?.status === 'rejected' ? (
-          <Badge variant="destructive" className="h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-red-200">
+          <Badge className="bg-destructive text-white h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-destructive/20">
             <AlertCircle className="w-4 h-4" /> REJECTED
           </Badge>
         ) : (
-          <Badge variant="outline" className="border-slate-300 h-10 px-6 font-bold text-sm gap-2 rounded-xl bg-white">
-            <AlertCircle className="w-4 h-4 text-slate-400" /> NOT SUBMITTED
+          <Badge variant="outline" className="border-muted h-10 px-6 font-bold text-sm gap-2 rounded-xl bg-white text-muted-foreground">
+            <AlertCircle className="w-4 h-4" /> NOT SUBMITTED
           </Badge>
         )}
       </div>
 
       {latestSubmission?.status === 'verified' ? (
-        <Card className="border-none shadow-2xl bg-emerald-50/50 p-12 text-center space-y-6 rounded-[2.5rem] border border-emerald-100">
-          <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-emerald-500 mx-auto shadow-xl">
+        <Card className="border-none shadow-2xl bg-primary/5 p-12 text-center space-y-6 rounded-[2.5rem] border border-primary/10">
+          <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-primary mx-auto shadow-xl">
             <ShieldCheck className="w-12 h-12" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-headline font-bold text-emerald-900">Trust Verified</h2>
-            <p className="max-w-md mx-auto text-emerald-700 font-medium">
+            <h2 className="text-3xl font-headline font-bold text-primary">Trust Verified</h2>
+            <p className="max-w-md mx-auto text-muted-foreground font-medium">
               Your identity has been confirmed by your sponsor. You now have full access to all incentives and network features.
             </p>
           </div>
         </Card>
       ) : latestSubmission?.status === 'pending' ? (
-        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-[2.5rem] bg-white">
-          <div className="w-24 h-24 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-500 mx-auto shadow-sm">
+        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-[2.5rem] bg-white border border-muted">
+          <div className="w-24 h-24 bg-primary/5 rounded-3xl flex items-center justify-center text-[hsl(var(--status-pending))] mx-auto shadow-sm">
             <Clock className="w-12 h-12" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-headline font-bold text-slate-900">Awaiting Approval</h2>
+            <h2 className="text-3xl font-headline font-bold text-primary">Awaiting Approval</h2>
             <p className="max-w-md mx-auto text-muted-foreground font-medium">
               Your documents are in the review queue of your sponsor. This process typically takes 24-48 business hours.
             </p>
@@ -142,10 +142,10 @@ export default function KYCPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Card className="border-none shadow-xl rounded-[2rem] bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50 border-b pb-6">
+            <Card className="border border-muted shadow-xl rounded-[2rem] bg-white overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
                 <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
                   Required Evidence
@@ -157,16 +157,16 @@ export default function KYCPage() {
                   { icon: MapPin, label: 'Address Proof', sub: 'Utility Bill / Statement' },
                   { icon: UserPlus, label: 'Live Selfie', sub: 'Face must be clearly visible' }
                 ].map((doc, i) => (
-                  <div key={i} className="p-5 border-2 border-dashed rounded-[1.5rem] hover:bg-slate-50 transition-all cursor-pointer group">
+                  <div key={i} className="p-5 border-2 border-dashed border-muted rounded-[1.5rem] hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                        <doc.icon className="w-6 h-6 text-slate-400 group-hover:text-primary" />
+                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center group-hover:bg-white transition-colors">
+                        <doc.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-bold text-slate-900">{doc.label}</p>
+                        <p className="text-sm font-bold text-foreground">{doc.label}</p>
                         <p className="text-xs text-muted-foreground font-medium">{doc.sub}</p>
                       </div>
-                      <Upload className="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors" />
+                      <Upload className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                   </div>
                 ))}
@@ -175,38 +175,38 @@ export default function KYCPage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="border-none shadow-xl rounded-[2rem] bg-white">
-              <CardHeader className="bg-slate-50 border-b pb-6">
+            <Card className="border border-muted shadow-xl rounded-[2rem] bg-white">
+              <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
                 <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-secondary/10 rounded-xl">
-                    <ShieldCheck className="w-5 h-5 text-secondary" />
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                    <ShieldCheck className="w-5 h-5 text-accent" />
                   </div>
                   Details & Confirmation
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="idNumber" className="text-xs font-bold uppercase tracking-widest text-slate-500">Document ID Number</Label>
+                  <Label htmlFor="idNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Document ID Number</Label>
                   <Input 
                     id="idNumber" 
                     value={formData.idNumber} 
                     onChange={e => setFormData({...formData, idNumber: e.target.value})}
                     placeholder="Enter PAN or Aadhaar Number"
-                    className="h-14 rounded-xl font-mono-data border-slate-200"
+                    className="h-14 rounded-xl font-mono-data border-muted bg-background"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address" className="text-xs font-bold uppercase tracking-widest text-slate-500">Residential Address</Label>
+                  <Label htmlFor="address" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Residential Address</Label>
                   <textarea 
                     id="address" 
-                    className="w-full min-h-[120px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-shadow"
+                    className="w-full min-h-[120px] rounded-xl border border-muted bg-background px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-shadow"
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
                     placeholder="Provide your complete permanent address"
                   />
                 </div>
                 {latestSubmission?.status === 'rejected' && (
-                  <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+                  <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-destructive text-sm font-medium">
                     <div className="flex items-center gap-2 mb-1">
                       <AlertCircle className="w-4 h-4" />
                       <span className="font-bold">Rejection Reason:</span>

@@ -22,6 +22,7 @@ import {
   Crown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const auth = useAuth();
@@ -89,26 +90,36 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto py-8 px-4">
       {/* Header Band */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-muted">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl relative">
+          <div className="w-20 h-20 bg-background rounded-3xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl relative">
             {distributor.name?.[0] || 'U'}
-            {isAdmin && <Crown className="w-6 h-6 text-yellow-500 absolute -top-2 -right-2 drop-shadow-md" />}
+            {isAdmin && <Crown className="w-6 h-6 text-accent absolute -top-2 -right-2 drop-shadow-md" />}
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-headline font-bold">{distributor.name}</h1>
-              <Badge className={distributor.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}>
+              <Badge className={cn(
+                "font-bold px-3",
+                distributor.status === 'active' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+              )}>
                 {distributor.status?.toUpperCase()}
               </Badge>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground font-mono-data">
               <span>ID: {distributor.uid?.slice(0, 8).toUpperCase()}</span>
               <span className="flex items-center gap-1">
-                <ShieldCheck className={`w-4 h-4 ${distributor.kycStatus === 'verified' ? 'text-emerald-500' : 'text-slate-400'}`} />
+                <ShieldCheck className={cn(
+                  "w-4 h-4",
+                  distributor.kycStatus === 'verified' ? 'text-primary' : 
+                  distributor.kycStatus === 'pending' ? 'text-[hsl(var(--status-pending))]' : 'text-muted-foreground'
+                )} />
                 KYC: {distributor.kycStatus?.toUpperCase()}
               </span>
-              <Badge variant="outline" className={`${isAdmin ? 'text-yellow-600 border-yellow-200 bg-yellow-50' : 'text-primary border-primary/20 bg-primary/5'} font-bold`}>
+              <Badge variant="outline" className={cn(
+                "font-bold",
+                isAdmin ? 'text-accent border-accent/20 bg-accent/5' : 'text-primary border-primary/20 bg-primary/5'
+              )}>
                 {distributor.rank?.toUpperCase()}
               </Badge>
             </div>
@@ -118,13 +129,13 @@ export default function DashboardPage() {
         <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col gap-3 min-w-[300px]">
           <span className="text-xs font-bold uppercase tracking-widest text-primary/60">Your Referral Link</span>
           <div className="flex items-center gap-2">
-            <code className="flex-1 bg-white px-3 py-2 rounded-lg text-xs font-mono-data border">
+            <code className="flex-1 bg-white px-3 py-2 rounded-lg text-xs font-mono-data border border-muted">
               {distributor.referralCode}
             </code>
             <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-white" onClick={copyRefLink}>
               <Copy className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-emerald-500 hover:text-white">
+            <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-white">
               <Share2 className="w-4 h-4" />
             </Button>
           </div>
@@ -139,18 +150,21 @@ export default function DashboardPage() {
           </h3>
           <div className="grid gap-4">
             {[
-              { label: 'Incentive Account', val: distributor.incentiveBalance || 0, color: 'primary' },
-              { label: 'Shopping Wallet', val: distributor.shoppingBalance || 0, color: 'emerald' },
-              { label: 'Repurchase Account', val: 0, color: 'blue' },
-              { label: 'Recharge Account', val: 0, color: 'purple' },
+              { label: 'Incentive Account', val: distributor.incentiveBalance || 0, isMain: true },
+              { label: 'Shopping Wallet', val: distributor.shoppingBalance || 0 },
+              { label: 'Repurchase Account', val: 0 },
+              { label: 'Recharge Account', val: 0 },
             ].map((w, i) => (
               <Card key={i} className="border-none shadow-md hover:shadow-lg transition-shadow overflow-hidden group">
                 <CardContent className="p-6 flex items-center justify-between">
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{w.label}</p>
-                    <p className="text-2xl font-mono-data font-bold">₹{w.val.toLocaleString()}</p>
+                    <p className={cn(
+                      "text-2xl font-mono-data font-bold",
+                      w.isMain ? "text-accent" : "text-primary"
+                    )}>₹{w.val.toLocaleString()}</p>
                   </div>
-                  <Button size="icon" variant="ghost" className="group-hover:bg-slate-100 rounded-full">
+                  <Button size="icon" variant="ghost" className="group-hover:bg-primary group-hover:text-white rounded-full">
                     <ArrowUpRight className="w-5 h-5" />
                   </Button>
                 </CardContent>
@@ -165,7 +179,7 @@ export default function DashboardPage() {
             <TrendingUp className="w-5 h-5 text-primary" /> Business Performance
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-none shadow-md overflow-hidden bg-slate-900 text-white">
+            <Card className="border-none shadow-md overflow-hidden bg-primary text-white">
               <CardHeader className="border-b border-white/10">
                 <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Current Level BV (L/R)</CardTitle>
               </CardHeader>
@@ -181,11 +195,11 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md overflow-hidden bg-primary text-white">
-              <CardHeader className="border-b border-white/10">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60 text-white/80">Total Direct Sellers (L/R)</CardTitle>
+            <Card className="border-none shadow-md overflow-hidden bg-secondary text-foreground">
+              <CardHeader className="border-b border-black/5">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Total Direct Sellers (L/R)</CardTitle>
               </CardHeader>
-              <CardContent className="p-8 grid grid-cols-2 gap-8 divide-x divide-white/10">
+              <CardContent className="p-8 grid grid-cols-2 gap-8 divide-x divide-black/5">
                 <div className="text-center space-y-2">
                   <p className="text-xs font-bold opacity-70 uppercase">Left</p>
                   <p className="text-3xl font-mono-data font-bold">{distributor.leftCount || 0}</p>
@@ -198,7 +212,7 @@ export default function DashboardPage() {
             </Card>
 
             <div className="md:col-span-2 grid sm:grid-cols-2 gap-6">
-               <Card className="border-none shadow-md bg-white">
+               <Card className="border border-muted shadow-sm bg-white">
                  <CardContent className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Next Level Target</p>
@@ -217,11 +231,11 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
 
-               <Card className="border-none shadow-md bg-white">
+               <Card className="border border-muted shadow-sm bg-white">
                  <CardContent className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Next Target Remaining</p>
-                      <Trophy className="w-4 h-4 text-yellow-500" />
+                      <Trophy className="w-4 h-4 text-accent" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -245,10 +259,10 @@ export default function DashboardPage() {
             <h3 className="font-headline text-xl font-bold flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" /> Earnings Overview
             </h3>
-            <Button variant="ghost" size="sm" className="text-primary font-bold">View Detailed Statement</Button>
+            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5">View Detailed Statement</Button>
           </div>
-          <Card className="border-none shadow-sm bg-white overflow-hidden">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 divide-x divide-y md:divide-y-0">
+          <Card className="border border-muted shadow-sm bg-white overflow-hidden">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 divide-x divide-y md:divide-y-0 border-muted">
               {[
                 { label: 'Direct Sponsor', val: 0 },
                 { label: 'Sales Matching', val: 0 },
@@ -257,9 +271,15 @@ export default function DashboardPage() {
                 { label: 'Royalty Club', val: 0 },
                 { label: 'Total Incentive', val: distributor.incentiveBalance || 0, highlight: true },
               ].map((e, i) => (
-                <div key={i} className={`p-6 space-y-2 ${e.highlight ? 'bg-primary/5' : ''}`}>
+                <div key={i} className={cn(
+                  "p-6 space-y-2",
+                  e.highlight ? 'bg-primary/5' : ''
+                )}>
                   <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-tighter leading-none">{e.label}</p>
-                  <p className={`text-xl font-mono-data font-bold ${e.highlight ? 'text-primary' : ''}`}>₹{e.val.toLocaleString()}</p>
+                  <p className={cn(
+                    "text-xl font-mono-data font-bold",
+                    e.highlight ? 'text-accent' : 'text-primary'
+                  )}>₹{e.val.toLocaleString()}</p>
                 </div>
               ))}
             </div>
