@@ -28,7 +28,7 @@ service cloud.firestore {
 
     // Products collection
     match /products/{productId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isSuperAdmin();
     }
 
@@ -82,11 +82,16 @@ service cloud.firestore {
 
     // Transactions collection
     match /transactions/{transactionId} {
-      // Owners can read their own transactions
-      allow read: if isSignedIn() && (resource.data.distributorId == request.auth.uid || resource.data.enrolledBy == request.auth.uid);
+      // Allow single doc read for everyone (needed for registration polling before account creation)
+      allow get: if true;
+
+      // Owners can query their own transactions
+      allow list: if isSignedIn() && (resource.data.distributorId == request.auth.uid || resource.data.enrolledBy == request.auth.uid);
+      
       // Super Admin can read and update (for refunds/audit) all transactions
       allow read, update: if isSuperAdmin();
-      // Mutations to status/payment details should generally be Cloud Function only
+      
+      // Mutations to status/payment details should generally be Cloud Function/Admin SDK only
       allow create: if isSignedIn(); 
     }
     

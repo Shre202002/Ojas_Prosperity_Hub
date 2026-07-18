@@ -1,7 +1,9 @@
+
 'use server';
 
 import Razorpay from 'razorpay';
 import { z } from 'zod';
+import { getFirebaseAdmin } from './firebase-admin';
 
 const CreateOrderSchema = z.object({
   packageId: z.enum(['starter', 'growth', 'platinum', '1400', '2800', '7000']),
@@ -25,10 +27,11 @@ const razorpay = new Razorpay({
 });
 
 /**
- * Creates a Razorpay Order server-side.
+ * Creates a Razorpay Order server-side and initializes a transaction doc.
  */
 export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchema>) {
   try {
+    const { db } = getFirebaseAdmin();
     const amount = PACKAGE_PRICES[input.packageId];
     if (!amount) throw new Error('Invalid package selected.');
 
@@ -41,6 +44,20 @@ export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchem
         distributorId: input.distributorId || 'pending',
         enrolledBy: input.enrolledBy || null,
       },
+    });
+
+    // Create the transaction record on the server (bypassing rules)
+    // so the client can listen to it even before account creation.
+    await db.collection('transactions').doc(order.id).set({
+      id: order.id,
+      distributorId: input.distributorId || null,
+      packageId: input.packageId,
+      amount: amount,
+      currency: 'INR',
+      status: 'created',
+      enrolledBy: input.enrolledBy || null,
+      razorpayOrderId: order.id,
+      createdAt: new Date(),
     });
 
     return {
