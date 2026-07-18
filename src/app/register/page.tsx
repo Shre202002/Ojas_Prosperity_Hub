@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -117,7 +116,7 @@ export default function RegisterPage() {
           contact: phone,
         },
         theme: {
-          color: '#FF5701',
+          color: '#2563eb', // Medical Blue
         },
       };
 
@@ -207,7 +206,7 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-1">
             <CardTitle className="text-4xl font-headline font-bold text-slate-900">Join the Network</CardTitle>
-            <CardDescription className="text-lg font-medium">Step into your future in direct selling.</CardDescription>
+            <CardDescription className="text-lg font-medium">Step into your future in health management.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="p-10">
@@ -262,7 +261,7 @@ export default function RegisterPage() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle className="font-bold">Sponsor Required</AlertTitle>
                   <AlertDescription>
-                    A valid referral code is mandatory to join the Ojas Care network.
+                    A valid referral code is mandatory to join the healthcare network.
                   </AlertDescription>
                 </Alert>
               ) : null}
