@@ -260,9 +260,9 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <p className="text-sm text-center text-muted-foreground">
-            Don't have an account? <Link href="/register" className="text-primary font-bold hover:underline">Register now</Link>
+            Don't have an account? <Link href="/join" className="text-primary font-bold hover:underline">Register now</Link>
           </p>
-          <Separator />
+          <div className="h-px w-full bg-slate-100" />
           <Link href="/admin/login" className="flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
             <ShieldCheck className="w-3 h-3" /> Staff & Administrator Portal
           </Link>
@@ -270,8 +270,4 @@ export default function LoginPage() {
       </Card>
     </div>
   );
-}
-
-function Separator() {
-  return <div className="h-px w-full bg-slate-100" />;
 }
