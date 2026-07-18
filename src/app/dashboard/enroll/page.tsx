@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder } from '@/lib/razorpay-actions';
+import { cn } from '@/lib/utils';
 
 const PACKAGES = [
   { id: 'starter', name: 'Starter DS', price: 5000, bv: 2500, description: 'Entry tier for new sellers' },
@@ -71,7 +71,7 @@ export default function AssistedEnrollmentPage() {
   if (!canEnroll && currentDistributor) {
     return (
       <Card className="max-w-md mx-auto mt-20 p-8 text-center space-y-4 border-none shadow-xl rounded-[2rem]">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto">
           <AlertCircle className="w-8 h-8" />
         </div>
         <CardTitle className="text-xl">Enrollment Restricted</CardTitle>
@@ -111,7 +111,7 @@ export default function AssistedEnrollmentPage() {
           email: currentDistributor?.email,
           contact: currentDistributor?.phone,
         },
-        theme: { color: '#2563eb' },
+        theme: { color: '#1E7D34' },
       };
 
       const rzp = (window as any).Razorpay(options);
@@ -131,12 +131,7 @@ export default function AssistedEnrollmentPage() {
       // 1. Generate secure temp password
       const tempPassword = Math.random().toString(36).substring(2, 12) + "!";
       
-      // 2. Note: Creating a secondary user in Auth from the client is restricted.
-      // In a real production app, this would call a Cloud Function to use Admin SDK.
-      // Here we simulate the creation logic and record it for the admin to see.
-      
       const transactionId = paymentResponse.razorpay_order_id;
-      const enrollmentId = `ENROLL_${Date.now()}`;
 
       // Record transaction
       await setDoc(doc(db, 'transactions', transactionId), {
@@ -167,8 +162,6 @@ export default function AssistedEnrollmentPage() {
         tempCredentialsSent: true,
       };
 
-      // In this environment, we simulate the "Auth Account Creation" by creating a Firestore record
-      // that the Super Admin or a specialized signup flow can pick up.
       await setDoc(doc(db, 'pendingEnrollments', formData.email.toLowerCase()), {
         ...newDistData,
         tempPassword,
@@ -213,23 +206,23 @@ export default function AssistedEnrollmentPage() {
           <UserPlus className="w-8 h-8" />
         </div>
         <div className="space-y-1">
-          <h1 className="text-4xl font-headline font-bold text-slate-900">Add New Member</h1>
+          <h1 className="text-4xl font-headline font-bold text-foreground">Add New Member</h1>
           <p className="text-muted-foreground font-medium">Assisted enrollment with secure sponsor-funded payment.</p>
         </div>
       </div>
 
       <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50 border-b p-10">
+        <CardHeader className="bg-background border-b p-10">
           <div className="flex justify-between items-center max-w-md mx-auto">
              {[1, 2, 3].map(s => (
                <div key={s} className="flex items-center gap-2">
                  <div className={cn(
                    "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all",
-                   step >= s ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-slate-200 text-slate-400"
+                   step >= s ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-muted text-muted-foreground"
                  )}>
                    {step > s ? <CheckCircle2 className="w-6 h-6" /> : s}
                  </div>
-                 {s < 3 && <div className={cn("h-1 w-12 rounded", step > s ? "bg-primary" : "bg-slate-200")} />}
+                 {s < 3 && <div className={cn("h-1 w-12 rounded", step > s ? "bg-primary" : "bg-muted")} />}
                </div>
              ))}
           </div>
@@ -247,7 +240,7 @@ export default function AssistedEnrollmentPage() {
             <div className="space-y-6 max-w-2xl mx-auto">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Full Name</Label>
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
                   <Input 
                     placeholder="New Member's Name" 
                     className="h-14 rounded-xl"
@@ -256,7 +249,7 @@ export default function AssistedEnrollmentPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Email Address</Label>
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
                   <Input 
                     type="email" 
                     placeholder="member@example.com" 
@@ -267,7 +260,7 @@ export default function AssistedEnrollmentPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Phone Number</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
                 <Input 
                   placeholder="+91..." 
                   className="h-14 rounded-xl"
@@ -278,11 +271,11 @@ export default function AssistedEnrollmentPage() {
 
               <div className="pt-6 border-t mt-8">
                  <h4 className="font-bold mb-4 flex items-center gap-2">
-                   <ShieldCheck className="w-5 h-5 text-emerald-500" /> Optional KYC (Assisted Submission)
+                   <ShieldCheck className="w-5 h-5 text-secondary" /> Optional KYC (Assisted Submission)
                  </h4>
                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">ID Number (Aadhaar/PAN)</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">ID Number (Aadhaar/PAN)</Label>
                       <Input 
                         placeholder="Document Number" 
                         className="h-14 rounded-xl"
@@ -291,9 +284,9 @@ export default function AssistedEnrollmentPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Residential Address</Label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Residential Address</Label>
                       <textarea 
-                        className="w-full h-24 rounded-xl border p-4 text-sm" 
+                        className="w-full h-24 rounded-xl border p-4 text-sm bg-background" 
                         placeholder="Complete permanent address"
                         value={formData.address}
                         onChange={e => setFormData({...formData, address: e.target.value})}
@@ -301,9 +294,9 @@ export default function AssistedEnrollmentPage() {
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       {['ID Proof', 'Address Proof', 'Selfie'].map(d => (
-                        <div key={d} className="border-2 border-dashed rounded-xl p-4 text-center space-y-1 hover:bg-slate-50 cursor-pointer group transition-colors">
-                           <Camera className="w-5 h-5 mx-auto text-slate-300 group-hover:text-primary" />
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{d}</p>
+                        <div key={d} className="border-2 border-dashed rounded-xl p-4 text-center space-y-1 hover:bg-background cursor-pointer group transition-colors">
+                           <Camera className="w-5 h-5 mx-auto text-muted-foreground group-hover:text-primary" />
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">{d}</p>
                         </div>
                       ))}
                     </div>
@@ -331,7 +324,7 @@ export default function AssistedEnrollmentPage() {
                       "p-8 rounded-[2rem] border-2 cursor-pointer transition-all relative overflow-hidden",
                       selectedPackage?.id === pkg.id 
                         ? "border-primary bg-primary/5 shadow-2xl" 
-                        : "border-slate-100 hover:border-slate-200 bg-white"
+                        : "border-muted hover:border-muted-foreground/20 bg-white"
                     )}
                   >
                     {selectedPackage?.id === pkg.id && (
@@ -367,29 +360,29 @@ export default function AssistedEnrollmentPage() {
 
           {step === 3 && (
             <div className="space-y-8 max-w-xl mx-auto">
-              <div className="bg-slate-50 p-8 rounded-[2rem] space-y-6 border">
+              <div className="bg-background p-8 rounded-[2rem] space-y-6 border">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-slate-500 uppercase">New Member</span>
+                  <span className="text-sm font-bold text-muted-foreground uppercase">New Member</span>
                   <span className="font-bold text-primary">{formData.name}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-slate-500 uppercase">Selected Plan</span>
+                  <span className="text-sm font-bold text-muted-foreground uppercase">Selected Plan</span>
                   <span className="font-bold">{selectedPackage?.name}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-slate-500 uppercase">Package BV</span>
+                  <span className="text-sm font-bold text-muted-foreground uppercase">Package BV</span>
                   <Badge className="font-mono-data">{selectedPackage?.bv} BV</Badge>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center pt-2">
-                  <span className="text-xl font-headline font-bold text-slate-900">Total Payable</span>
+                  <span className="text-xl font-headline font-bold text-foreground">Total Payable</span>
                   <span className="text-3xl font-mono-data font-bold text-primary">₹{selectedPackage?.price.toLocaleString()}</span>
                 </div>
               </div>
 
-              <div className="p-6 bg-amber-50 border border-amber-100 rounded-[1.5rem] flex gap-4">
-                <AlertCircle className="w-6 h-6 text-amber-500 shrink-0" />
-                <p className="text-xs text-amber-800 font-medium leading-relaxed">
+              <div className="p-6 bg-accent/10 border border-accent/20 rounded-[1.5rem] flex gap-4">
+                <AlertCircle className="w-6 h-6 text-accent shrink-0" />
+                <p className="text-xs text-accent-foreground font-medium leading-relaxed">
                   <strong>Important:</strong> Account activation requires member confirmation. Placement and BV will be credited only after the member logs in and verifies their credentials.
                 </p>
               </div>
@@ -397,7 +390,7 @@ export default function AssistedEnrollmentPage() {
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={() => setStep(2)} className="h-16 px-8 font-bold rounded-2xl">Back</Button>
                 <Button 
-                  className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-slate-900 text-white shadow-2xl"
+                  className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-foreground text-white shadow-2xl"
                   onClick={handleStartPayment}
                   disabled={loading}
                 >
@@ -409,17 +402,17 @@ export default function AssistedEnrollmentPage() {
 
           {step === 4 && (
             <div className="text-center py-12 space-y-8 animate-in zoom-in-95 duration-500">
-               <div className="w-24 h-24 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-emerald-200">
+               <div className="w-24 h-24 bg-primary rounded-[2.5rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-primary/20">
                   <CheckCircle2 className="w-12 h-12" />
                </div>
                <div className="space-y-2">
-                 <h3 className="text-3xl font-headline font-bold text-slate-900">Enrollment Initialized!</h3>
+                 <h3 className="text-3xl font-headline font-bold text-foreground">Enrollment Initialized!</h3>
                  <p className="text-muted-foreground font-medium max-w-md mx-auto">
                    Distributor credentials have been sent to <strong>{formData.email}</strong>.
                  </p>
                </div>
-               <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed inline-block">
-                  <p className="text-xs font-bold text-slate-400 uppercase mb-2">Next Step for Member</p>
+               <div className="bg-background p-6 rounded-2xl border-2 border-dashed inline-block">
+                  <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Next Step for Member</p>
                   <p className="text-sm font-bold text-primary flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4" /> Member must confirm account at /setup-account
                   </p>
@@ -438,5 +431,5 @@ export default function AssistedEnrollmentPage() {
 }
 
 function Separator() {
-  return <div className="h-px w-full bg-slate-200" />;
+  return <div className="h-px w-full bg-border" />;
 }

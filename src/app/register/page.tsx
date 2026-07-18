@@ -113,7 +113,7 @@ export default function RegisterPage() {
           contact: phone,
         },
         theme: {
-          color: '#3F5D43', // Deep Sage
+          color: '#1E7D34', // Leaf Green
         },
       };
 

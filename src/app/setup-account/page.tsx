@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -131,17 +130,17 @@ export default function SetupAccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]">
       <div className="mb-12 text-center space-y-3">
         <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/20 mx-auto rotate-3">
           <ShieldCheck className="w-10 h-10" />
         </div>
-        <h1 className="text-3xl font-headline font-bold text-slate-900">Account Setup</h1>
+        <h1 className="text-3xl font-headline font-bold text-foreground">Account Setup</h1>
         <p className="text-muted-foreground font-medium">Complete your enrollment to join the network.</p>
       </div>
 
       <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50 border-b p-8 text-center">
+        <CardHeader className="bg-background border-b p-8 text-center">
            <CardTitle className="text-xl font-headline font-bold">
              {step === 1 && "Temporary Access"}
              {step === 2 && "Secure Your Account"}
@@ -157,9 +156,9 @@ export default function SetupAccountPage() {
           {step === 1 && (
             <form onSubmit={handleFirstLogin} className="space-y-6">
                <div className="space-y-2">
-                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Email Address</Label>
+                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
                  <div className="relative">
-                    <Mail className="absolute left-3 top-4 w-5 h-5 text-slate-400" />
+                    <Mail className="absolute left-3 top-4 w-5 h-5 text-muted-foreground" />
                     <Input 
                       className="h-14 pl-12 rounded-xl"
                       value={credentials.email}
@@ -169,9 +168,9 @@ export default function SetupAccountPage() {
                  </div>
                </div>
                <div className="space-y-2">
-                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Temporary Password</Label>
+                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Temporary Password</Label>
                  <div className="relative">
-                    <Lock className="absolute left-3 top-4 w-5 h-5 text-slate-400" />
+                    <Lock className="absolute left-3 top-4 w-5 h-5 text-muted-foreground" />
                     <Input 
                       type="password"
                       className="h-14 pl-12 rounded-xl"
@@ -190,7 +189,7 @@ export default function SetupAccountPage() {
           {step === 2 && (
             <form onSubmit={handleConfirmAccount} className="space-y-6">
                <div className="space-y-2">
-                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Create New Password</Label>
+                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Create New Password</Label>
                  <Input 
                    type="password"
                    className="h-14 rounded-xl"
@@ -200,7 +199,7 @@ export default function SetupAccountPage() {
                  />
                </div>
                <div className="space-y-2">
-                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Confirm Password</Label>
+                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Confirm Password</Label>
                  <Input 
                    type="password"
                    className="h-14 rounded-xl"
@@ -209,7 +208,7 @@ export default function SetupAccountPage() {
                    required
                  />
                </div>
-               <Button className="w-full h-14 font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-200" disabled={loading || newPassword !== confirmPassword}>
+               <Button className="w-full h-14 font-bold rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" disabled={loading || newPassword !== confirmPassword}>
                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Activate Account"}
                </Button>
             </form>
@@ -217,7 +216,7 @@ export default function SetupAccountPage() {
 
           {step === 3 && (
             <div className="text-center space-y-8 py-6">
-               <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto shadow-sm">
+               <div className="w-20 h-20 bg-primary/5 text-primary rounded-3xl flex items-center justify-center mx-auto shadow-sm">
                   <CheckCircle2 className="w-10 h-10" />
                </div>
                <div className="space-y-2">
