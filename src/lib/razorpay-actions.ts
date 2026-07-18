@@ -8,6 +8,7 @@ const CreateOrderSchema = z.object({
   packageId: z.string(),
   amount: z.number(), // In Paise
   distributorId: z.string().optional(),
+  enrolledBy: z.string().optional(),
 });
 
 const razorpay = new Razorpay({
@@ -28,6 +29,7 @@ export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchem
       notes: {
         packageId: input.packageId,
         distributorId: input.distributorId || 'anonymous',
+        enrolledBy: input.enrolledBy || null,
       },
     });
 

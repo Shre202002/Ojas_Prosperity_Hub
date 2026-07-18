@@ -21,7 +21,7 @@ import {
   Sparkles,
   History,
   Globe,
-  Settings
+  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,6 +31,7 @@ import { Loader2 } from 'lucide-react';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Network', href: '/dashboard/network', icon: Network },
+  { name: 'Add Member', href: '/dashboard/enroll', icon: UserPlus },
   { name: 'KYC Verification', href: '/dashboard/kyc', icon: ShieldCheck },
   { name: 'Network Reviews', href: '/dashboard/network/reviews', icon: ClipboardCheck },
   { name: 'AI Assistant', href: '/dashboard/ai-assistant', icon: Sparkles },
@@ -54,7 +55,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+    // Redirect if pending confirmation
+    if (distributor?.status === 'pending_confirmation') {
+      router.push('/setup-account');
+    }
+  }, [user, loading, router, distributor]);
 
   if (loading) return (
     <div className="h-screen w-screen flex items-center justify-center bg-slate-50">

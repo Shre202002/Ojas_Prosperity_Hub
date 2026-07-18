@@ -20,9 +20,17 @@ service cloud.firestore {
       );
     }
 
+    function isVerifiedDistributor() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.status == 'active' &&
+        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.kycStatus == 'verified';
+    }
+
     // Distributors collection
     match /distributors/{distributorId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (isOwner(distributorId) || isSuperAdmin() || 
+        request.auth.uid in get(/databases/$(database)/documents/distributors/$(distributorId)).data.ancestorIds);
+      
       // Super Admin can read all distributors
       allow read: if isSuperAdmin();
       
@@ -32,6 +40,12 @@ service cloud.firestore {
         .hasAny(['parentId', 'leftChildId', 'rightChildId', 'leftCount', 'rightCount', 'rank', 'sponsorId']));
       
       allow create: if isSignedIn(); 
+    }
+
+    // Pending Enrollments (Assisted Flow)
+    match /pendingEnrollments/{email} {
+      allow read: if isSignedIn() && (request.auth.token.email.lower() == email.lower() || isSuperAdmin());
+      allow write: if isVerifiedDistributor() || isSuperAdmin();
     }
 
     // Packages collection
@@ -48,8 +62,10 @@ service cloud.firestore {
 
     // KYC Submissions
     match /kycSubmissions/{submissionId} {
-      allow read, create: if isSignedIn() && request.resource.data.distributorId == request.auth.uid;
+      // Distributor can manage their own
+      allow read, create: if isSignedIn() && (request.resource.data.distributorId == request.auth.uid || request.resource.data.distributorId == request.auth.token.email.lower());
       
+      // Sponsor can review
       allow read: if isSignedIn() && resource.data.sponsorId == request.auth.uid;
       allow update: if isSignedIn() && resource.data.sponsorId == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys()
@@ -61,11 +77,10 @@ service cloud.firestore {
     // Transactions collection
     match /transactions/{transactionId} {
       // Owners can read their own transactions
-      allow read: if isSignedIn() && resource.data.distributorId == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.distributorId == request.auth.uid || resource.data.enrolledBy == request.auth.uid);
       // Super Admin can read and update (for refunds/audit) all transactions
       allow read, update: if isSuperAdmin();
-      // Mutations to status/payment details should generally be Cloud Function only,
-      // but we allow Super Admin for manual reconciliation if needed.
+      // Mutations to status/payment details should generally be Cloud Function only
       allow create: if isSignedIn(); 
     }
     
