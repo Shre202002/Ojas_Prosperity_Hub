@@ -61,13 +61,11 @@ export default function RegisterPage() {
     document.body.appendChild(script);
 
     // If no ref in URL, check localStorage (Captured from landing page)
-    if (!refCode) {
-      const storedRef = localStorage.getItem('sponsorId');
-      if (storedRef) {
-        setRefCode(storedRef);
-      }
+    const storedRef = localStorage.getItem('sponsorId');
+    if (!searchParams.get('ref') && storedRef) {
+      setRefCode(storedRef);
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (transaction?.status === 'paid' && verifying) {
@@ -75,13 +73,21 @@ export default function RegisterPage() {
     }
   }, [transaction?.status, verifying]);
 
+  // Fixed validation effect with proper dependencies
   useEffect(() => {
-    if (refCode.length >= 5 && !isAdminEmail) {
-      validateReferral(refCode);
-    } else if (isAdminEmail) {
+    if (!db) return;
+
+    if (isAdminEmail) {
       setSponsorData({ name: 'System (Admin Mode)', uid: 'system' });
+      return;
     }
-  }, [refCode, isAdminEmail]);
+
+    if (refCode.length >= 5) {
+      validateReferral(refCode);
+    } else {
+      setSponsorData(null);
+    }
+  }, [refCode, isAdminEmail, db]);
 
   async function validateReferral(code: string) {
     if (!db) return;
@@ -101,6 +107,7 @@ export default function RegisterPage() {
         setSponsorData(null);
       }
     } catch (e) {
+      console.error("Referral validation error:", e);
       setSponsorData(null);
     } finally {
       setValidatingRef(false);
@@ -248,7 +255,7 @@ export default function RegisterPage() {
                   <Input 
                     id="refCode"
                     value={refCode}
-                    onChange={(e) => setRefCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setRefCode(e.target.value.toUpperCase().trim())}
                     placeholder={isAdminEmail ? "Bypassed for Admin" : "Enter Sponsor Code"}
                     className="h-14 uppercase font-mono-data rounded-xl border-muted bg-background"
                     disabled={isAdminEmail}
@@ -282,7 +289,7 @@ export default function RegisterPage() {
 
               <Button 
                 onClick={() => setStep(2)} 
-                disabled={(!isAdminEmail && !sponsorData) || !email || !password || !name} 
+                disabled={(!isAdminEmail && !sponsorData) || !email || !password || !name || validatingRef} 
                 className="w-full h-16 text-lg font-bold gap-2 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90"
               >
                 Choose Package <ArrowRight className="w-5 h-5" />
