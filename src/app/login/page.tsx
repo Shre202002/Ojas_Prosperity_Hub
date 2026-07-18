@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,27 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Mail, Lock, Loader2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
 
 const ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetEmailLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
@@ -33,7 +46,6 @@ export default function LoginPage() {
     e.preventDefault();
     if (!auth || !db) return;
 
-    // Redirect Super Admin to their dedicated portal if they try standard login
     if (email.toLowerCase() === ADMIN_EMAIL) {
       toast({
         title: 'Admin Detected',
@@ -64,6 +76,27 @@ export default function LoginPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!auth || !resetEmail) return;
+    setResetEmailLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      toast({
+        title: 'Reset Email Sent',
+        description: `Check your inbox at ${resetEmail} for instructions.`,
+      });
+      setIsResetOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Reset Failed',
+        description: error.message || 'Could not send reset email.',
+      });
+    } finally {
+      setResetEmailLoading(false);
     }
   };
 
@@ -158,6 +191,32 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
+                <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+                  <DialogTrigger asChild>
+                    <button type="button" className="text-xs font-bold text-primary hover:underline">Forgot Password?</button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl">
+                    <DialogHeader>
+                      <DialogTitle>Reset Password</DialogTitle>
+                      <DialogDescription>Enter your email and we'll send you a link to reset your account access.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Registered Email</Label>
+                        <Input 
+                          placeholder="name@example.com" 
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleResetPassword} disabled={resetLoading || !resetEmail} className="w-full h-12 font-bold">
+                        {resetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Reset Link'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />

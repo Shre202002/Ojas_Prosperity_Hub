@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft, Crown, UserPlus, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
 
 const SUPER_ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
 
@@ -19,7 +28,9 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
   
   const auth = useAuth();
   const db = useFirestore();
@@ -43,7 +54,6 @@ export default function AdminLoginPage() {
     try {
       let user;
       if (isSetupMode) {
-        // Initialize Super Admin Account
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         user = userCredential.user;
         
@@ -52,19 +62,16 @@ export default function AdminLoginPage() {
           description: 'Your Super Admin account has been initialized.',
         });
       } else {
-        // Standard Admin Login
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         user = userCredential.user;
       }
 
-      // Self-healing: Ensure Admin Profile exists in Firestore
       const distRef = doc(db, 'distributors', user.uid);
       const distSnap = await getDoc(distRef);
 
       if (!distSnap.exists()) {
         const newRefCode = "ADMIN-" + Math.random().toString(36).substring(2, 7).toUpperCase();
         
-        // Create User Profile
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           name: 'Super Admin',
@@ -74,7 +81,6 @@ export default function AdminLoginPage() {
           lastLogin: serverTimestamp(),
         });
 
-        // Create Distributor Profile
         await setDoc(distRef, {
           uid: user.uid,
           name: 'Super Admin',
@@ -93,10 +99,8 @@ export default function AdminLoginPage() {
           createdAt: new Date().toISOString(),
         });
 
-        // Register Ref Code
         await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
       } else {
-        // Just update last login
         await setDoc(doc(db, 'users', user.uid), { 
           lastLogin: serverTimestamp(),
           role: 'admin'
@@ -125,6 +129,26 @@ export default function AdminLoginPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!auth || !email) {
+      toast({ variant: 'destructive', title: 'Email Required', description: 'Please enter your admin email above first.' });
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'Recovery Link Sent',
+        description: `Admin recovery instructions sent to ${email}`,
+      });
+      setIsResetOpen(false);
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Reset Failed', description: e.message });
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -177,9 +201,42 @@ export default function AdminLoginPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" title="Password" className="text-slate-300">
-                  {isSetupMode ? 'Create Password' : 'Secret Key'}
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" title="Password" className="text-slate-300">
+                    {isSetupMode ? 'Create Password' : 'Secret Key'}
+                  </Label>
+                  {!isSetupMode && (
+                    <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+                      <DialogTrigger asChild>
+                        <button type="button" className="text-[10px] uppercase font-bold text-primary hover:text-white transition-colors">Reset Key</button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-slate-900 border-white/10 text-white">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Admin Access Recovery</DialogTitle>
+                          <DialogDescription className="text-slate-400">This will send a secure reset link to the master admin email.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2 py-4">
+                           <Label className="text-slate-300">Confirm Admin Email</Label>
+                           <Input 
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white"
+                            placeholder="sriyanshgupta24@gmail.com"
+                           />
+                        </div>
+                        <DialogFooter>
+                          <Button 
+                            onClick={handleResetPassword} 
+                            disabled={resetLoading || !email}
+                            className="w-full bg-primary hover:bg-primary/90 text-white h-12 font-bold"
+                          >
+                            {resetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Recovery Link'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                   <Input 

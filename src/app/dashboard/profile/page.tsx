@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, User, Mail, Calendar, Shield, Save, Upload } from 'lucide-react';
+import { Loader2, User, Mail, Calendar, Shield, Save, Upload, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
@@ -27,6 +27,7 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [photoURL, setPhotoURL] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (profileData) {
@@ -61,6 +62,26 @@ export default function ProfilePage() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!auth || !user?.email) return;
+    setResetting(true);
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      toast({
+        title: 'Reset Link Sent',
+        description: `A password reset email has been sent to ${user.email}.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Action Failed',
+        description: error.message || 'Could not trigger password reset.',
+      });
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -152,18 +173,31 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-lg bg-destructive/5">
+      <Card className="border-none shadow-lg bg-primary/5">
         <CardHeader>
-          <CardTitle className="text-lg text-destructive">Account Security</CardTitle>
-          <CardDescription>Manage your password and security settings.</CardDescription>
+          <CardTitle className="text-lg text-primary flex items-center gap-2">
+            <Key className="w-5 h-5" /> Account Security
+          </CardTitle>
+          <CardDescription>Update your password or request account recovery.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            For security reasons, to change your password or delete your account, please contact our support team.
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            To change your password, we will send a secure link to your registered email address.
           </p>
-          <Button variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/10">
-            Request Security Action
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-12 font-bold gap-2 border-primary/20 hover:bg-primary/10 text-primary"
+              onClick={handlePasswordReset}
+              disabled={resetting}
+            >
+              {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+              Send Password Reset Email
+            </Button>
+            <Button variant="ghost" className="flex-1 h-12 font-bold text-destructive hover:bg-destructive/5 border border-destructive/10">
+              Request Account Deletion
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
