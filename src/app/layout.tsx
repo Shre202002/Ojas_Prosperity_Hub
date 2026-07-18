@@ -1,9 +1,9 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Playfair_Display, JetBrains_Mono, DM_Sans } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { ReferralTracker } from '@/components/ReferralTracker';
 
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
@@ -23,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${dmSans.variable} ${playfair.variable} ${jetbrains.variable} font-sans antialiased`}>
         <FirebaseClientProvider>
+          <ReferralTracker />
           {children}
           <Toaster />
         </FirebaseClientProvider>

@@ -59,6 +59,14 @@ export default function RegisterPage() {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
+
+    // If no ref in URL, check localStorage (Captured from landing page)
+    if (!refCode) {
+      const storedRef = localStorage.getItem('sponsorId');
+      if (storedRef) {
+        setRefCode(storedRef);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -68,7 +76,7 @@ export default function RegisterPage() {
   }, [transaction?.status, verifying]);
 
   useEffect(() => {
-    if (refCode.length >= 6 && !isAdminEmail) {
+    if (refCode.length >= 5 && !isAdminEmail) {
       validateReferral(refCode);
     } else if (isAdminEmail) {
       setSponsorData({ name: 'System (Admin Mode)', uid: 'system' });
@@ -121,7 +129,6 @@ export default function RegisterPage() {
         order_id: orderRes.orderId,
         handler: async function (response: any) {
           setVerifying(true);
-          // Handled via Webhook or reactive listener
         },
         prefill: {
           name: name,
@@ -156,7 +163,7 @@ export default function RegisterPage() {
         email,
         phone,
         referralCode: newRefCode,
-        sponsorId: isAdminEmail ? null : sponsorData.uid,
+        sponsorId: isAdminEmail ? null : sponsorData?.uid,
         packageId: selectedPackage.id,
         rank: isAdminEmail ? 'Admin' : 'Distributor',
         kycStatus: isAdminEmail ? 'verified' : 'none',
@@ -258,7 +265,7 @@ export default function RegisterPage() {
                     You are being referred by <strong>{sponsorData.name}</strong>.
                   </AlertDescription>
                 </Alert>
-              ) : !isAdminEmail && refCode.length >= 6 && !validatingRef ? (
+              ) : !isAdminEmail && refCode.length >= 5 && !validatingRef ? (
                 <Alert variant="destructive" className="rounded-2xl shadow-lg shadow-destructive/10">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle className="font-bold">Sponsor Required</AlertTitle>
