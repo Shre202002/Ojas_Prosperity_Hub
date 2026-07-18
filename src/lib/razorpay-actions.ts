@@ -1,34 +1,44 @@
-
 'use server';
 
 import Razorpay from 'razorpay';
 import { z } from 'zod';
 
 const CreateOrderSchema = z.object({
-  packageId: z.string(),
-  amount: z.number(), // In Paise
+  packageId: z.enum(['starter', 'growth', 'platinum', '1400', '2800', '7000']),
   distributorId: z.string().optional(),
   enrolledBy: z.string().optional(),
 });
 
+// Server-side Price Lookup
+const PACKAGE_PRICES: Record<string, number> = {
+  'starter': 500000, // ₹5000 in paise
+  'growth': 1500000,
+  'platinum': 4000000,
+  '1400': 140000,
+  '2800': 280000,
+  '7000': 700000,
+};
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
 
 /**
  * Creates a Razorpay Order server-side.
- * This ensures the price is not manipulated on the client.
  */
 export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchema>) {
   try {
+    const amount = PACKAGE_PRICES[input.packageId];
+    if (!amount) throw new Error('Invalid package selected.');
+
     const order = await razorpay.orders.create({
-      amount: input.amount,
+      amount: amount,
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
       notes: {
         packageId: input.packageId,
-        distributorId: input.distributorId || 'anonymous',
+        distributorId: input.distributorId || 'pending',
         enrolledBy: input.enrolledBy || null,
       },
     });
@@ -38,7 +48,7 @@ export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchem
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+      keyId: process.env.RAZORPAY_KEY_ID!,
     };
   } catch (error: any) {
     console.error('Razorpay Order Creation Failed:', error);

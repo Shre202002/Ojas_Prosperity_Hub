@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -32,9 +32,11 @@ export default function RegisterPage() {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [refCode, setRefCode] = useState(searchParams.get('ref') || '');
   const [sponsorData, setSponsorData] = useState<any>(null);
   const [validatingRef, setValidatingRef] = useState(false);
+  const [activeOrderId, setOrderId] = useState<string | null>(null);
 
   // Form states
   const [email, setEmail] = useState('');
@@ -45,6 +47,12 @@ export default function RegisterPage() {
 
   const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL;
 
+  // Listen to transaction status for secure verification
+  const transRef = useMemoFirebase(() => (
+    db && activeOrderId ? doc(db, 'transactions', activeOrderId) : null
+  ), [db, activeOrderId]);
+  const { data: transaction } = useDoc(transRef);
+
   useEffect(() => {
     // Load Razorpay Script
     const script = document.createElement('script');
@@ -52,6 +60,12 @@ export default function RegisterPage() {
     script.async = true;
     document.body.appendChild(script);
   }, []);
+
+  useEffect(() => {
+    if (transaction?.status === 'paid' && verifying) {
+      finalizeRegistration();
+    }
+  }, [transaction?.status, verifying]);
 
   useEffect(() => {
     if (refCode.length >= 6 && !isAdminEmail) {
@@ -92,10 +106,11 @@ export default function RegisterPage() {
     try {
       const orderRes = await createRazorpayOrder({
         packageId: selectedPackage.id,
-        amount: selectedPackage.price * 100,
       });
 
       if (!orderRes.success) throw new Error(orderRes.error);
+
+      setOrderId(orderRes.orderId);
 
       const options = {
         key: orderRes.keyId,
@@ -105,16 +120,15 @@ export default function RegisterPage() {
         description: `Enrollment: ${selectedPackage.name}`,
         order_id: orderRes.orderId,
         handler: async function (response: any) {
-          await handleRegistrationSuccess(response);
+          setVerifying(true);
+          // Handled via Webhook or reactive listener
         },
         prefill: {
           name: name,
           email: email,
           contact: phone,
         },
-        theme: {
-          color: '#1E7D34', // Leaf Green
-        },
+        theme: { color: '#1E7D34' },
       };
 
       const rzp = (window as any).Razorpay(options);
@@ -126,7 +140,7 @@ export default function RegisterPage() {
     }
   };
 
-  async function handleRegistrationSuccess(paymentResponse: any) {
+  async function finalizeRegistration() {
     if (!auth || !db || !selectedPackage) return;
     setLoading(true);
 
@@ -134,19 +148,6 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       await updateProfile(user, { displayName: name });
-
-      const transactionId = paymentResponse.razorpay_order_id;
-      await setDoc(doc(db, 'transactions', transactionId), {
-        id: transactionId,
-        distributorId: user.uid,
-        packageId: selectedPackage.id,
-        amount: selectedPackage.price * 100,
-        status: 'paid',
-        razorpayOrderId: paymentResponse.razorpay_order_id,
-        razorpayPaymentId: paymentResponse.razorpay_payment_id,
-        createdAt: serverTimestamp(),
-        capturedAt: serverTimestamp(),
-      });
 
       const newRefCode = Math.random().toString(36).substring(2, 9).toUpperCase();
       const distributorData = {
@@ -186,6 +187,7 @@ export default function RegisterPage() {
       toast({ variant: 'destructive', title: 'Activation failed', description: e.message });
     } finally {
       setLoading(false);
+      setVerifying(false);
     }
   }
 
@@ -204,7 +206,13 @@ export default function RegisterPage() {
           </div>
         </CardHeader>
         <CardContent className="p-10">
-          {step === 1 && (
+          {verifying ? (
+            <div className="text-center py-20 space-y-6">
+              <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
+              <h2 className="text-2xl font-headline font-bold">Verifying Payment...</h2>
+              <p className="text-muted-foreground">Please do not refresh. We are confirming your transaction with Razorpay.</p>
+            </div>
+          ) : step === 1 ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -273,9 +281,7 @@ export default function RegisterPage() {
                 Choose Package <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
-          )}
-
-          {step === 2 && (
+          ) : (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {PACKAGES.map((pkg) => (
