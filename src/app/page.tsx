@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
@@ -80,6 +83,10 @@ export default function LandingPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Navigation Menu</SheetTitle>
+                  <SheetDescription>Access product catalogue, business plan, and contact information.</SheetDescription>
+                </SheetHeader>
                 <nav className="flex flex-col gap-6 mt-12">
                   {navLinks.map((link) => (
                     <Link key={link.name} href={link.href} className="text-xl font-headline font-bold text-primary hover:text-secondary transition-colors">
