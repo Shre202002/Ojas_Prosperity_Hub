@@ -26,6 +26,12 @@ service cloud.firestore {
         get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.kycStatus == 'verified';
     }
 
+    // Products collection
+    match /products/{productId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
+
     // Distributors collection
     match /distributors/{distributorId} {
       allow read: if isSignedIn() && (isOwner(distributorId) || isSuperAdmin() || 

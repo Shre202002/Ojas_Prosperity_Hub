@@ -10,18 +10,17 @@ import { doc } from 'firebase/firestore';
 import { 
   LayoutDashboard, 
   Network, 
-  Wallet, 
   User, 
   ShieldCheck, 
   LogOut, 
   ChevronRight,
-  TrendingUp,
   Package,
   ClipboardCheck,
   Sparkles,
   History,
   Globe,
-  UserPlus
+  UserPlus,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -104,6 +103,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {isAdmin && (
               <div className="pt-8 space-y-1.5">
                 <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Management</p>
+                <Link href="/dashboard/admin/products">
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                    pathname === '/dashboard/admin/products' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                  )}>
+                    <ShoppingBag className="w-5 h-5" />
+                    <span className="font-bold text-sm tracking-tight">Product Catalog</span>
+                  </div>
+                </Link>
                 <Link href="/dashboard/admin/transactions">
                   <div className={cn(
                     "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",

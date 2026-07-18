@@ -46,6 +46,37 @@
         "active": { "type": "boolean" }
       }
     },
+    "Product": {
+      "title": "Product",
+      "description": "Physical items in the e-commerce catalog.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "sku": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "bvValue": { "type": "number" },
+        "stock": { "type": "number" },
+        "images": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "storagePath": { "type": "string" },
+              "isPrimary": { "type": "boolean" },
+              "order": { "type": "number" }
+            }
+          } 
+        },
+        "status": { "type": "string", "enum": ["active", "inactive", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      }
+    },
     "Transaction": {
       "title": "Transaction",
       "description": "Financial records of package purchases and payouts.",
@@ -94,6 +125,10 @@
     "/packages/{packageId}": {
       "schema": "Package",
       "description": "Available entry packages."
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Inventory and e-commerce products."
     },
     "/kycSubmissions/{submissionId}": {
       "schema": "KYCSubmission",
