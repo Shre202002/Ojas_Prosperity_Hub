@@ -34,7 +34,7 @@ export default function KYCReviewQueue() {
     db && user ? query(collection(db, 'kycSubmissions'), where('sponsorId', '==', user.uid)) : null
   ), [db, user?.uid]);
   
-  const { data: submissions, loading } = useCollection(submissionsQuery);
+  const { data: submissions, loading } = useCollection(submissionsQuery, 'reviews');
 
   const pendingSubmissions = submissions?.filter(s => s.status === 'pending') || [];
   const historySubmissions = submissions?.filter(s => s.status !== 'pending') || [];

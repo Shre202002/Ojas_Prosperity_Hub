@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -20,7 +19,7 @@ export default function AdminTreesPage() {
   const rootQuery = useMemoFirebase(() => (
     db ? query(collection(db, 'distributors'), limit(1)) : null
   ), [db]);
-  const { data: firstDist } = useCollection(rootQuery);
+  const { data: firstDist } = useCollection(rootQuery, 'users (root/first distributor)');
 
   const displayRootId = rootId || firstDist?.[0]?.uid;
 

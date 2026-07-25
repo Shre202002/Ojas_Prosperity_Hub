@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -40,7 +39,7 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
     db && mode === 'sponsor' ? query(collection(db, 'distributors'), where('sponsorId', '==', id)) : null
   ), [db, id, mode]);
   
-  const { data: sponsorChildren } = useCollection(childrenQuery);
+  const { data: sponsorChildren } = useCollection(childrenQuery, 'users (sponsor children)');
 
   if (loading) return <div className="p-4 animate-pulse bg-slate-100 rounded-xl w-64 h-32" />;
   if (!node) return null;

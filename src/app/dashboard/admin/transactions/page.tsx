@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -46,7 +45,7 @@ export default function AdminTransactionsPage() {
     return q;
   }, [db, statusFilter]);
 
-  const { data: transactions, loading } = useCollection(transactionsQuery);
+  const { data: transactions, loading } = useCollection(transactionsQuery, 'transactions (admin)');
 
   const filteredTransactions = transactions?.filter(t => 
     t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -40,7 +40,7 @@ export default function AdminKYCReviewHub() {
     db ? query(collection(db, 'kycSubmissions'), orderBy('submittedAt', 'desc')) : null
   ), [db]);
   
-  const { data: submissions, loading } = useCollection(submissionsQuery);
+  const { data: submissions, loading } = useCollection(submissionsQuery, 'kyc (admin)');
 
   const filteredSubmissions = submissions?.filter(s => {
     const matchesSearch = s.distributorId.toLowerCase().includes(searchTerm.toLowerCase()) || 

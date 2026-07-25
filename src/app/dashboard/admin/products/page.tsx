@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -57,7 +56,7 @@ export default function AdminProductsPage() {
     return query(collection(db, 'products'), orderBy('createdAt', 'desc'));
   }, [db]);
 
-  const { data: products, loading } = useCollection(productsQuery);
+  const { data: products, loading } = useCollection(productsQuery, 'products (admin)');
 
   const filteredProducts = products?.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 

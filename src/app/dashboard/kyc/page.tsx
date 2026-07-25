@@ -39,7 +39,7 @@ export default function KYCPage() {
     db && user ? query(collection(db, 'kycSubmissions'), where('distributorId', '==', user.uid)) : null
   ), [db, user?.uid]);
   
-  const { data: submissions, loading: loadingSubmissions } = useCollection(kycQuery);
+  const { data: submissions, loading: loadingSubmissions } = useCollection(kycQuery, 'kyc');
   const latestSubmission = submissions?.[0];
 
   const [uploading, setUploading] = useState(false);
