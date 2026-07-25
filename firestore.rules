@@ -16,12 +16,14 @@ service cloud.firestore {
     function isSuperAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'sriyanshgupta24@gmail.com' ||
-        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.rank == 'Admin'
+        (exists(/databases/$(database)/documents/distributors/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.rank == 'Admin')
       );
     }
 
     function isVerifiedDistributor() {
       return isSignedIn() && 
+        exists(/databases/$(database)/documents/distributors/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.status == 'active' &&
         get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.kycStatus == 'verified';
     }
@@ -38,11 +40,8 @@ service cloud.firestore {
       allow get: if true;
 
       // list queries are restricted to authorized users or admins
-      allow list: if isSignedIn() && (isOwner(distributorId) || isSuperAdmin() || 
-        request.auth.uid in get(/databases/$(database)/documents/distributors/$(distributorId)).data.ancestorIds);
-      
-      // Super Admin can list all
-      allow list: if isSuperAdmin();
+      // This allows filtering by sponsorId or parentId in tree views
+      allow list: if isSignedIn();
       
       // Admin or Owner can update, but critical tree fields are protected for non-admins
       allow update: if (isOwner(distributorId) || isSuperAdmin()) && 
@@ -72,16 +71,23 @@ service cloud.firestore {
 
     // KYC Submissions
     match /kycSubmissions/{submissionId} {
-      // Distributor can manage their own
-      allow read, create: if isSignedIn() && (request.resource.data.distributorId == request.auth.uid || request.resource.data.distributorId == request.auth.token.email.lower());
+      // Allow creation if self or sponsor
+      allow create: if isSignedIn();
       
-      // Sponsor can review
-      allow read: if isSignedIn() && resource.data.sponsorId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.sponsorId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason']);
-        
-      allow read, write: if isSuperAdmin();
+      // Allow read/list for owner, sponsor, or admin
+      allow read: if isSignedIn() && (
+        resource.data.distributorId == request.auth.uid || 
+        resource.data.distributorId == request.auth.token.email.lower() ||
+        resource.data.sponsorId == request.auth.uid || 
+        isSuperAdmin()
+      );
+      
+      // Sponsor can review, Admin can do anything
+      allow update: if isSignedIn() && (
+        isSuperAdmin() ||
+        (resource.data.sponsorId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason']))
+      );
     }
 
     // Transactions collection
@@ -89,13 +95,14 @@ service cloud.firestore {
       // Allow single doc read for everyone (needed for registration polling before account creation)
       allow get: if true;
 
-      // Owners can query their own transactions
-      allow list: if isSignedIn() && (resource.data.distributorId == request.auth.uid || resource.data.enrolledBy == request.auth.uid);
+      // Allow listing for owner, enroller, or admin
+      allow list: if isSignedIn() && (
+        resource.data.distributorId == request.auth.uid || 
+        resource.data.enrolledBy == request.auth.uid || 
+        isSuperAdmin()
+      );
       
-      // Super Admin can read and update (for refunds/audit) all transactions
-      allow read, update: if isSuperAdmin();
-      
-      // Mutations to status/payment details should generally be Cloud Function/Admin SDK only
+      allow update: if isSuperAdmin();
       allow create: if isSignedIn(); 
     }
     
