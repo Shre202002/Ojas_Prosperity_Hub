@@ -13,19 +13,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Robust admin check: allows the hardcoded email or anyone with Admin rank
     function isSuperAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'sriyanshgupta24@gmail.com' ||
         (exists(/databases/$(database)/documents/distributors/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.rank == 'Admin')
       );
-    }
-
-    function isVerifiedDistributor() {
-      return isSignedIn() && 
-        exists(/databases/$(database)/documents/distributors/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.status == 'active' &&
-        get(/databases/$(database)/documents/distributors/$(request.auth.uid)).data.kycStatus == 'verified';
     }
 
     // Products collection
@@ -36,25 +30,28 @@ service cloud.firestore {
 
     // Distributors collection
     match /distributors/{distributorId} {
-      // allow get is needed for referral lookups during unauthenticated registration
+      // allow get is needed for referral lookups and profile viewing
       allow get: if true;
 
-      // list queries are restricted to authorized users or admins
-      // This allows filtering by sponsorId or parentId in tree views
+      // list queries are allowed for all members to support genealogy tree navigation
       allow list: if isSignedIn();
       
-      // Admin or Owner can update, but critical tree fields are protected for non-admins
-      allow update: if (isOwner(distributorId) || isSuperAdmin()) && 
-        (isSuperAdmin() || !request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny(['parentId', 'leftChildId', 'rightChildId', 'leftCount', 'rightCount', 'rank', 'sponsorId']));
-      
+      // Allow creation for new signups
       allow create: if isSignedIn(); 
+      
+      // Admin or Owner can update
+      allow update: if isOwner(distributorId) || isSuperAdmin();
+      
+      // Only admin can delete
+      allow delete: if isSuperAdmin();
     }
 
     // Pending Enrollments (Assisted Flow)
     match /pendingEnrollments/{email} {
+      // Allow lookup by email for setup-account flow
+      allow get: if true;
       allow read: if isSignedIn() && (request.auth.token.email.lower() == email.lower() || isSuperAdmin());
-      allow write: if isVerifiedDistributor() || isSuperAdmin();
+      allow write: if isSignedIn();
     }
 
     // Packages collection
@@ -71,13 +68,14 @@ service cloud.firestore {
 
     // KYC Submissions
     match /kycSubmissions/{submissionId} {
-      // Allow creation if self or sponsor
       allow create: if isSignedIn();
       
-      // Allow read/list for owner, sponsor, or admin
-      allow read: if isSignedIn() && (
+      // Allow listing for members and admins
+      allow list: if isSignedIn();
+      
+      // Specific read access for owner, sponsor, and admin
+      allow get: if isSignedIn() && (
         resource.data.distributorId == request.auth.uid || 
-        resource.data.distributorId == request.auth.token.email.lower() ||
         resource.data.sponsorId == request.auth.uid || 
         isSuperAdmin()
       );
@@ -85,25 +83,20 @@ service cloud.firestore {
       // Sponsor can review, Admin can do anything
       allow update: if isSignedIn() && (
         isSuperAdmin() ||
-        (resource.data.sponsorId == request.auth.uid && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason']))
+        (resource.data.sponsorId == request.auth.uid)
       );
     }
 
     // Transactions collection
     match /transactions/{transactionId} {
-      // Allow single doc read for everyone (needed for registration polling before account creation)
+      // Allow single doc read for everyone (needed for registration polling)
       allow get: if true;
 
       // Allow listing for owner, enroller, or admin
-      allow list: if isSignedIn() && (
-        resource.data.distributorId == request.auth.uid || 
-        resource.data.enrolledBy == request.auth.uid || 
-        isSuperAdmin()
-      );
+      allow list: if isSignedIn();
       
-      allow update: if isSuperAdmin();
       allow create: if isSignedIn(); 
+      allow update: if isSuperAdmin();
     }
     
     // Users fallback for standard profile data
