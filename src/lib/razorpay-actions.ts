@@ -1,7 +1,5 @@
-
 'use server';
 
-import Razorpay from 'razorpay';
 import { z } from 'zod';
 import { getFirebaseAdmin } from './firebase-admin';
 
@@ -11,9 +9,8 @@ const CreateOrderSchema = z.object({
   enrolledBy: z.string().optional(),
 });
 
-// Server-side Price Lookup
 const PACKAGE_PRICES: Record<string, number> = {
-  'starter': 500000, // ₹5000 in paise
+  'starter': 500000, 
   'growth': 1500000,
   'platinum': 4000000,
   '1400': 140000,
@@ -21,13 +18,9 @@ const PACKAGE_PRICES: Record<string, number> = {
   '7000': 700000,
 };
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
 /**
- * Creates a Razorpay Order server-side and initializes a transaction doc.
+ * SIMULATED Order Creation
+ * Creates a transaction record in Firestore directly without calling Razorpay API.
  */
 export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchema>) {
   try {
@@ -35,43 +28,53 @@ export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchem
     const amount = PACKAGE_PRICES[input.packageId];
     if (!amount) throw new Error('Invalid package selected.');
 
-    const order = await razorpay.orders.create({
-      amount: amount,
-      currency: 'INR',
-      receipt: `receipt_${Date.now()}`,
-      notes: {
-        packageId: input.packageId,
-        distributorId: input.distributorId || 'pending',
-        enrolledBy: input.enrolledBy || null,
-      },
-    });
+    // Generate a dummy Order ID
+    const dummyOrderId = `sim_order_${Math.random().toString(36).substring(2, 12)}`;
 
     // Create the transaction record on the server (bypassing rules)
-    // so the client can listen to it even before account creation.
-    await db.collection('transactions').doc(order.id).set({
-      id: order.id,
+    await db.collection('transactions').doc(dummyOrderId).set({
+      id: dummyOrderId,
       distributorId: input.distributorId || null,
       packageId: input.packageId,
       amount: amount,
       currency: 'INR',
       status: 'created',
       enrolledBy: input.enrolledBy || null,
-      razorpayOrderId: order.id,
+      razorpayOrderId: dummyOrderId,
       createdAt: new Date(),
     });
 
     return {
       success: true,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID!,
+      orderId: dummyOrderId,
+      amount: amount,
+      currency: 'INR',
+      keyId: 'SIMULATED_KEY',
     };
   } catch (error: any) {
-    console.error('Razorpay Order Creation Failed:', error);
+    console.error('Simulated Order Creation Failed:', error);
     return {
       success: false,
-      error: error.message || 'Could not create payment order.',
+      error: error.message || 'Could not simulate payment order.',
     };
+  }
+}
+
+/**
+ * SIMULATED Payment Verification
+ * Updates a transaction to "paid" status immediately.
+ */
+export async function simulatePaymentCapture(orderId: string) {
+  try {
+    const { db } = getFirebaseAdmin();
+    await db.collection('transactions').doc(orderId).update({
+      status: 'paid',
+      razorpayPaymentId: `sim_pay_${Math.random().toString(36).substring(2, 12)}`,
+      capturedAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }

@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package, ShieldCheck, CreditCard, User, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createRazorpayOrder } from '@/lib/razorpay-actions';
+import { createRazorpayOrder, simulatePaymentCapture } from '@/lib/razorpay-actions';
 
 const PACKAGES = [
   { id: 'starter', name: 'Starter DS', price: 5000, bv: 2500, description: 'Entry tier for new sellers' },
@@ -58,19 +58,13 @@ export default function RegisterPage() {
   const { data: transaction } = useDoc(transRef);
 
   useEffect(() => {
-    // Load Razorpay Script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-
     if (!isIndividual) {
       const storedRef = localStorage.getItem('sponsorId');
       if (!searchParams.get('ref') && storedRef) {
         setRefCode(storedRef);
       }
     }
-  }, [searchParams, isIndividual]);
+  }, [isIndividual]);
 
   useEffect(() => {
     if (transaction?.status === 'paid' && verifying) {
@@ -99,14 +93,13 @@ export default function RegisterPage() {
     setValidatingRef(true);
     setKycError(null);
     try {
-      const refRef = doc(db, 'referralCodes', code);
+      const refRef = doc(db, 'referralCodes', code.trim());
       const refSnap = await getDoc(refRef);
       if (refSnap.exists()) {
         const ownerId = refSnap.data().ownerId;
         const ownerSnap = await getDoc(doc(db, 'distributors', ownerId));
         if (ownerSnap.exists()) {
           const owner = ownerSnap.data();
-          // Mandatory KYC Gate for Sponsoring
           if (owner.kycStatus === 'verified' || owner.rank === 'Admin') {
             setSponsorData(owner);
           } else {
@@ -127,11 +120,12 @@ export default function RegisterPage() {
     }
   }
 
-  const initializePayment = async () => {
+  const startSimulatedPayment = async () => {
     if (!selectedPackage || !email || !name) return;
     setLoading(true);
 
     try {
+      // 1. Create Order record
       const orderRes = await createRazorpayOrder({
         packageId: selectedPackage.id,
       });
@@ -139,37 +133,27 @@ export default function RegisterPage() {
       if (!orderRes.success) throw new Error(orderRes.error);
 
       setOrderId(orderRes.orderId);
+      setVerifying(true);
 
-      const options = {
-        key: orderRes.keyId,
-        amount: orderRes.amount,
-        currency: orderRes.currency,
-        name: 'Wellness Kendra',
-        description: `${isIndividual ? 'Individual' : 'Referred'} Enrollment: ${selectedPackage.name}`,
-        order_id: orderRes.orderId,
-        handler: async function (response: any) {
-          setVerifying(true);
-        },
-        prefill: {
-          name: name,
-          email: email,
-          contact: phone,
-        },
-        theme: { color: '#1E7D34' },
-      };
+      // 2. Simulate Delay for "Processing"
+      setTimeout(async () => {
+        const captureRes = await simulatePaymentCapture(orderRes.orderId);
+        if (!captureRes.success) {
+           toast({ variant: 'destructive', title: 'Simulation failed', description: captureRes.error });
+           setVerifying(false);
+           setLoading(false);
+        }
+        // finalizeRegistration is triggered by transaction listener useEffect
+      }, 2000);
 
-      const rzp = (window as any).Razorpay(options);
-      rzp.open();
     } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Payment setup failed', description: e.message });
-    } finally {
+      toast({ variant: 'destructive', title: 'Setup failed', description: e.message });
       setLoading(false);
     }
   };
 
   async function finalizeRegistration() {
     if (!auth || !db || !selectedPackage) return;
-    setLoading(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -210,17 +194,14 @@ export default function RegisterPage() {
         createdAt: serverTimestamp(),
       });
 
-      toast({ title: 'Welcome aboard!', description: 'Account activated and payment verified.' });
+      toast({ title: 'Welcome aboard!', description: 'Account activated via simulated payment.' });
       router.push('/dashboard');
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Activation failed', description: e.message });
-    } finally {
-      setLoading(false);
       setVerifying(false);
+      setLoading(false);
     }
   }
-
-  if (!db) return null;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 selection:bg-primary/20">
@@ -242,8 +223,8 @@ export default function RegisterPage() {
           {verifying ? (
             <div className="text-center py-20 space-y-6">
               <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-              <h2 className="text-2xl font-headline font-bold">Verifying Payment...</h2>
-              <p className="text-muted-foreground">Please do not refresh. We are confirming your transaction with Razorpay.</p>
+              <h2 className="text-2xl font-headline font-bold">Processing Simulated Payment...</h2>
+              <p className="text-muted-foreground">Confirming your transaction and initializing your dashboard access.</p>
             </div>
           ) : step === 1 ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -366,20 +347,20 @@ export default function RegisterPage() {
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={() => setStep(1)} className="h-16 px-8 font-bold rounded-2xl hover:bg-background">Back</Button>
                 <Button 
-                  onClick={initializePayment} 
+                  onClick={startSimulatedPayment} 
                   disabled={loading || !selectedPackage} 
                   className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-2xl"
                 >
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                     <>
                       <CreditCard className="w-6 h-6" /> 
-                      Secure Checkout
+                      Simulate Payment & Join
                     </>
                   )}
                 </Button>
               </div>
-              <p className="text-center text-xs text-muted-foreground font-medium">
-                Payments secured by Razorpay • UPI, Cards, Netbanking accepted
+              <p className="text-center text-xs text-muted-foreground font-medium italic">
+                * Simulated Payment Gateway - No real funds will be charged.
               </p>
             </div>
           )}

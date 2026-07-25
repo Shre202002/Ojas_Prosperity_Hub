@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,7 @@ import {
   Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createRazorpayOrder } from '@/lib/razorpay-actions';
+import { createRazorpayOrder, simulatePaymentCapture } from '@/lib/razorpay-actions';
 import { cn } from '@/lib/utils';
 
 const PACKAGES = [
@@ -57,14 +56,6 @@ export default function AssistedEnrollmentPage() {
   ), [db, user?.uid]);
   const { data: currentDistributor } = useDoc(distributorRef);
 
-  useEffect(() => {
-    // Load Razorpay Script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
-
   // Validation: Only active + verified can enroll
   const canEnroll = currentDistributor?.status === 'active' && currentDistributor?.kycStatus === 'verified';
 
@@ -83,7 +74,7 @@ export default function AssistedEnrollmentPage() {
     );
   }
 
-  const handleStartPayment = async () => {
+  const handleStartSimulatedPayment = async () => {
     if (!selectedPackage || !user) return;
     setLoading(true);
 
@@ -96,64 +87,36 @@ export default function AssistedEnrollmentPage() {
 
       if (!orderRes.success) throw new Error(orderRes.error);
 
-      const options = {
-        key: orderRes.keyId,
-        amount: orderRes.amount,
-        currency: orderRes.currency,
-        name: 'Ojas Care',
-        description: `Enrollment for ${formData.name}`,
-        order_id: orderRes.orderId,
-        handler: async function (response: any) {
-          await processAssistedEnrollment(response);
-        },
-        prefill: {
-          name: currentDistributor?.name,
-          email: currentDistributor?.email,
-          contact: currentDistributor?.phone,
-        },
-        theme: { color: '#1E7D34' },
-      };
+      // Simulate a small delay for "Payment Processing"
+      setTimeout(async () => {
+        const captureRes = await simulatePaymentCapture(orderRes.orderId);
+        if (captureRes.success) {
+           await processAssistedEnrollment(orderRes.orderId);
+        } else {
+           toast({ variant: 'destructive', title: 'Simulation failed', description: captureRes.error });
+           setLoading(false);
+        }
+      }, 1500);
 
-      const rzp = (window as any).Razorpay(options);
-      rzp.open();
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Payment setup failed', description: e.message });
-    } finally {
       setLoading(false);
     }
   };
 
-  async function processAssistedEnrollment(paymentResponse: any) {
+  async function processAssistedEnrollment(orderId: string) {
     if (!auth || !db || !user || !selectedPackage) return;
-    setLoading(true);
 
     try {
-      // 1. Generate secure temp password
       const tempPassword = Math.random().toString(36).substring(2, 12) + "!";
       
-      const transactionId = paymentResponse.razorpay_order_id;
-
-      // Record transaction
-      await setDoc(doc(db, 'transactions', transactionId), {
-        id: transactionId,
-        distributorId: null, // assigned later
-        packageId: selectedPackage.id,
-        amount: selectedPackage.price * 100,
-        status: 'paid',
-        enrolledBy: user.uid,
-        razorpayOrderId: paymentResponse.razorpay_order_id,
-        razorpayPaymentId: paymentResponse.razorpay_payment_id,
-        createdAt: serverTimestamp(),
-        capturedAt: serverTimestamp(),
-      });
-
       // Prepare Distributor Record (Pending Confirmation)
       const newDistData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         status: 'pending_confirmation',
-        kycStatus: 'pending', // Sponsor provided docs
+        kycStatus: 'pending', 
         sponsorId: user.uid,
         packageId: selectedPackage.id,
         enrollmentType: 'assisted',
@@ -165,7 +128,7 @@ export default function AssistedEnrollmentPage() {
       await setDoc(doc(db, 'pendingEnrollments', formData.email.toLowerCase()), {
         ...newDistData,
         tempPassword,
-        transactionId
+        transactionId: orderId
       });
 
       // Assisted KYC Submission
@@ -173,7 +136,7 @@ export default function AssistedEnrollmentPage() {
         const kycId = `KYC_${Date.now()}`;
         await setDoc(doc(db, 'kycSubmissions', kycId), {
           id: kycId,
-          distributorId: formData.email.toLowerCase(), // temp ID
+          distributorId: formData.email.toLowerCase(),
           sponsorId: user.uid,
           submittedBy: 'sponsor',
           status: 'pending',
@@ -188,7 +151,7 @@ export default function AssistedEnrollmentPage() {
 
       toast({
         title: 'Enrollment Initialized',
-        description: `Credentials sent to ${formData.email}. Account counts toward business once they confirm.`,
+        description: `Credentials sent to ${formData.email}. (Simulation Complete)`,
       });
       setStep(4);
     } catch (e: any) {
@@ -292,14 +255,6 @@ export default function AssistedEnrollmentPage() {
                         onChange={e => setFormData({...formData, address: e.target.value})}
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      {['ID Proof', 'Address Proof', 'Selfie'].map(d => (
-                        <div key={d} className="border-2 border-dashed rounded-xl p-4 text-center space-y-1 hover:bg-background cursor-pointer group transition-colors">
-                           <Camera className="w-5 h-5 mx-auto text-muted-foreground group-hover:text-primary" />
-                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">{d}</p>
-                        </div>
-                      ))}
-                    </div>
                  </div>
               </div>
 
@@ -373,7 +328,7 @@ export default function AssistedEnrollmentPage() {
                   <span className="text-sm font-bold text-muted-foreground uppercase">Package BV</span>
                   <Badge className="font-mono-data">{selectedPackage?.bv} BV</Badge>
                 </div>
-                <Separator />
+                <div className="h-px w-full bg-border" />
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xl font-headline font-bold text-foreground">Total Payable</span>
                   <span className="text-3xl font-mono-data font-bold text-primary">₹{selectedPackage?.price.toLocaleString()}</span>
@@ -383,7 +338,7 @@ export default function AssistedEnrollmentPage() {
               <div className="p-6 bg-accent/10 border border-accent/20 rounded-[1.5rem] flex gap-4">
                 <AlertCircle className="w-6 h-6 text-accent shrink-0" />
                 <p className="text-xs text-accent-foreground font-medium leading-relaxed">
-                  <strong>Important:</strong> Account activation requires member confirmation. Placement and BV will be credited only after the member logs in and verifies their credentials.
+                  <strong>Simulation Mode:</strong> Account activation requires member confirmation. (Simulated Payment capture will be processed).
                 </p>
               </div>
 
@@ -391,10 +346,10 @@ export default function AssistedEnrollmentPage() {
                 <Button variant="ghost" onClick={() => setStep(2)} className="h-16 px-8 font-bold rounded-2xl">Back</Button>
                 <Button 
                   className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-foreground text-white shadow-2xl"
-                  onClick={handleStartPayment}
+                  onClick={handleStartSimulatedPayment}
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CreditCard className="w-6 h-6" /> Pay & Enroll Member</>}
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CreditCard className="w-6 h-6" /> Simulate Payment & Enroll</>}
                 </Button>
               </div>
             </div>
@@ -408,7 +363,7 @@ export default function AssistedEnrollmentPage() {
                <div className="space-y-2">
                  <h3 className="text-3xl font-headline font-bold text-foreground">Enrollment Initialized!</h3>
                  <p className="text-muted-foreground font-medium max-w-md mx-auto">
-                   Distributor credentials have been sent to <strong>{formData.email}</strong>.
+                   Simulated enrollment complete for <strong>{formData.email}</strong>.
                  </p>
                </div>
                <div className="bg-background p-6 rounded-2xl border-2 border-dashed inline-block">
@@ -428,8 +383,4 @@ export default function AssistedEnrollmentPage() {
       </Card>
     </div>
   );
-}
-
-function Separator() {
-  return <div className="h-px w-full bg-border" />;
 }
