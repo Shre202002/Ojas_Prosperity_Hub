@@ -34,11 +34,15 @@ service cloud.firestore {
 
     // Distributors collection
     match /distributors/{distributorId} {
-      allow read: if isSignedIn() && (isOwner(distributorId) || isSuperAdmin() || 
+      // allow get is needed for referral lookups during unauthenticated registration
+      allow get: if true;
+
+      // list queries are restricted to authorized users or admins
+      allow list: if isSignedIn() && (isOwner(distributorId) || isSuperAdmin() || 
         request.auth.uid in get(/databases/$(database)/documents/distributors/$(distributorId)).data.ancestorIds);
       
-      // Super Admin can read all distributors
-      allow read: if isSuperAdmin();
+      // Super Admin can list all
+      allow list: if isSuperAdmin();
       
       // Admin or Owner can update, but critical tree fields are protected for non-admins
       allow update: if (isOwner(distributorId) || isSuperAdmin()) && 

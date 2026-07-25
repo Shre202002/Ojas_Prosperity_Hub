@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -93,13 +94,14 @@ export default function RegisterPage() {
     setValidatingRef(true);
     setKycError(null);
     try {
-      const refRef = doc(db, 'referralCodes', code.trim());
+      const refRef = doc(db, 'referralCodes', code.trim().toUpperCase());
       const refSnap = await getDoc(refRef);
       if (refSnap.exists()) {
         const ownerId = refSnap.data().ownerId;
         const ownerSnap = await getDoc(doc(db, 'distributors', ownerId));
         if (ownerSnap.exists()) {
           const owner = ownerSnap.data();
+          // Universal Rule: Must be verified or Admin to refer
           if (owner.kycStatus === 'verified' || owner.rank === 'Admin') {
             setSponsorData(owner);
           } else {
@@ -108,13 +110,20 @@ export default function RegisterPage() {
           }
         } else {
           setSponsorData(null);
+          setKycError("Invalid referral: Sponsor profile not found.");
         }
       } else {
         setSponsorData(null);
+        setKycError("Referral code not found. Please double check the code.");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Referral validation error:", e);
       setSponsorData(null);
+      if (e.code === 'permission-denied') {
+        setKycError("Unable to verify sponsor due to security restrictions. Please contact admin.");
+      } else {
+        setKycError("An error occurred while validating the referral code.");
+      }
     } finally {
       setValidatingRef(false);
     }
