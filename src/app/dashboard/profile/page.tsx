@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc, updateDoc, serverTimestamp, updateProfile, sendPasswordResetEmail } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, User, Mail, Calendar, Shield, Save, Upload, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthErrorMessage, getPasswordResetActionSettings } from '@/lib/password-reset';
 
 export default function ProfilePage() {
   const auth = useAuth();
@@ -69,7 +68,7 @@ export default function ProfilePage() {
     if (!auth || !user?.email) return;
     setResetting(true);
     try {
-      await sendPasswordResetEmail(auth, user.email);
+      await sendPasswordResetEmail(auth, user.email, getPasswordResetActionSettings());
       toast({
         title: 'Reset Link Sent',
         description: `A password reset email has been sent to ${user.email}.`,
@@ -78,7 +77,7 @@ export default function ProfilePage() {
       toast({
         variant: 'destructive',
         title: 'Action Failed',
-        description: error.message || 'Could not trigger password reset.',
+        description: getAuthErrorMessage(error, 'Could not trigger password reset.'),
       });
     } finally {
       setResetting(false);

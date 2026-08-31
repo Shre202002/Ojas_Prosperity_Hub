@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore } from '@/firebase';
-import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { useAuth, useFirestore, signInWithEmailAndPassword, updatePassword, doc, getDoc, serverTimestamp, updateDoc } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,46 +75,18 @@ export default function SetupAccountPage() {
       // 1. Force password change
       await updatePassword(user, newPassword);
 
-      // 2. Get pending data
-      const pendingRef = doc(db, 'pendingEnrollments', email);
-      const pendingSnap = await getDoc(pendingRef);
-      const pendingData = pendingSnap.data()!;
-
-      // 3. Activate Distributor (Simulated Binary Placement)
-      const newRefCode = Math.random().toString(36).substring(2, 9).toUpperCase();
-      
-      const distributorData = {
-        uid: user.uid,
-        name: pendingData.name,
-        email: pendingData.email,
-        phone: pendingData.phone,
-        referralCode: newRefCode,
-        sponsorId: pendingData.sponsorId,
-        packageId: pendingData.packageId,
-        rank: 'Distributor',
-        kycStatus: pendingData.kycStatus || 'none',
-        leftCount: 0,
-        rightCount: 0,
-        leftBV: 0, // In reality, placement engine would handle this
-        rightBV: 0,
-        incentiveBalance: 0,
-        shoppingBalance: 0,
-        status: 'active',
-        enrollmentType: 'assisted',
-        enrolledBy: pendingData.enrolledBy,
-        createdAt: new Date().toISOString(),
-      };
-
-      await setDoc(doc(db, 'distributors', user.uid), distributorData);
-      await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
-      
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        name: pendingData.name,
-        email: pendingData.email,
-        role: 'user',
-        createdAt: serverTimestamp(),
+      // 2. Let the server create the distributor and both branch links.
+      const token = await user.getIdToken(true);
+      const response = await fetch('/api/network/provision', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ registrationType: 'assisted', email }),
       });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not activate this account.');
 
       // Cleanup pending record
       await updateDoc(doc(db, 'pendingEnrollments', email), { confirmedAt: serverTimestamp() });

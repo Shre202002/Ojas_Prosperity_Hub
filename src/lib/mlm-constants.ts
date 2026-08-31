@@ -1,8 +1,6 @@
 
-export const PACKAGES = {
-  "1400": { bv: 2, matchingPercent: 8, weeklyCap: 20000, directBonus: 100 },
-  "2800": { bv: 4, matchingPercent: 9, weeklyCap: 50000, directBonus: 200 },
-  "7000": { bv: 10, matchingPercent: 10, weeklyCap: 150000, directBonus: 400 },
+export const COMMISSION_POLICY = {
+  sponsorRate: 0.1,
 };
 
 export const RANKS = [

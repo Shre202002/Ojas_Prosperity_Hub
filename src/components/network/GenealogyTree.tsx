@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, doc, collection, query, where } from '@/lib/app-auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +47,8 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
     <div className="flex flex-col items-center">
       <Card className={cn(
         "w-64 border-none shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl relative",
-        node.status === 'inactive' ? 'opacity-60' : ''
+        node.status === 'inactive' ? 'opacity-60' : '',
+        node.kycStatus === 'verified' ? 'ring-2 ring-emerald-400' : node.kycStatus === 'rejected' ? 'ring-2 ring-red-400' : 'ring-2 ring-amber-300'
       )}>
         {unrestricted && <ShieldCheck className="absolute top-2 right-2 w-3 h-3 text-primary opacity-50" />}
         <div className={cn("h-1.5 w-full", mode === 'placement' ? 'bg-primary' : 'bg-slate-900')} />
@@ -65,9 +65,10 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t">
-            <Badge variant="outline" className="text-[8px] font-bold h-5 uppercase">
-              {node.rank}
-            </Badge>
+            <div className="flex gap-1 items-center">
+              <Badge variant="outline" className="text-[8px] font-bold h-5 uppercase">{node.rank}</Badge>
+              <Badge className={cn("text-[8px] font-bold h-5 uppercase text-white", node.kycStatus === 'verified' ? 'bg-emerald-600' : node.kycStatus === 'rejected' ? 'bg-red-600' : 'bg-amber-500')}>{node.kycStatus || 'not submitted'}</Badge>
+            </div>
             {mode === 'placement' && (
               <div className="flex gap-3">
                 <div className="text-center">

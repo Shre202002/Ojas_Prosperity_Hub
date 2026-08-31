@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, collection, query } from '@/lib/app-auth';
 import { GenealogyTree } from '@/components/network/GenealogyTree';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -15,13 +14,15 @@ export default function AdminTreesPage() {
   const [rootId, setRootId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Initial root is the first distributor in the system
+  // Load all distributors once so Admin and Global views use the same source.
   const rootQuery = useMemoFirebase(() => (
-    db ? query(collection(db, 'distributors'), limit(1)) : null
+    db ? query(collection(db, 'distributors')) : null
   ), [db]);
-  const { data: firstDist } = useCollection(rootQuery, 'users (root/first distributor)');
+  const { data: distributors } = useCollection(rootQuery, 'users (global tree)');
 
-  const displayRootId = rootId || firstDist?.[0]?.uid;
+  const adminRoot = distributors?.find((item: any) => item.rank === 'Admin') || distributors?.find((item: any) => !item.sponsorId);
+  const displayRootId = rootId || adminRoot?.uid;
+  const globalRoots = distributors?.filter((item: any) => !item.sponsorId) || [];
 
   return (
     <div className="space-y-8 py-8">
@@ -30,7 +31,7 @@ export default function AdminTreesPage() {
         <div className="space-y-2 relative z-10">
           <h1 className="text-4xl font-headline font-bold">Global Network Audit</h1>
           <p className="text-slate-400 max-w-lg font-medium">
-            Company-wide visibility into every distributor's structure and binary placement.
+            Review the Admin organization or inspect every global network root.
           </p>
         </div>
 
@@ -78,36 +79,36 @@ export default function AdminTreesPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="sponsor" className="space-y-8">
+      <Tabs defaultValue="admin" className="space-y-8">
         <TabsList className="bg-white p-1 rounded-2xl shadow-sm h-14 border">
-          <TabsTrigger value="sponsor" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all">
-            <Users className="w-4 h-4 mr-2" /> Global Sponsor Tree
+          <TabsTrigger value="admin" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all">
+            <Users className="w-4 h-4 mr-2" /> Admin Tree
           </TabsTrigger>
-          <TabsTrigger value="placement" className="px-10 h-full rounded-xl data-[state=active]:bg-slate-900 data-[state=active]:text-white font-bold transition-all">
-            <Network className="w-4 h-4 mr-2" /> Global Binary Tree
+          <TabsTrigger value="global" className="px-10 h-full rounded-xl data-[state=active]:bg-slate-900 data-[state=active]:text-white font-bold transition-all">
+            <Network className="w-4 h-4 mr-2" /> Global Tree
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="sponsor" className="animate-in fade-in duration-500">
+        <TabsContent value="admin" className="animate-in fade-in duration-500">
           <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-[2.5rem]">
             <CardHeader className="border-b bg-white p-8">
-              <CardTitle className="font-headline text-3xl font-bold">Sponsor Genealogy</CardTitle>
-              <CardDescription>Viewing personally referred downlines for ID: {displayRootId}</CardDescription>
+              <CardTitle className="font-headline text-3xl font-bold">Admin Tree</CardTitle>
+              <CardDescription>All users under the Super Admin organization, shown on their left or right placement branch.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              {displayRootId && <GenealogyTree rootId={displayRootId} mode="sponsor" unrestricted={true} />}
+              {displayRootId && <GenealogyTree rootId={displayRootId} mode="placement" unrestricted={true} />}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="placement" className="animate-in fade-in duration-500">
+        <TabsContent value="global" className="animate-in fade-in duration-500">
           <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-[2.5rem]">
             <CardHeader className="border-b bg-white p-8">
-              <CardTitle className="font-headline text-3xl font-bold">Binary Placement</CardTitle>
-              <CardDescription>Viewing spillover and binary structure for ID: {displayRootId}</CardDescription>
+              <CardTitle className="font-headline text-3xl font-bold">Global Tree</CardTitle>
+              <CardDescription>All registered users, including the Admin and independent roots.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              {displayRootId && <GenealogyTree rootId={displayRootId} mode="placement" unrestricted={true} />}
+              <div className="space-y-12">{globalRoots.map((root: any) => <GenealogyTree key={root.uid} rootId={root.uid} mode="placement" unrestricted={true} />)}</div>
             </CardContent>
           </Card>
         </TabsContent>

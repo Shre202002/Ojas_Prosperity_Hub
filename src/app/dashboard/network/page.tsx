@@ -2,12 +2,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser } from '@/lib/app-auth';
 import { GenealogyTree } from '@/components/network/GenealogyTree';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Network, Users, Search, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import AdminTreesPage from '@/app/dashboard/admin/trees/page';
 
 export default function NetworkPage() {
   const auth = useAuth();
@@ -15,6 +16,7 @@ export default function NetworkPage() {
   const [search, setSearch] = useState('');
 
   if (!user) return null;
+  if (user.role === 'admin' || user.email === 'sriyanshgupta24@gmail.com') return <AdminTreesPage />;
 
   return (
     <div className="space-y-8 py-8">

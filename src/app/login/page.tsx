@@ -4,15 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { useAuth, useFirestore } from '@/firebase';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, useAuth, doc, setDoc, getDoc, serverTimestamp } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Mail, Lock, Loader2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthErrorMessage, getPasswordResetActionSettings } from '@/lib/password-reset';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   Dialog,
@@ -36,7 +35,7 @@ export default function LoginPage() {
   const [isResetOpen, setIsResetOpen] = useState(false);
   
   const auth = useAuth();
-  const db = useFirestore();
+  const db = null;
   const router = useRouter();
   const { toast } = useToast();
 
@@ -80,20 +79,21 @@ export default function LoginPage() {
   };
 
   const handleResetPassword = async () => {
-    if (!auth || !resetEmail) return;
+    const normalizedEmail = resetEmail.trim().toLowerCase();
+    if (!auth || !normalizedEmail) return;
     setResetEmailLoading(true);
     try {
-      await sendPasswordResetEmail(auth, resetEmail);
+      await sendPasswordResetEmail(auth, normalizedEmail, getPasswordResetActionSettings());
       toast({
         title: 'Reset Email Sent',
-        description: `Check your inbox at ${resetEmail} for instructions.`,
+        description: `Check your inbox at ${normalizedEmail} for instructions.`,
       });
       setIsResetOpen(false);
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Reset Failed',
-        description: error.message || 'Could not send reset email.',
+        description: getAuthErrorMessage(error, 'Could not send reset email.'),
       });
     } finally {
       setResetEmailLoading(false);
@@ -195,7 +195,7 @@ export default function LoginPage() {
                   <DialogTrigger asChild>
                     <button type="button" className="text-xs font-bold text-primary hover:underline">Forgot Password?</button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl">
+                  <DialogContent className="rounded-3xl" onOpenAutoFocus={() => { if (!resetEmail) setResetEmail(email); }}>
                     <DialogHeader>
                       <DialogTitle>Reset Password</DialogTitle>
                       <DialogDescription>Enter your email and we'll send you a link to reset your account access.</DialogDescription>
@@ -205,6 +205,8 @@ export default function LoginPage() {
                         <Label>Registered Email</Label>
                         <Input 
                           placeholder="name@example.com" 
+                          type="email"
+                          required
                           value={resetEmail}
                           onChange={(e) => setResetEmail(e.target.value)}
                         />

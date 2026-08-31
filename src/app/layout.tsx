@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Playfair_Display, JetBrains_Mono, DM_Sans } from 'next/font/google';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { AuthProvider } from '@/lib/app-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { ReferralTracker } from '@/components/ReferralTracker';
 
@@ -22,11 +22,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${playfair.variable} ${jetbrains.variable} font-sans antialiased`}>
-        <FirebaseClientProvider>
+        <AuthProvider>
           <ReferralTracker />
           {children}
           <Toaster />
-        </FirebaseClientProvider>
+        </AuthProvider>
       </body>
     </html>
   );

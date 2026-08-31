@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useEffect } from 'react';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ import {
   TrendingUp, 
   Users, 
   Copy, 
-  Share2, 
   ShieldCheck, 
   AlertCircle,
   ArrowUpRight,
@@ -35,6 +34,17 @@ export default function DashboardPage() {
   ), [db, user?.uid]);
   
   const { data: distributor, loading, error } = useDoc(distributorRef);
+
+  useEffect(() => {
+    if (!user) return;
+    user.getIdToken().then((token) => fetch('/api/network/provision', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ email: user.email, name: user.displayName }),
+    })).catch((provisionError) => {
+      console.error('Referral link repair failed:', provisionError);
+    });
+  }, [user?.uid]);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -79,10 +89,11 @@ export default function DashboardPage() {
     </div>
   );
 
-  const copyRefLink = () => {
-    const link = `${window.location.origin}/register?ref=${distributor.referralCode}`;
+  const copyRefLink = (position: 'left' | 'right') => {
+    const code = position === 'left' ? distributor.leftReferralCode : distributor.rightReferralCode;
+    const link = `${window.location.origin}/register?ref=${code}`;
     navigator.clipboard.writeText(link);
-    toast({ title: 'Referral link copied!', description: 'Share this to grow your network.' });
+    toast({ title: `${position === 'left' ? 'Left' : 'Right'} referral link copied!`, description: 'Share this link to place a new member in that branch.' });
   };
 
   const isAdmin = distributor.rank === 'Admin';
@@ -126,19 +137,22 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col gap-3 min-w-[300px]">
-          <span className="text-xs font-bold uppercase tracking-widest text-primary/60">Your Referral Link</span>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-white px-3 py-2 rounded-lg text-xs font-mono-data border border-muted">
-              {distributor.referralCode}
-            </code>
-            <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-white" onClick={copyRefLink}>
-              <Copy className="w-4 h-4" />
-            </Button>
-            <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-white">
-              <Share2 className="w-4 h-4" />
-            </Button>
-          </div>
+        <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col gap-3 min-w-[320px]">
+          <span className="text-xs font-bold uppercase tracking-widest text-primary/60">Your Branch Links</span>
+          {(['left', 'right'] as const).map((position) => {
+            const code = position === 'left' ? distributor.leftReferralCode : distributor.rightReferralCode;
+            return (
+              <div key={position} className="flex items-center gap-2">
+                <span className="w-12 text-xs font-bold uppercase text-muted-foreground">{position}</span>
+                <code className="flex-1 bg-white px-3 py-2 rounded-lg text-xs font-mono-data border border-muted truncate">
+                  {code || 'Not configured'}
+                </code>
+                <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-white" onClick={() => copyRefLink(position)} disabled={!code}>
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -259,7 +273,7 @@ export default function DashboardPage() {
             <h3 className="font-headline text-xl font-bold flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" /> Earnings Overview
             </h3>
-            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5">View Detailed Statement</Button>
+            <Link href="/dashboard/wallet"><Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5">View Detailed Statement</Button></Link>
           </div>
           <Card className="border border-muted shadow-sm bg-white overflow-hidden">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 divide-x divide-y md:divide-y-0 border-muted">

@@ -43,7 +43,7 @@ export default function AIAssistantPage() {
         currentRightTeamCount: 512,
         currentLeftBV: 1240,
         currentRightBV: 890,
-        packageType: "2800",
+        packageType: "Current package",
         specificGoal: "Advance to Gold rank by next month"
       });
       setBusinessResult(res);

@@ -3,15 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { useAuth, useFirestore } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, useAuth } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft, Crown, UserPlus, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthErrorMessage, getPasswordResetActionSettings } from '@/lib/password-reset';
 import {
   Dialog,
   DialogContent,
@@ -33,13 +32,12 @@ export default function AdminLoginPage() {
   const [isResetOpen, setIsResetOpen] = useState(false);
   
   const auth = useAuth();
-  const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleAdminAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) return;
+    if (!auth) return;
 
     if (email.toLowerCase() !== SUPER_ADMIN_EMAIL) {
       toast({
@@ -66,46 +64,21 @@ export default function AdminLoginPage() {
         user = userCredential.user;
       }
 
-      const distRef = doc(db, 'distributors', user.uid);
-      const distSnap = await getDoc(distRef);
-
-      if (!distSnap.exists()) {
-        const newRefCode = "ADMIN-" + Math.random().toString(36).substring(2, 7).toUpperCase();
-        
-        await setDoc(doc(db, 'users', user.uid), {
-          uid: user.uid,
+      const token = await user.getIdToken(true);
+      const response = await fetch('/api/network/provision', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
           name: 'Super Admin',
           email: user.email,
-          role: 'admin',
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-        });
-
-        await setDoc(distRef, {
-          uid: user.uid,
-          name: 'Super Admin',
-          email: user.email,
-          referralCode: newRefCode,
-          sponsorId: null,
-          rank: 'Admin',
-          kycStatus: 'verified',
-          status: 'active',
-          incentiveBalance: 0,
-          shoppingBalance: 0,
-          leftCount: 0,
-          rightCount: 0,
-          leftBV: 0,
-          rightBV: 0,
-          createdAt: new Date().toISOString(),
-        });
-
-        await setDoc(doc(db, 'referralCodes', newRefCode), { ownerId: user.uid });
-      } else {
-        await setDoc(doc(db, 'users', user.uid), { 
-          lastLogin: serverTimestamp(),
-          role: 'admin'
-        }, { merge: true });
-      }
+          registrationType: 'admin',
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not provision the admin profile.');
 
       toast({
         title: 'Welcome, Super Admin',
@@ -139,14 +112,14 @@ export default function AdminLoginPage() {
     }
     setResetLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase(), getPasswordResetActionSettings());
       toast({
         title: 'Recovery Link Sent',
-        description: `Admin recovery instructions sent to ${email}`,
+        description: `Admin recovery instructions sent to ${email.trim().toLowerCase()}`,
       });
       setIsResetOpen(false);
     } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Reset Failed', description: e.message });
+      toast({ variant: 'destructive', title: 'Reset Failed', description: getAuthErrorMessage(e, 'Could not send the reset email.') });
     } finally {
       setResetLoading(false);
     }

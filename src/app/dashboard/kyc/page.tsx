@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, query, collection, where } from 'firebase/firestore';
+import { useAuth, useUser, useFirestore, useDoc, useCollection, useMemoFirebase, doc, setDoc, query, collection, where } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -47,40 +46,20 @@ export default function KYCPage() {
     idNumber: '',
     address: '',
   });
+  const [files, setFiles] = useState<{ idProof: File | null; addressProof: File | null; selfie: File | null }>({ idProof: null, addressProof: null, selfie: null });
 
   async function handleSubmitKYC() {
     if (!user || !db || !distributor) return;
     setUploading(true);
     try {
-      const submissionId = `KYC_${user.uid}_${Date.now()}`;
-      
-      // Determine if this is an individual registration or has a sponsor
-      const reviewerType = distributor.sponsorId ? 'sponsor' : 'admin';
-
-      const submissionData = {
-        id: submissionId,
-        distributorId: user.uid,
-        sponsorId: distributor.sponsorId || null,
-        reviewerType,
-        status: 'pending',
-        submittedAt: new Date().toISOString(),
-        idProofUrl: 'https://picsum.photos/seed/id/400/300',
-        addressProofUrl: 'https://picsum.photos/seed/addr/400/300',
-        selfieUrl: 'https://picsum.photos/seed/selfie/400/300',
-        idNumber: formData.idNumber,
-        address: formData.address,
-        reviewedBy: null,
-        reviewedAt: null,
-        rejectionReason: null
-      };
-
-      await setDoc(doc(db, 'kycSubmissions', submissionId), submissionData);
+      const body = new FormData(); body.append('idNumber', formData.idNumber); body.append('address', formData.address);
+      Object.entries(files).forEach(([type, file]) => { if (file) body.append(type, file); });
+      const response = await fetch('/api/kyc', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('ojas_session_token') || ''}` }, body });
+      const result = await response.json(); if (!response.ok) throw new Error(result.error || 'KYC submission failed.');
       
       toast({
         title: 'KYC Submitted',
-        description: reviewerType === 'admin' 
-          ? 'Your documents will be verified by the Admin team.' 
-          : 'Your sponsor will review your documents shortly.',
+        description: distributor.sponsorId ? 'Your sponsor and Admin team can review your documents.' : 'Your documents will be verified by the Admin team.',
       });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Submission failed', description: e.message });
@@ -93,6 +72,14 @@ export default function KYCPage() {
     <div className="flex items-center justify-center p-12">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
+  );
+
+  if (distributor.rank === 'Admin') return (
+    <Card className="max-w-xl mx-auto mt-20 p-10 text-center space-y-4">
+      <ShieldCheck className="w-12 h-12 text-primary mx-auto" />
+      <h1 className="text-2xl font-headline font-bold">Super Admin Verification Not Required</h1>
+      <p className="text-muted-foreground">Use the Admin KYC Review Hub to manage member verification.</p>
+    </Card>
   );
 
   return (
@@ -160,9 +147,9 @@ export default function KYCPage() {
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 {[
-                  { icon: Camera, label: 'ID Proof', sub: 'Aadhaar / PAN / Passport' },
-                  { icon: MapPin, label: 'Address Proof', sub: 'Utility Bill / Statement' },
-                  { icon: UserPlus, label: 'Live Selfie', sub: 'Face must be clearly visible' }
+                  { icon: Camera, label: 'ID Proof', sub: 'Aadhaar / PAN / Passport', type: 'idProof' as const },
+                  { icon: MapPin, label: 'Address Proof', sub: 'Utility Bill / Statement', type: 'addressProof' as const },
+                  { icon: UserPlus, label: 'Live Selfie', sub: 'Face must be clearly visible', type: 'selfie' as const }
                 ].map((doc, i) => (
                   <div key={i} className="p-5 border-2 border-dashed border-muted rounded-[1.5rem] hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group">
                     <div className="flex items-center gap-4">
@@ -173,7 +160,7 @@ export default function KYCPage() {
                         <p className="text-sm font-bold text-foreground">{doc.label}</p>
                         <p className="text-xs text-muted-foreground font-medium">{doc.sub}</p>
                       </div>
-                      <Upload className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <label className="text-xs font-bold text-primary cursor-pointer">{files[doc.type]?.name || 'Choose'}<input type="file" accept="image/*,application/pdf" className="hidden" onChange={event => setFiles(current => ({ ...current, [doc.type]: event.target.files?.[0] || null }))} /></label>
                     </div>
                   </div>
                 ))}
@@ -223,7 +210,7 @@ export default function KYCPage() {
                 )}
                 <Button 
                   onClick={handleSubmitKYC} 
-                  disabled={uploading || !formData.idNumber || !formData.address}
+                  disabled={uploading || !formData.idNumber || !formData.address || !files.idProof || !files.addressProof || !files.selfie}
                   className="w-full h-16 font-bold text-lg gap-3 rounded-[1.5rem] shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-[0.98]"
                 >
                   {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Submit for Verification'}

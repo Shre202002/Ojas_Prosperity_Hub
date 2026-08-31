@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc, setDoc, serverTimestamp, getDoc } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,14 +21,8 @@ import {
   Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createRazorpayOrder, simulatePaymentCapture } from '@/lib/razorpay-actions';
+import { createRazorpayOrder } from '@/lib/razorpay-actions';
 import { cn } from '@/lib/utils';
-
-const PACKAGES = [
-  { id: 'starter', name: 'Starter DS', price: 5000, bv: 2500, description: 'Entry tier for new sellers' },
-  { id: 'growth', name: 'Growth DS', price: 15000, bv: 8000, description: 'Balanced mid-tier for growth' },
-  { id: 'platinum', name: 'Platinum DS', price: 40000, bv: 22000, description: 'Highest rank track unlocked' },
-];
 
 export default function AssistedEnrollmentPage() {
   const auth = useAuth();
@@ -41,6 +34,9 @@ export default function AssistedEnrollmentPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(true);
+  const [packagesError, setPackagesError] = useState('');
 
   // New member data
   const [formData, setFormData] = useState({
@@ -55,6 +51,8 @@ export default function AssistedEnrollmentPage() {
     user && db ? doc(db, 'distributors', user.uid) : null
   ), [db, user?.uid]);
   const { data: currentDistributor } = useDoc(distributorRef);
+
+  useEffect(() => { fetch('/api/packages', { cache: 'no-store' }).then(async response => { if (!response.ok) throw new Error('Could not load packages.'); return response.json(); }).then(result => setPackages(result.data || [])).catch(error => setPackagesError(error.message)).finally(() => setPackagesLoading(false)); }, []);
 
   // Validation: Only active + verified can enroll
   const canEnroll = currentDistributor?.status === 'active' && currentDistributor?.kycStatus === 'verified';
@@ -74,29 +72,53 @@ export default function AssistedEnrollmentPage() {
     );
   }
 
-  const handleStartSimulatedPayment = async () => {
+  const handleStartPayment = async () => {
     if (!selectedPackage || !user) return;
     setLoading(true);
 
     try {
       const orderRes = await createRazorpayOrder({
         packageId: selectedPackage.id,
-        amount: selectedPackage.price * 100,
         enrolledBy: user.uid,
       });
 
       if (!orderRes.success) throw new Error(orderRes.error);
+      if (!orderRes.orderId) throw new Error('Payment order was not created.');
 
-      // Simulate a small delay for "Payment Processing"
-      setTimeout(async () => {
-        const captureRes = await simulatePaymentCapture(orderRes.orderId);
-        if (captureRes.success) {
-           await processAssistedEnrollment(orderRes.orderId);
-        } else {
-           toast({ variant: 'destructive', title: 'Simulation failed', description: captureRes.error });
-           setLoading(false);
+      await new Promise<void>((resolve, reject) => {
+        const checkout = () => {
+          const RazorpayCheckout = (window as any).Razorpay;
+          if (!RazorpayCheckout) return reject(new Error('Payment checkout could not be loaded.'));
+          const razorpay = new RazorpayCheckout({
+            key: orderRes.keyId, amount: orderRes.amount, currency: orderRes.currency,
+            name: 'Ojas Prosperity Hub', description: `${selectedPackage.name} enrollment`,
+            order_id: orderRes.orderId,
+            prefill: { name: formData.name, email: formData.email, contact: formData.phone },
+            theme: { color: '#1d6b52' },
+            handler: async (response: any) => {
+              try {
+                const verification = await fetch('/api/razorpay/verify', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(response),
+                });
+                const result = await verification.json();
+                if (!verification.ok) throw new Error(result.error || 'Payment verification failed.');
+                resolve();
+              } catch (error) { reject(error); }
+            },
+            modal: { ondismiss: () => reject(new Error('Payment was cancelled.')) },
+          });
+          razorpay.open();
+        };
+        if ((window as any).Razorpay) checkout();
+        else {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = checkout;
+          script.onerror = () => reject(new Error('Could not load Razorpay checkout.'));
+          document.body.appendChild(script);
         }
-      }, 1500);
+      });
+      await processAssistedEnrollment(orderRes.orderId);
 
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Payment setup failed', description: e.message });
@@ -151,7 +173,7 @@ export default function AssistedEnrollmentPage() {
 
       toast({
         title: 'Enrollment Initialized',
-        description: `Credentials sent to ${formData.email}. (Simulation Complete)`,
+        description: `Credentials sent to ${formData.email}. Payment confirmed.`,
       });
       setStep(4);
     } catch (e: any) {
@@ -271,7 +293,9 @@ export default function AssistedEnrollmentPage() {
           {step === 2 && (
             <div className="space-y-8 max-w-3xl mx-auto">
               <div className="grid md:grid-cols-3 gap-6">
-                {PACKAGES.map(pkg => (
+                {packagesLoading && <div className="col-span-full flex items-center justify-center gap-2 py-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Loading packages…</div>}
+                {packagesError && <div className="col-span-full rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{packagesError}</div>}
+                {packages.map(pkg => (
                   <div 
                     key={pkg.id}
                     onClick={() => setSelectedPackage(pkg)}
@@ -293,7 +317,7 @@ export default function AssistedEnrollmentPage() {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{pkg.description}</p>
                       </div>
                       <div className="pt-4 border-t border-dashed">
-                        <p className="text-3xl font-mono-data font-bold text-primary">₹{pkg.price.toLocaleString()}</p>
+<p className="text-3xl font-mono-data font-bold text-primary">₹{Number(pkg.price).toLocaleString('en-IN')}</p>
                         <Badge variant="secondary" className="mt-2 font-mono-data text-[10px] rounded-full px-3">{pkg.bv} BV</Badge>
                       </div>
                     </div>
@@ -304,7 +328,7 @@ export default function AssistedEnrollmentPage() {
                 <Button variant="ghost" onClick={() => setStep(1)} className="h-16 px-8 font-bold rounded-2xl">Back</Button>
                 <Button 
                   className="flex-1 h-16 text-lg font-bold gap-2 rounded-2xl bg-primary shadow-xl"
-                  disabled={!selectedPackage}
+                  disabled={!selectedPackage || packagesLoading || Boolean(packagesError) || packages.length === 0}
                   onClick={() => setStep(3)}
                 >
                   Review Summary <ArrowRight className="w-5 h-5" />
@@ -331,14 +355,14 @@ export default function AssistedEnrollmentPage() {
                 <div className="h-px w-full bg-border" />
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xl font-headline font-bold text-foreground">Total Payable</span>
-                  <span className="text-3xl font-mono-data font-bold text-primary">₹{selectedPackage?.price.toLocaleString()}</span>
+                  <span className="text-3xl font-mono-data font-bold text-primary">₹{Number(selectedPackage?.price || 0).toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
               <div className="p-6 bg-accent/10 border border-accent/20 rounded-[1.5rem] flex gap-4">
                 <AlertCircle className="w-6 h-6 text-accent shrink-0" />
                 <p className="text-xs text-accent-foreground font-medium leading-relaxed">
-                  <strong>Simulation Mode:</strong> Account activation requires member confirmation. (Simulated Payment capture will be processed).
+                  <strong>Secure payment:</strong> The member enrollment record is created after Razorpay confirms payment.
                 </p>
               </div>
 
@@ -346,10 +370,10 @@ export default function AssistedEnrollmentPage() {
                 <Button variant="ghost" onClick={() => setStep(2)} className="h-16 px-8 font-bold rounded-2xl">Back</Button>
                 <Button 
                   className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-foreground text-white shadow-2xl"
-                  onClick={handleStartSimulatedPayment}
+                  onClick={handleStartPayment}
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CreditCard className="w-6 h-6" /> Simulate Payment & Enroll</>}
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CreditCard className="w-6 h-6" /> Pay Securely & Enroll</>}
                 </Button>
               </div>
             </div>
@@ -363,7 +387,7 @@ export default function AssistedEnrollmentPage() {
                <div className="space-y-2">
                  <h3 className="text-3xl font-headline font-bold text-foreground">Enrollment Initialized!</h3>
                  <p className="text-muted-foreground font-medium max-w-md mx-auto">
-                   Simulated enrollment complete for <strong>{formData.email}</strong>.
+                   Enrollment payment confirmed for <strong>{formData.email}</strong>.
                  </p>
                </div>
                <div className="bg-background p-6 rounded-2xl border-2 border-dashed inline-block">

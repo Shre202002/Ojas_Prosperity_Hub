@@ -18,7 +18,7 @@ const BusinessGrowthStrategistInputSchema = z.object({
   currentRightTeamCount: z.number().describe('The current number of members in the right team.'),
   currentLeftBV: z.number().describe('The current Business Volume (BV) in the left leg.'),
   currentRightBV: z.number().describe('The current Business Volume (BV) in the right leg.'),
-  packageType: z.enum(["1400", "2800", "7000"]).describe('The package type the member enrolled with.'),
+  packageType: z.string().describe('The package name the member enrolled with.'),
   specificGoal: z.string().optional().describe('A specific goal the member wants to achieve (e.g., "reach Silver rank next month", "increase sales by 20%").'),
 });
 export type BusinessGrowthStrategistInput = z.infer<typeof BusinessGrowthStrategistInputSchema>;

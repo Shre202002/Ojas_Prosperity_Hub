@@ -3,9 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signOut } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc, signOut } from '@/lib/app-auth';
 import { 
   LayoutDashboard, 
   Network, 
@@ -20,7 +18,8 @@ import {
   Globe,
   UserPlus,
   ShoppingBag,
-  Fingerprint
+  Fingerprint,
+  WalletCards
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +29,7 @@ import { Loader2 } from 'lucide-react';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Network', href: '/dashboard/network', icon: Network },
+  { name: 'Wallets', href: '/dashboard/wallet', icon: WalletCards },
   { name: 'Add Member', href: '/dashboard/enroll', icon: UserPlus },
   { name: 'KYC Verification', href: '/dashboard/kyc', icon: ShieldCheck },
   { name: 'Network Reviews', href: '/dashboard/network/reviews', icon: ClipboardCheck },
@@ -85,7 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <ScrollArea className="flex-1 px-4">
           <nav className="space-y-1.5 py-4">
-            {navItems.map((item) => (
+            {navItems.filter(item => !(isAdmin && ['/dashboard/kyc', '/dashboard/wallet'].includes(item.href))).map((item) => (
               <Link key={item.name} href={item.href}>
                 <div className={cn(
                   "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
@@ -103,6 +103,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {isAdmin && (
               <div className="pt-8 space-y-1.5">
                 <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Management</p>
+                <Link href="/dashboard/admin/wallet">
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                    pathname === '/dashboard/admin/wallet' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                  )}>
+                    <WalletCards className="w-5 h-5" />
+                    <span className="font-bold text-sm tracking-tight">Wallets & Income</span>
+                  </div>
+                </Link>
                 <Link href="/dashboard/admin/kyc">
                   <div className={cn(
                     "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
@@ -137,6 +146,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   )}>
                     <Globe className="w-5 h-5" />
                     <span className="font-bold text-sm tracking-tight">Global Trees</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard/admin/packages">
+                  <div className={cn("flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group", pathname === '/dashboard/admin/packages' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50")}>
+                    <Package className="w-5 h-5" /><span className="font-bold text-sm tracking-tight">Packages & Rates</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard/admin/withdrawals">
+                  <div className={cn("flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group", pathname === '/dashboard/admin/withdrawals' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50")}>
+                    <WalletCards className="w-5 h-5" /><span className="font-bold text-sm tracking-tight">Withdrawals</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard/admin/users">
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                    pathname === '/dashboard/admin/users' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                  )}>
+                    <User className="w-5 h-5" />
+                    <span className="font-bold text-sm tracking-tight">Users</span>
                   </div>
                 </Link>
               </div>

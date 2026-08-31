@@ -2,9 +2,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useFirestore } from '@/firebase';
-import { doc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { useFirestore, doc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, deleteDoc } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -69,7 +67,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     if (!files || files.length === 0) return;
 
     setUploading(true);
-    const storage = getStorage();
     const newImages = [...images];
 
     try {
@@ -85,10 +82,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         const imageId = Math.random().toString(36).substring(2, 15);
         const productId = initialData?.id || 'temp';
         const storagePath = `products/${productId}/${imageId}_${file.name}`;
-        const storageRef = ref(storage, storagePath);
-        
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+        const url = URL.createObjectURL(file);
 
         newImages.push({
           url,
@@ -120,8 +114,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     // Attempt to delete from storage if it's a real file
     if (imageToRemove.storagePath) {
       try {
-        const storage = getStorage();
-        await deleteObject(ref(storage, imageToRemove.storagePath));
+        URL.revokeObjectURL(imageToRemove.url);
       } catch (e) {
         console.error('Failed to delete storage object:', e);
       }

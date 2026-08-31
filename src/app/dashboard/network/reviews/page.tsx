@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, doc, updateDoc, collection, query, where, serverTimestamp } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

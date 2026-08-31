@@ -10,7 +10,9 @@
         "name": { "type": "string" },
         "email": { "type": "string" },
         "phone": { "type": "string" },
-        "referralCode": { "type": "string" },
+        "referralCode": { "type": "string", "description": "Legacy field removed by migration." },
+        "leftReferralCode": { "type": "string" },
+        "rightReferralCode": { "type": "string" },
         "sponsorId": { "type": "string" },
         "sponsorChildIds": { "type": "array", "items": { "type": "string" } },
         "parentId": { "type": "string" },
@@ -32,7 +34,7 @@
         "ancestorIds": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["uid", "email", "name", "referralCode"]
+      "required": ["uid", "email", "name", "leftReferralCode", "rightReferralCode"]
     },
     "Package": {
       "title": "Package",
@@ -138,7 +140,12 @@
       "schema": {
         "type": "object",
         "properties": {
-          "ownerId": { "type": "string" }
+          "ownerId": { "type": "string" },
+          "ownerName": { "type": "string" },
+          "ownerKycStatus": { "type": "string" },
+          "ownerRank": { "type": "string" },
+          "treeRootId": { "type": "string" },
+          "position": { "type": "string", "enum": ["left", "right"] }
         }
       },
       "description": "Fast lookup for referral codes."

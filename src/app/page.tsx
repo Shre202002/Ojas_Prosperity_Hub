@@ -275,9 +275,9 @@ export default function LandingPage() {
 
                 <div className="space-y-6 relative z-10">
                   {[
-                    { title: 'Basic Starter', price: '1400', bv: '2 BV', income: '8% Matching', color: 'bg-white/5 border-white/10' },
-                    { title: 'Executive Kit', price: '2800', bv: '4 BV', income: '9% Matching', color: 'bg-white/10 border-white/20' },
-                    { title: 'Business Builder', price: '7000', bv: '10 BV', income: '10% Matching', color: 'bg-secondary/20 border-secondary/30' },
+                    { title: 'Starter', price: 'Live', bv: 'Package BV', income: 'Current pricing', color: 'bg-white/5 border-white/10' },
+                    { title: 'Growth', price: 'Live', bv: 'Package BV', income: 'Current pricing', color: 'bg-white/10 border-white/20' },
+                    { title: 'Platinum', price: 'Live', bv: 'Package BV', income: 'Current pricing', color: 'bg-secondary/20 border-secondary/30' },
                   ].map((pkg, i) => (
                     <div key={i} className={`flex items-center justify-between p-6 rounded-[1.5rem] border ${pkg.color} group hover:bg-white/20 transition-all cursor-pointer`}>
                       <div>

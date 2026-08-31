@@ -2,10 +2,10 @@
 
 ## Core Features:
 
-- Referral-Driven Registration: Secure sign-up using Firebase Auth with sponsor-linked onboarding and side preference selection (left/right).
+- Referral-Driven Registration: Secure MongoDB-backed sign-up with sponsor-linked onboarding and side preference selection (left/right).
 - Automated Binary Placement Tool: Cloud Function logic to intelligently handle node placement and auto-spillover via Breadth-First Search (BFS) in the binary tree.
 - Interactive Visual Downline: A dynamic tree visualization tool that displays 5+ levels of a user's organizational structure using React-D3-Tree.
-- Live Performance Dashboard: Real-time statistics for left/right Team Counts, Business Volume (BV), current Rank progress, and wallet balances stored in Firestore.
+- Live Performance Dashboard: Real-time statistics for left/right Team Counts, Business Volume (BV), current Rank progress, and wallet balances stored in MongoDB.
 - Matching & Direct Income Engine: Backend tool for precise calculation of commission across four package levels based on BV parity and direct referrals.
 - AI Ayurvedic Assistant: A generative AI-powered tool to suggest specific Ojas Care health product protocols based on user member inquiries and business growth.
 - Wallet and KYC Management: Unified system for bank detail integration, withdrawal requests, and transactional history with admin approval flow.
