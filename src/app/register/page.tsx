@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, updateProfile } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ function normalizeReferralCode(value: string) {
   return trimmed.toUpperCase();
 }
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -432,5 +432,13 @@ export default function RegisterPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" /></div>}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }
