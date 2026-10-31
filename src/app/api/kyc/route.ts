@@ -8,7 +8,7 @@ async function upload(file: File, uid: string, type: string) {
   if (!process.env.Imagekit_PRIVATE_KEY) throw new Error('ImageKit is not configured.');
   if (file.size > 8 * 1024 * 1024) throw new Error(`${type} must be smaller than 8MB.`);
   if (!['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(file.type)) throw new Error(`${type} must be JPG, PNG, WEBP, or PDF.`);
-  const body = new FormData(); body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }), file.name); body.append('fileName', `${uid}-${type}-${Date.now()}-${file.name}`); body.append('folder', `/ojas/kyc/${uid}`);
+  const body = new FormData(); body.append('file', new Blob([await file.arrayBuffer()], { type: file.type }), file.name); body.append('fileName', `${uid}-${type}-${Date.now()}-${file.name}`); body.append('folder', `/sjapl/kyc/${uid}`);
   const auth = Buffer.from(`${process.env.Imagekit_PRIVATE_KEY}:`).toString('base64');
   const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', headers: { Authorization: `Basic ${auth}` }, body });
   const result = await response.json(); if (!response.ok) throw new Error(result.message || 'Image upload failed.');

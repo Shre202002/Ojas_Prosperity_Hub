@@ -27,8 +27,8 @@ export const PRODUCTS: Product[] = [
   {
     id: 1,
     slug: "veer-shakti",
-    name: "Ayurvedic Kendra Veer Shakti",
-    brand: "Ayurvedic Kendra",
+    name: "Veer Shakti",
+    brand: "Shri Jaya Ayur Neuro",
     category: "Men's Wellness",
     price: 1499,
     salePrice: 1199,
@@ -37,14 +37,14 @@ export const PRODUCTS: Product[] = [
     stock: 100,
     sku: "AK-VS-500",
     packSize: "500ml",
-    image: "/assets/products/veer-shakti.png",
+    image: "/assets/products/ojas-veer-shakti.png",
     gallery: [
-      "/assets/products/veer-shakti.png"
+      "/assets/products/ojas-veer-shakti.png"
     ],
     rating: 4.8,
     reviews: 128,
     shortDescription: "Premium Ayurvedic wellness tonic for men's vitality, stamina, and overall wellness.",
-    description: "Ayurvedic Kendra Veer Shakti is a carefully crafted herbal wellness tonic designed to support men's active lifestyle, energy levels, and overall well-being.",
+    description: "Veer Shakti is a carefully crafted herbal wellness tonic designed to support men's active lifestyle, energy levels, and overall well-being.",
     benefits: [
       "Supports strength and stamina",
       "Promotes vitality and wellness",
@@ -60,8 +60,8 @@ export const PRODUCTS: Product[] = [
   {
     id: 2,
     slug: "nari-shakti",
-    name: "Ayurvedic Kendra Nari Shakti",
-    brand: "Ayurvedic Kendra",
+    name: "Nari Shakti",
+    brand: "Shri Jaya Ayur Neuro",
     category: "Women's Wellness",
     price: 1499,
     salePrice: 1199,
@@ -70,14 +70,14 @@ export const PRODUCTS: Product[] = [
     stock: 100,
     sku: "AK-NS-500",
     packSize: "500ml",
-    image: "/assets/products/nari-shakti.png",
+    image: "/assets/products/ojas-nari-shakti.png",
     gallery: [
-      "/assets/products/nari-shakti.png"
+      "/assets/products/ojas-nari-shakti.png"
     ],
     rating: 4.9,
     reviews: 96,
     shortDescription: "Herbal wellness tonic formulated to support women's health, vitality, and daily wellness.",
-    description: "Ayurvedic Kendra Nari Shakti is an Ayurvedic wellness tonic designed to support women's overall health, vitality, and active lifestyle.",
+    description: "Nari Shakti is an Ayurvedic wellness tonic designed to support women's overall health, vitality, and active lifestyle.",
     benefits: [
       "Supports women's wellness",
       "Supports daily vitality",
@@ -93,8 +93,8 @@ export const PRODUCTS: Product[] = [
   {
     id: 3,
     slug: "sea-thorn",
-    name: "Ayurvedic Kendra Sea Thorn",
-    brand: "Ayurvedic Kendra",
+    name: "Sea Thorn",
+    brand: "Shri Jaya Ayur Neuro",
     category: "Nutrition & Immunity",
     price: 1699,
     salePrice: 1299,
@@ -110,7 +110,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.9,
     reviews: 142,
     shortDescription: "Sea Buckthorn nutritional supplement rich in antioxidants, vitamins, and omega fatty acids.",
-    description: "Ayurvedic Kendra Sea Thorn is a premium nutritional wellness supplement enriched with Sea Buckthorn to support immunity, skin health, and overall wellness.",
+    description: "Sea Thorn is a premium nutritional wellness supplement enriched with Sea Buckthorn to support immunity, skin health, and overall wellness.",
     benefits: [
       "Rich in antioxidants",
       "Supports immunity",
@@ -126,8 +126,8 @@ export const PRODUCTS: Product[] = [
   {
     id: 4,
     slug: "liver-amrit",
-    name: "Ayurvedic Kendra Liver Amrit",
-    brand: "Ayurvedic Kendra",
+    name: "Liver Amrit",
+    brand: "Shri Jaya Ayur Neuro",
     category: "Digestive & Liver Wellness",
     price: 1599,
     salePrice: 1249,
@@ -143,7 +143,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.8,
     reviews: 85,
     shortDescription: "Herbal wellness tonic designed to support digestive wellness and overall health.",
-    description: "Ayurvedic Kendra Liver Amrit is a traditional herbal wellness tonic formulated to support digestive wellness and maintain overall well-being.",
+    description: "Liver Amrit is a traditional herbal wellness tonic formulated to support digestive wellness and maintain overall well-being.",
     benefits: [
       "Supports digestive wellness",
       "Supports liver health",

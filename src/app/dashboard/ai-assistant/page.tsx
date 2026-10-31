@@ -61,7 +61,7 @@ export default function AIAssistantPage() {
           <Sparkles className="w-8 h-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary">Ayurvedic Kendra AI Assistant</h1>
+          <h1 className="text-3xl font-headline font-bold text-primary">SJAPL AI Assistant</h1>
           <p className="text-muted-foreground">Personalized Ayurvedic advice and business growth strategies powered by AI.</p>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function AIAssistantPage() {
 
             <div className="space-y-6">
               {!healthResult && !loading && (
-                <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-white rounded-3xl border-2 border-dashed opacity-50">
+                <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-white rounded-2xl border-2 border-dashed opacity-50">
                   <Leaf className="w-16 h-16 text-primary/20 mb-4" />
                   <p className="text-muted-foreground italic font-medium">Your personalized Ayurvedic protocol will appear here.</p>
                 </div>
@@ -161,7 +161,7 @@ export default function AIAssistantPage() {
                       <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{healthResult.protocolDescription}</p>
                     </div>
 
-                    <div className="p-4 bg-secondary/10 rounded-2xl border border-secondary/20">
+                    <div className="p-4 bg-accent/10 rounded-2xl border border-accent/20">
                       <h4 className="font-headline font-bold text-secondary-foreground flex items-center gap-2 mb-2">
                         <TrendingUp className="w-4 h-4" /> Growth Tip
                       </h4>
@@ -208,7 +208,7 @@ export default function AIAssistantPage() {
                      <ul className="space-y-3">
                        {businessResult.downlineGrowthTips.map((tip, i) => (
                          <li key={i} className="flex gap-3 text-sm">
-                           <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" /> {tip}
+                           <CheckCircle2 className="w-4 h-4 text-accent shrink-0" /> {tip}
                          </li>
                        ))}
                      </ul>

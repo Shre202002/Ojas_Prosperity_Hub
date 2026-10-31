@@ -2,6 +2,7 @@ import type { ClientSession, Db, ObjectId } from 'mongodb';
 import { ObjectId as MongoObjectId } from 'mongodb';
 import { getActiveBvRate } from './package-config';
 import { appendCompanyLedger } from './company-ledger';
+import { recordWalletTransaction, matchingCommissionEntry } from './wallet-transactions';
 
 export const MATCHING_RATE = 0.15;
 export type MatchingSide = 'left' | 'right';
@@ -66,6 +67,7 @@ export async function createMatchingCommission({ db, session, beneficiaryId, lef
   await db.collection('distributors').updateOne({ uid: beneficiaryId }, { $inc: { commissionBvBalance: matchedBv * MATCHING_RATE }, $set: { updatedAt: now } }, { session });
   const commission = { commissionKey: matchingId, commissionType: 'matching', matchingId, beneficiaryId, sourceUserIds, leftLotIds: leftLotIds.map(id => id.toHexString()), rightLotIds: rightLotIds.map(id => id.toHexString()), matchedLeftBv: leftBv, matchedRightBv: rightBv, bvAmount: matchedBv * MATCHING_RATE, commissionRate: MATCHING_RATE, rateAtEarn, commissionAmount, status: 'credited', createdAt: now };
   await db.collection('commissions').insertOne(commission, { session });
+  await recordWalletTransaction(matchingCommissionEntry({ beneficiaryId, commissionKey: matchingId, bv: commission.bvAmount, rate: rateAtEarn, amountInr: commissionAmount, matchedBv, sourceUserIds, at: now }), session);
   await appendCompanyLedger({ entryType: 'commission_payout', direction: 'debit', amount: commissionAmount, referenceCollection: 'commissions', referenceId: matchingId, userId: beneficiaryId, bv: commission.bvAmount, description: `Matching bonus for ${matchedBv} BV` }, session);
   return commission;
 }

@@ -10,7 +10,7 @@ function randomPart(length = 7) {
 }
 
 /** Creates a readable referral code and verifies it is unused before returning it. */
-export async function createUniqueReferralCode(db: Firestore, prefix = 'OJAS') {
+export async function createUniqueReferralCode(db: Firestore, prefix = 'SJAPL') {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const code = `${prefix}-${randomPart()}`;
     const existing = await getDoc(doc(db, 'referralCodes', code));
@@ -20,7 +20,7 @@ export async function createUniqueReferralCode(db: Firestore, prefix = 'OJAS') {
   throw new Error('Unable to create a unique referral code. Please try again.');
 }
 
-export async function createUniqueReferralCodes(db: Firestore, prefix = 'OJAS') {
+export async function createUniqueReferralCodes(db: Firestore, prefix = 'SJAPL') {
   const left = await createUniqueReferralCode(db, `${prefix}-L`);
   const right = await createUniqueReferralCode(db, `${prefix}-R`);
   return { left, right };

@@ -18,7 +18,7 @@ export const orderBy = (..._args: unknown[]) => ({});
 export const limit = (..._args: unknown[]) => ({});
 export const serverTimestamp = () => new Date();
 export async function getDoc(ref: AppRef) {
-  const token = localStorage.getItem('ojas_session_token');
+  const token = localStorage.getItem('sjapl_session_token');
   const endpoint = ref.collection === 'transactions' && !token ? '/api/payment-status' : `/api/data/${ref.collection}`;
   const lookupKey = ref.collection === 'referralCodes' ? 'code' : 'id';
   const result = await apiRequest(`${endpoint}?${lookupKey}=${encodeURIComponent(ref.id || '')}`);

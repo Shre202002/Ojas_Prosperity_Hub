@@ -37,9 +37,13 @@ export async function ensureMongoIndexes() {
     db.collection('companyLedger').createIndex({ createdAt: -1 }),
     db.collection('companyLedger').createIndex({ userId: 1, createdAt: -1 }),
     db.collection('companyLedger').createIndex({ entryType: 1, createdAt: -1 }),
+    db.collection('walletTransactions').createIndex({ idempotencyKey: 1 }, { unique: true }),
+    db.collection('walletTransactions').createIndex({ userId: 1, createdAt: -1 }),
+    db.collection('walletTransactions').createIndex({ userId: 1, type: 1, createdAt: -1 }),
+    db.collection('walletTransactions').createIndex({ type: 1, createdAt: -1 }),
+    db.collection('walletTransactions').createIndex({ referenceCollection: 1, referenceId: 1 }),
     db.collection('kycSubmissions').createIndex({ distributorId: 1, submittedAt: -1 }),
     db.collection('kycSubmissions').createIndex({ sponsorId: 1, submittedAt: -1 }),
-    db.collection('pendingEnrollments').createIndex({ email: 1 }, { unique: true }),
   ]);
 }
 

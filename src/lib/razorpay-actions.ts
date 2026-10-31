@@ -33,7 +33,7 @@ export async function createRazorpayOrder(input: z.infer<typeof CreateOrderSchem
     const order = await razorpay.orders.create({
       amount,
       currency: 'INR',
-      receipt: `ojas_${Date.now()}`,
+      receipt: `sjapl_${Date.now()}`,
       notes: { packageId: pkg.id, enrolledBy: input.enrolledBy || '' },
     });
 

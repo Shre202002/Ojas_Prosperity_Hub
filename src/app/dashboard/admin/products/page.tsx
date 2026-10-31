@@ -108,7 +108,7 @@ export default function AdminProductsPage() {
     <div className="space-y-8 py-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <h1 className="text-4xl font-headline font-bold text-slate-900">Product Catalog</h1>
+          <h1 className="text-4xl font-headline font-bold text-foreground">Product Catalog</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             <Package className="w-4 h-4 text-primary" />
             Manage inventory, categories, and BV values for the platform.
@@ -124,7 +124,7 @@ export default function AdminProductsPage() {
               <Plus className="w-5 h-5" /> Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem]">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-2xl font-headline font-bold">
                 {editingProduct ? 'Edit Product' : 'Create New Product'}
@@ -145,7 +145,7 @@ export default function AdminProductsPage() {
         <Card className="border-none shadow-md bg-white">
           <CardContent className="p-6">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Inventory</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Active Inventory</p>
               <p className="text-2xl font-mono-data font-bold">{products?.filter(p => p.status === 'active').length || 0}</p>
             </div>
           </CardContent>
@@ -153,28 +153,28 @@ export default function AdminProductsPage() {
         <Card className="border-none shadow-md bg-white">
           <CardContent className="p-6">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total SKU Count</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total SKU Count</p>
               <p className="text-2xl font-mono-data font-bold">{products?.length || 0}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem]">
-        <CardHeader className="bg-slate-50 border-b pb-6 p-8">
+      <Card className="border-none shadow-xl bg-white overflow-hidden rounded-2xl">
+        <CardHeader className="bg-muted border-b pb-6 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-4 top-3.5 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder="Search by Name or SKU..." 
-                className="pl-12 h-14 rounded-2xl border-slate-200 font-medium"
+                className="pl-12 h-14 rounded-2xl border-border font-medium"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border">
-                 <Filter className="w-4 h-4 text-slate-400" />
+                 <Filter className="w-4 h-4 text-muted-foreground" />
                  <select 
                   className="bg-transparent text-sm font-bold outline-none cursor-pointer"
                   value={statusFilter}
@@ -191,7 +191,7 @@ export default function AdminProductsPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead className="font-bold w-[100px]">Thumb</TableHead>
                 <TableHead className="font-bold">Product Details</TableHead>
@@ -219,7 +219,7 @@ export default function AdminProductsPage() {
               ) : filteredProducts.map((p) => {
                 const primaryImage = p.images?.find((img: any) => img.isPrimary) || p.images?.[0];
                 return (
-                  <TableRow key={p.id} className="group hover:bg-slate-50 transition-colors">
+                  <TableRow key={p.id} className="group hover:bg-muted transition-colors">
                     <TableCell>
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
                         {primaryImage ? (
@@ -248,7 +248,7 @@ export default function AdminProductsPage() {
                     </TableCell>
                     <TableCell className="font-bold text-primary">₹{p.price.toLocaleString()}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5 text-secondary">
+                      <div className="flex items-center gap-1.5 text-accent">
                         <TrendingUp className="w-3.5 h-3.5" />
                         <span className="font-mono-data font-bold">{p.bvValue}</span>
                       </div>
@@ -256,7 +256,7 @@ export default function AdminProductsPage() {
                     <TableCell>
                       <span className={cn(
                         "text-xs font-bold",
-                        p.stock < 10 ? "text-red-500" : "text-slate-600"
+                        p.stock < 10 ? "text-red-500" : "text-muted-foreground"
                       )}>
                         {p.stock !== null ? p.stock : 'Unlimited'}
                       </span>
@@ -265,7 +265,7 @@ export default function AdminProductsPage() {
                       <Badge className={cn(
                         "font-bold text-[10px] uppercase tracking-widest",
                         p.status === 'active' ? "bg-primary text-white" : 
-                        p.status === 'inactive' ? "bg-slate-200 text-slate-500" : "bg-destructive text-white"
+                        p.status === 'inactive' ? "bg-slate-200 text-muted-foreground" : "bg-destructive text-white"
                       )}>
                         {p.status}
                       </Badge>
@@ -286,7 +286,7 @@ export default function AdminProductsPage() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:text-secondary"
+                          className="h-8 w-8 hover:text-accent"
                           onClick={() => handleToggleStatus(p)}
                         >
                           {p.status === 'active' ? <Archive className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}

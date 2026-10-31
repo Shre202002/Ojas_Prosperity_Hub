@@ -10,7 +10,7 @@ async function uploadToImageKit(file: File, distributorId: string, type: string)
   const form = new FormData();
   form.append('file', new Blob([await file.arrayBuffer()], { type: file.type }), file.name);
   form.append('fileName', `${distributorId}-${type}-${Date.now()}-${file.name}`);
-  form.append('folder', `/ojas/kyc/${distributorId}`);
+  form.append('folder', `/sjapl/kyc/${distributorId}`);
   const auth = Buffer.from(`${privateKey}:`).toString('base64');
   const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', headers: { Authorization: `Basic ${auth}` }, body: form });
   const result = await response.json();

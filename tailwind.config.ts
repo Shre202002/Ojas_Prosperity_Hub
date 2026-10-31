@@ -11,8 +11,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        body: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        headline: ['var(--font-display)', 'Georgia', 'serif'],
+        deva: ['var(--font-deva)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

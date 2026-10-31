@@ -106,7 +106,7 @@ export default function ProfilePage() {
             <AvatarFallback className="text-3xl">{(name || user?.displayName || 'U')[0]}</AvatarFallback>
           </Avatar>
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-headline">{profileData?.name || 'Ojas Member'}</CardTitle>
+            <CardTitle className="text-2xl font-headline">{profileData?.name || 'SJAPL Member'}</CardTitle>
             <CardDescription className="flex items-center gap-2">
               <Shield className="w-3 h-3" /> {profileData?.role?.toUpperCase() || 'USER'}
             </CardDescription>

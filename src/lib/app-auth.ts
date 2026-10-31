@@ -5,7 +5,7 @@ import * as React from 'react';
 
 export type AppUser = { uid: string; email: string; displayName?: string | null; photoURL?: string | null; role?: string | null; getIdToken: (refresh?: boolean) => Promise<string> };
 export type AppAuth = { currentUser: AppUser | null };
-const tokenKey = 'ojas_session_token';
+const tokenKey = 'sjapl_session_token';
 let currentUser: AppUser | null = null;
 const listeners = new Set<(user: AppUser | null) => void>();
 const notify = () => listeners.forEach(listener => listener(currentUser));

@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, useAuth } from '@/lib/app-auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, useAuth } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft, Crown, UserPlus, LogIn } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft, UserPlus, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAuthErrorMessage, getPasswordResetActionSettings } from '@/lib/password-reset';
+import { BrandLogo } from '@/components/layout/BrandLogo';
+import { BRAND } from '@/lib/brand';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +23,6 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 
-const SUPER_ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
-
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,75 +30,42 @@ export default function AdminLoginPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [isResetOpen, setIsResetOpen] = useState(false);
-  
+
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleAdminAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
-
-    if (email.toLowerCase() !== SUPER_ADMIN_EMAIL) {
-      toast({
-        variant: 'destructive',
-        title: 'Unauthorized Email',
-        description: 'Only the designated Super Admin email can access this gateway.',
-      });
-      return;
-    }
-
     setLoading(true);
     try {
-      let user;
-      if (isSetupMode) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        user = userCredential.user;
-        
-        toast({
-          title: 'Admin Created',
-          description: 'Your Super Admin account has been initialized.',
-        });
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        user = userCredential.user;
+      const { user } = isSetupMode
+        ? await createUserWithEmailAndPassword(auth, email.trim(), password)
+        : await signInWithEmailAndPassword(auth, email.trim(), password);
+
+      // The server decides who is an admin (SUPER_ADMIN_EMAIL); anyone else is turned away.
+      if (user.role !== 'admin') {
+        await signOut(auth);
+        throw new Error('This account does not have administrator access.');
       }
 
       const token = await user.getIdToken(true);
       const response = await fetch('/api/network/provision', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: 'Super Admin',
-          email: user.email,
-          registrationType: 'admin',
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: 'Super Admin', email: user.email, registrationType: 'admin' }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not provision the admin profile.');
 
-      toast({
-        title: 'Welcome, Super Admin',
-        description: 'Platform management mode activated.',
-      });
+      toast({ title: 'Welcome, Super Admin', description: 'Platform management mode activated.' });
       router.push('/dashboard');
     } catch (error: any) {
-      let message = 'Invalid credentials for admin portal.';
-      if (error.code === 'auth/email-already-in-use') {
-        message = 'Account already exists. Please login instead.';
-        setIsSetupMode(false);
-      }
-      if (error.code === 'auth/weak-password') message = 'Password should be at least 6 characters.';
-      if (error.code === 'auth/user-not-found') message = 'Admin account not found. Please use Setup mode first.';
-      if (error.code === 'auth/wrong-password') message = 'Incorrect password for admin portal.';
-      
+      if (isSetupMode && /already registered/i.test(error.message)) setIsSetupMode(false);
       toast({
         variant: 'destructive',
-        title: 'Authentication Error',
-        description: message,
+        title: 'Authentication error',
+        description: getAuthErrorMessage(error, error.message || 'Invalid credentials for the admin portal.'),
       });
     } finally {
       setLoading(false);
@@ -106,104 +73,73 @@ export default function AdminLoginPage() {
   };
 
   const handleResetPassword = async () => {
-    if (!auth || !email) {
-      toast({ variant: 'destructive', title: 'Email Required', description: 'Please enter your admin email above first.' });
+    if (!email) {
+      toast({ variant: 'destructive', title: 'Email required', description: 'Please enter your admin email first.' });
       return;
     }
     setResetLoading(true);
     try {
       await sendPasswordResetEmail(auth, email.trim().toLowerCase(), getPasswordResetActionSettings());
-      toast({
-        title: 'Recovery Link Sent',
-        description: `Admin recovery instructions sent to ${email.trim().toLowerCase()}`,
-      });
+      toast({ title: 'Request received', description: 'If this email is registered, recovery instructions will be sent to it.' });
       setIsResetOpen(false);
     } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Reset Failed', description: getAuthErrorMessage(e, 'Could not send the reset email.') });
+      toast({ variant: 'destructive', title: 'Reset failed', description: getAuthErrorMessage(e, 'Could not start the password reset.') });
     } finally {
       setResetLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary rounded-full blur-[120px]"></div>
-      </div>
+  const field = 'pl-10 h-12 bg-white/5 border-white/15 text-white placeholder:text-white/40';
 
-      <div className="relative z-10 w-full max-w-md space-y-8">
+  return (
+    <div className="min-h-screen bg-brand-gradient flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/20 rotate-3">
-            <Crown className="w-10 h-10" />
-          </div>
+          <BrandLogo size={72} showName={false} />
           <div className="space-y-1">
-            <h1 className="text-3xl font-headline font-bold text-white">
-              {isSetupMode ? 'Admin Setup' : 'Super Admin'}
-            </h1>
-            <p className="text-slate-400 font-medium">Ayurvedic Kendra Management Portal</p>
+            <h1 className="text-3xl font-bold text-white">{isSetupMode ? 'Admin setup' : 'Super Admin'}</h1>
+            <p className="text-white/60">{BRAND.name} management portal</p>
           </div>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/10 backdrop-blur-xl border border-white/10 text-white">
+        <Card className="bg-white/[0.06] backdrop-blur-xl border-white/15 text-white shadow-2xl">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-xl font-headline font-bold flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-primary" /> {isSetupMode ? 'Initialize Master Account' : 'Secure Gateway'}
+            <CardTitle className="text-xl flex items-center justify-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-accent" /> {isSetupMode ? 'Initialize master account' : 'Secure gateway'}
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              {isSetupMode 
-                ? 'Configure your master password to begin.' 
-                : 'Enter your credentials to access the management tools.'}
+            <CardDescription className="text-white/60">
+              {isSetupMode ? 'Choose a master password to begin.' : 'Enter your credentials to open the management tools.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
             <form onSubmit={handleAdminAuth} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Admin Email</Label>
+                <Label htmlFor="email" className="text-white/80">Admin email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    className="pl-10 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-slate-500 h-12" 
-                    placeholder="sriyanshgupta24@gmail.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Mail className="absolute left-3 top-4 w-4 h-4 text-white/40" />
+                  <Input id="email" type="email" autoComplete="email" className={field} placeholder="admin@yourcompany.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" title="Password" className="text-slate-300">
-                    {isSetupMode ? 'Create Password' : 'Secret Key'}
-                  </Label>
+                  <Label htmlFor="password" className="text-white/80">{isSetupMode ? 'Create password' : 'Password'}</Label>
                   {!isSetupMode && (
                     <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
                       <DialogTrigger asChild>
-                        <button type="button" className="text-[10px] uppercase font-bold text-primary hover:text-white transition-colors">Reset Key</button>
+                        <button type="button" className="text-xs font-semibold text-accent hover:text-white transition-colors">Forgot password?</button>
                       </DialogTrigger>
-                      <DialogContent className="bg-slate-900 border-white/10 text-white">
+                      <DialogContent>
                         <DialogHeader>
-                          <DialogTitle className="text-white">Admin Access Recovery</DialogTitle>
-                          <DialogDescription className="text-slate-400">This will send a secure reset link to the master admin email.</DialogDescription>
+                          <DialogTitle>Admin access recovery</DialogTitle>
+                          <DialogDescription>We will start a secure reset for the admin email below.</DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-2 py-4">
-                           <Label className="text-slate-300">Confirm Admin Email</Label>
-                           <Input 
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="bg-white/5 border-white/10 text-white"
-                            placeholder="sriyanshgupta24@gmail.com"
-                           />
+                        <div className="space-y-2 py-2">
+                          <Label htmlFor="admin-reset-email">Admin email</Label>
+                          <Input id="admin-reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
                         <DialogFooter>
-                          <Button 
-                            onClick={handleResetPassword} 
-                            disabled={resetLoading || !email}
-                            className="w-full bg-primary hover:bg-primary/90 text-white h-12 font-bold"
-                          >
-                            {resetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Recovery Link'}
+                          <Button onClick={handleResetPassword} disabled={resetLoading || !email} className="w-full h-11 font-semibold">
+                            {resetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send recovery link'}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -211,46 +147,31 @@ export default function AdminLoginPage() {
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    className="pl-10 rounded-xl bg-white/5 border-white/10 text-white h-12" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <Lock className="absolute left-3 top-4 w-4 h-4 text-white/40" />
+                  <Input id="password" type="password" autoComplete={isSetupMode ? 'new-password' : 'current-password'} className={field} value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-14 font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 mt-4" disabled={loading}>
+              <Button type="submit" className="w-full h-12 font-semibold bg-accent text-accent-foreground hover:bg-accent/90 mt-2" disabled={loading}>
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <span className="flex items-center gap-2">
                     {isSetupMode ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                    {isSetupMode ? 'Initialize Admin' : 'Enter Management Portal'}
+                    {isSetupMode ? 'Initialize admin' : 'Enter management portal'}
                   </span>
                 )}
               </Button>
             </form>
-
-            <button 
-              onClick={() => setIsSetupMode(!isSetupMode)}
-              className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors mt-2"
-            >
-              {isSetupMode ? 'Already have an account? Login here' : 'First time? Setup master account'}
+            <button type="button" onClick={() => setIsSetupMode(!isSetupMode)} className="w-full text-center text-sm text-white/60 hover:text-white transition-colors">
+              {isSetupMode ? 'Already set up? Sign in' : 'First time? Set up master account'}
             </button>
           </CardContent>
           <CardFooter>
-            <Link href="/login" className="w-full">
-              <Button variant="ghost" className="w-full text-slate-400 hover:text-white hover:bg-white/5 gap-2">
-                <ArrowLeft className="w-4 h-4" /> Standard Member Login
-              </Button>
-            </Link>
+            <Button asChild variant="ghost" className="w-full text-white/60 hover:text-white hover:bg-white/10 gap-2">
+              <Link href="/login"><ArrowLeft className="w-4 h-4" /> Member login</Link>
+            </Button>
           </CardFooter>
         </Card>
-        
-        <p className="text-center text-slate-500 text-xs font-medium">
-          Authorized Personnel Only • IP Logging Active
-        </p>
+
+        <p className="text-center text-white/40 text-xs">Authorized personnel only</p>
       </div>
     </div>
   );

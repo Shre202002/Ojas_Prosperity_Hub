@@ -1,14 +1,11 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
-  ArrowLeft, 
   CheckCircle2, 
   ShoppingCart, 
   ShieldCheck, 
@@ -19,14 +16,15 @@ import {
   Tag
 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/products';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { ProductImage } from '@/components/ProductImage';
+import { SiteHeader } from '@/components/layout/SiteHeader';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   
   const product = PRODUCTS.find((p) => p.slug === id);
-  const logoImage = PlaceHolderImages.find(img => img.id === 'site-logo');
 
   if (!product) {
     return (
@@ -39,43 +37,17 @@ export default function ProductDetailsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-primary/10 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          {logoImage && (
-            <Image 
-              src={logoImage.imageUrl} 
-              alt="Logo" 
-              width={40} 
-              height={40} 
-              className="object-contain"
-              unoptimized
-            />
-          )}
-          <span className="font-headline font-bold text-lg text-primary tracking-tight uppercase hidden sm:inline-block">Ayurvedic Kendra</span>
-        </Link>
-        <Link href="/">
-          <Button variant="ghost" className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Back to Home
-          </Button>
-        </Link>
-      </header>
+      <SiteHeader />
 
-      <main className="pt-24 pb-16 px-6 max-w-7xl mx-auto">
+      <main className="pt-28 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Image */}
           <div className="space-y-6">
-            <div className="relative aspect-square rounded-3xl overflow-hidden bg-white shadow-2xl border-4 border-white">
-              <Image 
-                src={product.image} 
-                alt={product.name} 
-                fill 
-                className="object-cover p-8"
-                unoptimized
-              />
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-secondary/50 shadow-xl border border-border/60">
+              <ProductImage src={product.image} alt={product.name} className="object-contain p-4" />
               <div className="absolute top-6 left-6 flex flex-col gap-2">
                 {product.isBestSeller && (
-                  <Badge className="px-4 py-1.5 text-sm uppercase tracking-wider shadow-lg bg-secondary text-secondary-foreground">
+                  <Badge className="px-4 py-1.5 text-sm uppercase tracking-wider shadow-lg bg-accent text-accent-foreground">
                     Best Seller
                   </Badge>
                 )}
@@ -88,7 +60,7 @@ export default function ProductDetailsPage() {
             </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <Card className="border-none shadow-md bg-white">
+              <Card className="border-border/60 shadow-sm">
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="bg-primary/10 p-2 rounded-full">
                     <ShieldCheck className="w-5 h-5 text-primary" />
@@ -96,10 +68,10 @@ export default function ProductDetailsPage() {
                   <div className="text-xs font-bold uppercase opacity-60">100% Herbal</div>
                 </CardContent>
               </Card>
-              <Card className="border-none shadow-md bg-white">
+              <Card className="border-border/60 shadow-sm">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <div className="bg-secondary/10 p-2 rounded-full">
-                    <Leaf className="w-5 h-5 text-secondary" />
+                  <div className="bg-accent/10 p-2 rounded-full">
+                    <Leaf className="w-5 h-5 text-accent" />
                   </div>
                   <div className="text-xs font-bold uppercase opacity-60">Pure Ayurveda</div>
                 </CardContent>
@@ -110,7 +82,7 @@ export default function ProductDetailsPage() {
           {/* Product Info */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-secondary">
+              <div className="flex items-center gap-2 text-accent">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
@@ -123,7 +95,7 @@ export default function ProductDetailsPage() {
               
               <div className="flex flex-col gap-1">
                 <div className="flex items-baseline gap-4">
-                  <div className="text-4xl font-bold text-secondary">₹{product.salePrice}</div>
+                  <div className="text-4xl font-bold text-accent">₹{product.salePrice}</div>
                   {product.salePrice < product.price && (
                     <div className="text-xl text-muted-foreground line-through">₹{product.price}</div>
                   )}
@@ -158,7 +130,7 @@ export default function ProductDetailsPage() {
               </ul>
             </div>
 
-            <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 space-y-3">
+            <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-3">
               <h3 className="font-bold text-primary flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" /> How to Use
               </h3>
@@ -181,30 +153,7 @@ export default function ProductDetailsPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-primary text-white py-12 px-6 border-t border-white/10 mt-16 text-center">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <Link href="/" className="inline-flex items-center gap-3">
-            {logoImage && (
-              <Image 
-                src={logoImage.imageUrl} 
-                alt="Logo" 
-                width={40} 
-                height={40} 
-                className="brightness-0 invert object-contain"
-                unoptimized
-              />
-            )}
-            <span className="font-headline font-bold text-xl tracking-tight uppercase">Ayurvedic Kendra</span>
-          </Link>
-          <p className="opacity-70 max-w-2xl mx-auto">
-            Experience the healing power of nature with our scientifically verified Ayurvedic solutions.
-          </p>
-          <div className="pt-8 opacity-40 text-sm">
-            © {new Date().getFullYear()} Ayurvedic Kendra & Neuropathy. All Rights Reserved.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, FileUp, FileText, Loader2, Search, XCircle } from 'lucide-react';
 
 type KycRow = { distributor: any; user: any; submission: any };
-const token = () => localStorage.getItem('ojas_session_token') || '';
+const token = () => localStorage.getItem('sjapl_session_token') || '';
 const documents = [
   { type: 'idProof' as const, label: 'ID Proof' },
   { type: 'addressProof' as const, label: 'Address Proof' },
@@ -60,9 +60,9 @@ export default function AdminKYCReviewHub() {
   const visible = rows.filter(row => `${row.user?.name || ''} ${row.user?.email || ''} ${row.distributor.uid}`.toLowerCase().includes(search.toLowerCase()));
   return (
     <div className="space-y-8 py-8">
-      <div className="bg-slate-900 text-white p-8 rounded-[2rem] flex flex-col md:flex-row justify-between gap-4">
-        <div><h1 className="text-4xl font-headline font-bold">Global KYC Review Hub</h1><p className="text-slate-400">Review every paid non-admin member, including members with no submission.</p></div>
-        <div className="relative md:w-80"><Search className="absolute left-3 top-3 w-4 h-4 text-slate-500" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members..." className="pl-10 bg-white/10 border-white/10 text-white" /></div>
+      <div className="bg-primary text-white p-8 rounded-xl flex flex-col md:flex-row justify-between gap-4">
+        <div><h1 className="text-4xl font-headline font-bold">Global KYC Review Hub</h1><p className="text-muted-foreground">Review every paid non-admin member, including members with no submission.</p></div>
+        <div className="relative md:w-80"><Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members..." className="pl-10 bg-white/10 border-white/10 text-white" /></div>
       </div>
       {loading ? <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /> : (
         <div className="grid gap-5">

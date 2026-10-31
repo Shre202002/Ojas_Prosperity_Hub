@@ -93,7 +93,7 @@ export default function AdminTransactionsPage() {
     <div className="space-y-8 py-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <h1 className="text-4xl font-headline font-bold text-slate-900">Financial Ledger</h1>
+          <h1 className="text-4xl font-headline font-bold text-foreground">Financial Ledger</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             <History className="w-4 h-4 text-primary" />
             Full platform transaction history and reconciliation.
@@ -114,7 +114,7 @@ export default function AdminTransactionsPage() {
         <Card className="border-none shadow-md bg-white">
           <CardContent className="p-6">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Volume</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Volume</p>
               <p className="text-2xl font-mono-data font-bold">₹{(filteredTransactions.reduce((acc, t) => t.status === 'paid' ? acc + t.amount : acc, 0) / 100).toLocaleString()}</p>
             </div>
           </CardContent>
@@ -123,7 +123,7 @@ export default function AdminTransactionsPage() {
           <Card key={s} className="border-none shadow-md bg-white">
             <CardContent className="p-6">
               <div className="space-y-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{s} Count</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{s} Count</p>
                 <p className="text-2xl font-mono-data font-bold">{filteredTransactions.filter(t => t.status === (s === 'pending' ? 'created' : s)).length}</p>
               </div>
             </CardContent>
@@ -131,21 +131,21 @@ export default function AdminTransactionsPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-xl bg-white overflow-hidden rounded-[2.5rem]">
-        <CardHeader className="bg-slate-50 border-b pb-6 p-8">
+      <Card className="border-none shadow-xl bg-white overflow-hidden rounded-2xl">
+        <CardHeader className="bg-muted border-b pb-6 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-4 top-3.5 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder="Search by ID, User, or Payment ID..." 
-                className="pl-12 h-14 rounded-2xl border-slate-200 font-medium"
+                className="pl-12 h-14 rounded-2xl border-border font-medium"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border">
-                 <Filter className="w-4 h-4 text-slate-400" />
+                 <Filter className="w-4 h-4 text-muted-foreground" />
                  <select 
                   className="bg-transparent text-sm font-bold outline-none cursor-pointer"
                   value={statusFilter}
@@ -163,7 +163,7 @@ export default function AdminTransactionsPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead className="font-bold">Transaction ID</TableHead>
                 <TableHead className="font-bold">Distributor</TableHead>
@@ -188,7 +188,7 @@ export default function AdminTransactionsPage() {
                   </TableCell>
                 </TableRow>
               ) : filteredTransactions.map((t) => (
-                <TableRow key={t.id} className="group hover:bg-slate-50 transition-colors">
+                <TableRow key={t.id} className="group hover:bg-muted transition-colors">
                   <TableCell className="font-mono-data text-xs">{t.id.slice(0, 12)}...</TableCell>
                   <TableCell>
                     <div className="space-y-0.5">
@@ -207,12 +207,12 @@ export default function AdminTransactionsPage() {
                       {t.status === 'paid' && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                       {t.status === 'created' && <Clock className="w-3 h-3 text-amber-500" />}
                       {t.status === 'failed' && <AlertCircle className="w-3 h-3 text-red-500" />}
-                      {t.status === 'refunded' && <Ban className="w-3 h-3 text-slate-400" />}
+                      {t.status === 'refunded' && <Ban className="w-3 h-3 text-muted-foreground" />}
                       <span className={cn(
                         "text-[10px] font-bold uppercase tracking-widest",
                         t.status === 'paid' ? 'text-emerald-600' :
                         t.status === 'created' ? 'text-amber-600' :
-                        t.status === 'failed' ? 'text-red-600' : 'text-slate-500'
+                        t.status === 'failed' ? 'text-red-600' : 'text-muted-foreground'
                       )}>
                         {t.status}
                       </span>
@@ -223,7 +223,7 @@ export default function AdminTransactionsPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary">
+                       <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                         <ArrowUpRight className="w-4 h-4" />
                        </Button>
                        {t.status === 'paid' && (

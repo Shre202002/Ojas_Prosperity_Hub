@@ -70,7 +70,7 @@ export default function KYCReviewQueue() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 space-y-10 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] shadow-sm border border-muted">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-2xl shadow-sm border border-muted">
         <div className="space-y-2">
           <h1 className="text-4xl font-headline font-bold text-primary">Network KYC Reviews</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
@@ -101,9 +101,9 @@ export default function KYCReviewQueue() {
         </div>
 
         {pendingSubmissions.length === 0 ? (
-          <Card className="border-none shadow-xl bg-white/50 p-20 text-center rounded-[2.5rem] border-2 border-dashed border-muted">
+          <Card className="border-none shadow-xl bg-white/50 p-20 text-center rounded-2xl border-2 border-dashed border-muted">
             <CardContent className="space-y-4">
-              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-muted-foreground mx-auto shadow-sm">
+              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center text-muted-foreground mx-auto shadow-sm">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <p className="text-muted-foreground font-medium italic text-lg">Your verification queue is currently empty.</p>
@@ -112,7 +112,7 @@ export default function KYCReviewQueue() {
         ) : (
           <div className="grid grid-cols-1 gap-6">
             {pendingSubmissions.map((sub) => (
-              <Card key={sub.id} className="border border-muted shadow-xl rounded-[2.5rem] bg-white overflow-hidden group">
+              <Card key={sub.id} className="border border-muted shadow-xl rounded-2xl bg-white overflow-hidden group">
                 <CardContent className="p-8 flex flex-col lg:flex-row items-center justify-between gap-8">
                   <div className="flex items-center gap-6 flex-1">
                     <Avatar className="h-20 w-20 border-4 border-background shadow-md">
@@ -164,7 +164,7 @@ export default function KYCReviewQueue() {
       {historySubmissions.length > 0 && (
         <div className="space-y-6 pt-10 border-t border-muted">
           <h3 className="font-headline text-2xl font-bold text-primary px-4">Verification History</h3>
-          <Card className="border border-muted shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+          <Card className="border border-muted shadow-xl rounded-2xl bg-white overflow-hidden">
             <CardContent className="p-0">
               <div className="divide-y divide-muted">
                 {historySubmissions.map((sub) => (

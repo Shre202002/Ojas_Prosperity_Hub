@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI assistant that provides tailored strategies and tips for Ojas Care members
+ * @fileOverview An AI assistant that provides tailored strategies and tips for Shri Jaya Ayur Neuro members
  * to grow their downline, improve sales, and advance their rank.
  *
  * - businessGrowthStrategist - A function that handles the business growth strategy generation process.
@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const BusinessGrowthStrategistInputSchema = z.object({
-  userName: z.string().describe('The name of the Ojas Care member.'),
+  userName: z.string().describe('The name of the Shri Jaya Ayur Neuro member.'),
   currentRank: z.string().describe('The current rank of the member (e.g., "Star", "Bronze").'),
   currentLeftTeamCount: z.number().describe('The current number of members in the left team.'),
   currentRightTeamCount: z.number().describe('The current number of members in the right team.'),
@@ -28,7 +28,7 @@ const BusinessGrowthStrategistOutputSchema = z.object({
   downlineGrowthTips: z.array(z.string()).describe('Actionable tips and methods to grow the downline team.'),
   salesImprovementTips: z.array(z.string()).describe('Actionable tips and methods to improve product sales.'),
   rankAdvancementTips: z.array(z.string()).describe('Actionable tips and methods specifically for advancing to the next rank.'),
-  productRecommendation: z.string().optional().describe('A suggestion for an Ojas Care health product relevant to the strategy or member needs.'),
+  productRecommendation: z.string().optional().describe('A suggestion for an Shri Jaya Ayur Neuro health product relevant to the strategy or member needs.'),
   nextSteps: z.string().describe('A concise summary of immediate, actionable next steps.'),
 });
 export type BusinessGrowthStrategistOutput = z.infer<typeof BusinessGrowthStrategistOutputSchema>;
@@ -41,7 +41,7 @@ const businessGrowthStrategistPrompt = ai.definePrompt({
   name: 'businessGrowthStrategistPrompt',
   input: {schema: BusinessGrowthStrategistInputSchema},
   output: {schema: BusinessGrowthStrategistOutputSchema},
-  prompt: `You are an expert MLM coach and business growth strategist for "Ojas Care Private Limited", an Ayurvedic health products company with the tagline "सेहत से समृद्धि" (Health to Prosperity). Your goal is to provide tailored strategies and actionable tips to Ojas Care members to help them maximize their earnings and success.\n\nThe member's current details are:\n- Name: {{{userName}}}\n- Current Rank: {{{currentRank}}}\n- Package Type: ₹{{{packageType}}}\n- Left Team Count: {{{currentLeftTeamCount}}}\n- Right Team Count: {{{currentRightTeamCount}}}\n- Left Business Volume (BV): {{{currentLeftBV}}}\n- Right Business Volume (BV): {{{currentRightBV}}}\n\n{{#if specificGoal}}\nThe member has a specific goal: "{{{specificGoal}}}"\n{{/if}}\n\nBased on this information and the principles of successful MLM business with Ojas Care, provide a comprehensive strategy focusing on downline growth, sales improvement, and rank advancement.\n\nEnsure your advice is:\n- Actionable and practical.\n- Specific to MLM and Ojas Care's product focus (Ayurvedic health products).\n- Structured clearly into the requested output fields.\n\nConsider the interplay between BV, team counts, and rank progression. Guide the user on how to leverage their current position and package type.\n\nYour response MUST be in the JSON format as defined by the output schema, explaining how to grow their downline, improve sales, and advance their rank.\n`
+  prompt: `You are an expert MLM coach and business growth strategist for "Shri Jaya Ayur Neuro Pvt Ltd", an Ayurvedic health products company with the tagline "आरोग्यं परमं सुखम्" (Health is the Supreme Happiness). Your goal is to provide tailored strategies and actionable tips to Shri Jaya Ayur Neuro members to help them maximize their earnings and success.\n\nThe member's current details are:\n- Name: {{{userName}}}\n- Current Rank: {{{currentRank}}}\n- Package Type: ₹{{{packageType}}}\n- Left Team Count: {{{currentLeftTeamCount}}}\n- Right Team Count: {{{currentRightTeamCount}}}\n- Left Business Volume (BV): {{{currentLeftBV}}}\n- Right Business Volume (BV): {{{currentRightBV}}}\n\n{{#if specificGoal}}\nThe member has a specific goal: "{{{specificGoal}}}"\n{{/if}}\n\nBased on this information and the principles of successful MLM business with Shri Jaya Ayur Neuro, provide a comprehensive strategy focusing on downline growth, sales improvement, and rank advancement.\n\nEnsure your advice is:\n- Actionable and practical.\n- Specific to MLM and Shri Jaya Ayur Neuro's product focus (Ayurvedic health products).\n- Structured clearly into the requested output fields.\n\nConsider the interplay between BV, team counts, and rank progression. Guide the user on how to leverage their current position and package type.\n\nYour response MUST be in the JSON format as defined by the output schema, explaining how to grow their downline, improve sales, and advance their rank.\n`
 });
 
 const businessGrowthStrategistFlow = ai.defineFlow(

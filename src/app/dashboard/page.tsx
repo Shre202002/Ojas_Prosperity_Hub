@@ -72,8 +72,8 @@ export default function DashboardPage() {
 
   if (!distributor) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="max-w-md text-center p-8 space-y-6 border-none shadow-2xl rounded-[2.5rem]">
-        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary">
+      <Card className="max-w-md text-center p-8 space-y-6 border-none shadow-2xl rounded-2xl">
+        <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
           <UserPlus className="w-10 h-10" />
         </div>
         <div className="space-y-2">
@@ -101,9 +101,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto py-8 px-4">
       {/* Header Band */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-muted">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-xl shadow-sm border border-muted">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-background rounded-3xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl relative">
+          <div className="w-20 h-20 bg-background rounded-2xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl relative">
             {distributor.name?.[0] || 'U'}
             {isAdmin && <Crown className="w-6 h-6 text-accent absolute -top-2 -right-2 drop-shadow-md" />}
           </div>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
 
             <Card className="border-none shadow-md overflow-hidden bg-secondary text-foreground">
               <CardHeader className="border-b border-black/5">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Total Direct Sellers (L/R)</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Total Members (L/R)</CardTitle>
               </CardHeader>
               <CardContent className="p-8 grid grid-cols-2 gap-8 divide-x divide-black/5">
                 <div className="text-center space-y-2">
@@ -234,11 +234,11 @@ export default function DashboardPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">Target Left</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Target Left</p>
                         <p className="font-mono-data font-bold">5,000</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">Target Right</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Target Right</p>
                         <p className="font-mono-data font-bold">5,000</p>
                       </div>
                     </div>
@@ -253,11 +253,11 @@ export default function DashboardPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">Remaining L</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Remaining L</p>
                         <p className="font-mono-data font-bold text-primary">{Math.max(0, 5000 - (distributor.leftBV || 0))}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400">Remaining R</p>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Remaining R</p>
                         <p className="font-mono-data font-bold text-primary">{Math.max(0, 5000 - (distributor.rightBV || 0))}</p>
                       </div>
                     </div>

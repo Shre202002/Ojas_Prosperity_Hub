@@ -54,7 +54,7 @@ export default function KYCPage() {
     try {
       const body = new FormData(); body.append('idNumber', formData.idNumber); body.append('address', formData.address);
       Object.entries(files).forEach(([type, file]) => { if (file) body.append(type, file); });
-      const response = await fetch('/api/kyc', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('ojas_session_token') || ''}` }, body });
+      const response = await fetch('/api/kyc', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('sjapl_session_token') || ''}` }, body });
       const result = await response.json(); if (!response.ok) throw new Error(result.error || 'KYC submission failed.');
       
       toast({
@@ -110,8 +110,8 @@ export default function KYCPage() {
       </div>
 
       {latestSubmission?.status === 'verified' ? (
-        <Card className="border-none shadow-2xl bg-primary/5 p-12 text-center space-y-6 rounded-[2.5rem] border border-primary/10">
-          <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-primary mx-auto shadow-xl">
+        <Card className="border-none shadow-2xl bg-primary/5 p-12 text-center space-y-6 rounded-2xl border border-primary/10">
+          <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center text-primary mx-auto shadow-xl">
             <ShieldCheck className="w-12 h-12" />
           </div>
           <div className="space-y-2">
@@ -122,8 +122,8 @@ export default function KYCPage() {
           </div>
         </Card>
       ) : latestSubmission?.status === 'pending' ? (
-        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-[2.5rem] bg-white border border-muted">
-          <div className="w-24 h-24 bg-primary/5 rounded-3xl flex items-center justify-center text-[hsl(var(--status-pending))] mx-auto shadow-sm">
+        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-2xl bg-white border border-muted">
+          <div className="w-24 h-24 bg-primary/5 rounded-2xl flex items-center justify-center text-[hsl(var(--status-pending))] mx-auto shadow-sm">
             <Clock className="w-12 h-12" />
           </div>
           <div className="space-y-2">
@@ -136,7 +136,7 @@ export default function KYCPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Card className="border border-muted shadow-xl rounded-[2rem] bg-white overflow-hidden">
+            <Card className="border border-muted shadow-xl rounded-xl bg-white overflow-hidden">
               <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
                 <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
                   <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -169,7 +169,7 @@ export default function KYCPage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="border border-muted shadow-xl rounded-[2rem] bg-white">
+            <Card className="border border-muted shadow-xl rounded-xl bg-white">
               <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
                 <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
                   <div className="p-2 bg-white rounded-xl shadow-sm">

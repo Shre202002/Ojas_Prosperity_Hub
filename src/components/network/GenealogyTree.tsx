@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useDoc, useCollection, useMemoFirebase, doc, collection, query, where } from '@/lib/app-auth';
+import { useFirestore, useDoc, useMemoFirebase, doc } from '@/lib/app-auth';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,22 +11,25 @@ import {
   UserPlus, 
   ChevronRight, 
   ChevronDown, 
-  MoreVertical,
   PlusCircle,
   ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Admin referral codes per leg; when set, each member gets a "join under" link.
+type JoinCodes = { left?: string; right?: string };
+
 interface TreeNodeProps {
   id: string;
-  mode: 'sponsor' | 'placement';
   level: number;
   unrestricted?: boolean;
+  joinCodes?: JoinCodes;
 }
 
-function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
+function TreeNode({ id, level, unrestricted, joinCodes }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 1);
   const db = useFirestore();
+  const { toast } = useToast();
   
   const distributorRef = useMemoFirebase(() => (
     db ? doc(db, 'distributors', id) : null
@@ -33,15 +37,15 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
   
   const { data: node, loading } = useDoc(distributorRef);
 
-  // For Sponsor mode, fetch all direct referrals
-  const childrenQuery = useMemoFirebase(() => (
-    db && mode === 'sponsor' ? query(collection(db, 'distributors'), where('sponsorId', '==', id)) : null
-  ), [db, id, mode]);
-  
-  const { data: sponsorChildren } = useCollection(childrenQuery, 'users (sponsor children)');
-
-  if (loading) return <div className="p-4 animate-pulse bg-slate-100 rounded-xl w-64 h-32" />;
+  if (loading) return <div className="p-4 animate-pulse bg-muted rounded-xl w-64 h-32" />;
   if (!node) return null;
+
+  // New members can only extend this member's own leg: left-leg members grow left, right-leg members grow right.
+  const joinCode = node.leg === 'left' ? joinCodes?.left : node.leg === 'right' ? joinCodes?.right : undefined;
+  const copyJoinLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/register?ref=${joinCode}&under=${node.uid}`);
+    toast({ title: 'Join link copied', description: `New member will be placed on the ${node.leg} side below ${node.name}.` });
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -51,7 +55,7 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
         node.kycStatus === 'verified' ? 'ring-2 ring-emerald-400' : node.kycStatus === 'rejected' ? 'ring-2 ring-red-400' : 'ring-2 ring-amber-300'
       )}>
         {unrestricted && <ShieldCheck className="absolute top-2 right-2 w-3 h-3 text-primary opacity-50" />}
-        <div className={cn("h-1.5 w-full", mode === 'placement' ? 'bg-primary' : 'bg-slate-900')} />
+        <div className="h-1.5 w-full bg-primary" />
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
@@ -69,24 +73,28 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
               <Badge variant="outline" className="text-[8px] font-bold h-5 uppercase">{node.rank}</Badge>
               <Badge className={cn("text-[8px] font-bold h-5 uppercase text-white", node.kycStatus === 'verified' ? 'bg-emerald-600' : node.kycStatus === 'rejected' ? 'bg-red-600' : 'bg-amber-500')}>{node.kycStatus || 'not submitted'}</Badge>
             </div>
-            {mode === 'placement' && (
-              <div className="flex gap-3">
-                <div className="text-center">
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase">L</p>
-                  <p className="text-[10px] font-mono-data font-bold">{node.leftCount || 0}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase">R</p>
-                  <p className="text-[10px] font-mono-data font-bold">{node.rightCount || 0}</p>
-                </div>
+            <div className="flex gap-3">
+              <div className="text-center">
+                <p className="text-[8px] font-bold text-muted-foreground uppercase">L</p>
+                <p className="text-[10px] font-mono-data font-bold">{node.leftCount || 0}</p>
               </div>
-            )}
+              <div className="text-center">
+                <p className="text-[8px] font-bold text-muted-foreground uppercase">R</p>
+                <p className="text-[10px] font-mono-data font-bold">{node.rightCount || 0}</p>
+              </div>
+            </div>
           </div>
+
+          {joinCode && (
+            <Button variant="outline" className="w-full h-8 gap-1 text-[10px] font-bold uppercase tracking-wider" onClick={copyJoinLink}>
+              <UserPlus className="w-3 h-3" /> Copy {node.leg} join link
+            </Button>
+          )}
           
-          {(mode === 'sponsor' && sponsorChildren && sponsorChildren.length > 0) || (mode === 'placement' && (node.leftChildId || node.rightChildId)) ? (
+          {node.leftChildId || node.rightChildId ? (
             <Button 
               variant="ghost" 
-              className="w-full h-8 flex items-center justify-center gap-1 hover:bg-slate-50"
+              className="w-full h-8 flex items-center justify-center gap-1 hover:bg-muted"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -95,7 +103,7 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
               </span>
             </Button>
           ) : (
-            <div className="text-center py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-slate-50 rounded-lg">
+            <div className="text-center py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-muted rounded-lg">
               No Downline
             </div>
           )}
@@ -106,23 +114,15 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
         <div className="mt-8 flex gap-8 relative">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-slate-200" />
           
-          {mode === 'sponsor' ? (
-            sponsorChildren?.map((child: any) => (
-              <TreeNode key={child.uid} id={child.uid} mode={mode} level={level + 1} unrestricted={unrestricted} />
-            ))
+          {node.leftChildId ? (
+            <TreeNode id={node.leftChildId} level={level + 1} unrestricted={unrestricted} joinCodes={joinCodes} />
           ) : (
-            <>
-              {node.leftChildId ? (
-                <TreeNode id={node.leftChildId} mode={mode} level={level + 1} unrestricted={unrestricted} />
-              ) : (
-                <EmptyNode position="Left" />
-              )}
-              {node.rightChildId ? (
-                <TreeNode id={node.rightChildId} mode={mode} level={level + 1} unrestricted={unrestricted} />
-              ) : (
-                <EmptyNode position="Right" />
-              )}
-            </>
+            <EmptyNode position="Left" />
+          )}
+          {node.rightChildId ? (
+            <TreeNode id={node.rightChildId} level={level + 1} unrestricted={unrestricted} joinCodes={joinCodes} />
+          ) : (
+            <EmptyNode position="Right" />
           )}
         </div>
       )}
@@ -132,23 +132,23 @@ function TreeNode({ id, mode, level, unrestricted }: TreeNodeProps) {
 
 function EmptyNode({ position }: { position: string }) {
   return (
-    <Card className="w-64 border-2 border-dashed border-slate-200 bg-slate-50/50 shadow-none flex flex-col items-center justify-center p-8 space-y-4">
+    <Card className="w-64 border-2 border-dashed border-border bg-muted shadow-none flex flex-col items-center justify-center p-8 space-y-4">
       <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
         <PlusCircle className="w-6 h-6" />
       </div>
       <div className="text-center space-y-1">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{position} Slot Open</p>
-        <p className="text-[10px] text-slate-400">Invite someone to fill this leg</p>
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{position} Slot Open</p>
+        <p className="text-[10px] text-muted-foreground">Invite someone to fill this leg</p>
       </div>
     </Card>
   );
 }
 
-export function GenealogyTree({ rootId, mode, unrestricted }: { rootId: string; mode: 'sponsor' | 'placement'; unrestricted?: boolean }) {
+export function GenealogyTree({ rootId, unrestricted, joinCodes }: { rootId: string; unrestricted?: boolean; joinCodes?: JoinCodes }) {
   return (
     <div className="p-8 overflow-x-auto">
       <div className="min-w-max flex justify-center pb-20">
-        <TreeNode id={rootId} mode={mode} level={0} unrestricted={unrestricted} />
+        <TreeNode id={rootId} level={0} unrestricted={unrestricted} joinCodes={joinCodes} />
       </div>
     </div>
   );

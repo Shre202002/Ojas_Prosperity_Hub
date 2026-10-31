@@ -1,5 +1,5 @@
 {
-  "name": "nextn",
+  "name": "sjapl-portal",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "migrate:binary-referrals": "node scripts/migrate-binary-referrals.mjs",
     "migrate:dynamic-bv-rate": "node scripts/migrate-dynamic-bv-rate.mjs",
     "migrate:company-ledger": "node scripts/migrate-company-ledger.mjs",
+    "backfill:wallet-transactions": "node --env-file=.env scripts/backfill-wallet-transactions.mjs",
     "audit:wallet-bv": "node scripts/audit-wallet-bv.mjs",
     "migrate:matching-lots": "node scripts/migrate-matching-lots.mjs",
     "build": "next build",

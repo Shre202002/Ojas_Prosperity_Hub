@@ -1,4 +1,4 @@
-# **App Name**: Ojas Prosperity Hub
+# **App Name**: Shri Jaya Ayur Neuro (SJAPL)
 
 ## Core Features:
 
@@ -7,7 +7,7 @@
 - Interactive Visual Downline: A dynamic tree visualization tool that displays 5+ levels of a user's organizational structure using React-D3-Tree.
 - Live Performance Dashboard: Real-time statistics for left/right Team Counts, Business Volume (BV), current Rank progress, and wallet balances stored in MongoDB.
 - Matching & Direct Income Engine: Backend tool for precise calculation of commission across four package levels based on BV parity and direct referrals.
-- AI Ayurvedic Assistant: A generative AI-powered tool to suggest specific Ojas Care health product protocols based on user member inquiries and business growth.
+- AI Ayurvedic Assistant: A generative AI-powered tool to suggest specific Shri Jaya Ayur Neuro health product protocols based on user member inquiries and business growth.
 - Wallet and KYC Management: Unified system for bank detail integration, withdrawal requests, and transactional history with admin approval flow.
 
 ## Style Guidelines:

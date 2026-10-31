@@ -8,6 +8,7 @@ import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/app-auth';
 import { useToast } from '@/hooks/use-toast';
 import { getAuthErrorMessage } from '@/lib/password-reset';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,8 +68,8 @@ function ResetPasswordForm() {
   };
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center p-6">
-      <Card className="w-full max-w-md shadow-2xl border-none">
+    <AuthShell>
+      <Card className="shadow-xl border-border/60">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Reset Password</CardTitle>
           <CardDescription>{email ? `Create a new password for ${email}.` : 'Create a new password for your account.'}</CardDescription>
@@ -100,7 +101,7 @@ function ResetPasswordForm() {
           )}
         </CardContent>
       </Card>
-    </main>
+    </AuthShell>
   );
 }
 

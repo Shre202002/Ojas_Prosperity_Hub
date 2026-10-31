@@ -5,7 +5,7 @@ import { collection } from '@/lib/mongodb';
 export const runtime = 'nodejs';
 const PUBLIC_COLLECTIONS = new Set(['products', 'packages', 'referralCodes']);
 const ADMIN_COLLECTIONS = new Set(['products', 'packages', 'transactions', 'kycSubmissions', 'distributors']);
-const ALLOWED = new Set(['distributors', 'users', 'referralCodes', 'products', 'packages', 'transactions', 'kycSubmissions', 'pendingEnrollments']);
+const ALLOWED = new Set(['distributors', 'users', 'referralCodes', 'products', 'packages', 'transactions', 'kycSubmissions']);
 
 function response(error: any) {
   const message = error?.message || 'Database request failed.';
@@ -28,7 +28,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (token && name === 'transactions' && !id) await requireAdmin(request);
     if (!token && name === 'referralCodes' && !query.get('code')) return NextResponse.json({ error: 'Code is required.' }, { status: 400 });
     if (token && name === 'users' && !filter.uid) filter.uid = token.uid;
-    if (token && name === 'pendingEnrollments' && !filter.email) filter.email = token.email?.toLowerCase();
     if (token && name === 'kycSubmissions' && !filter.distributorId && !filter.sponsorId) filter.distributorId = token.uid;
     if (token && name === 'transactions' && !ADMIN_COLLECTIONS.has(name)) filter.distributorId = token.uid;
     const docs = await store.find(filter).sort({ createdAt: -1, submittedAt: -1 }).limit(500).toArray();

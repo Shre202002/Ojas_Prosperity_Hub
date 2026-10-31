@@ -199,7 +199,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
             <Input 
               value={formData.name} 
               onChange={e => setFormData({...formData, name: e.target.value})}
-              placeholder="e.g. Ojas Liver Amrit"
+              placeholder="e.g. Liver Amrit"
               required
               className="h-12 rounded-xl"
             />
@@ -280,13 +280,13 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product Media</Label>
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-muted rounded-[2rem] p-10 text-center space-y-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group"
+            className="border-2 border-dashed border-muted rounded-xl p-10 text-center space-y-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group"
           >
             <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto group-hover:bg-primary/10 transition-colors">
                {uploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary" />}
             </div>
             <div className="space-y-1">
-              <p className="font-bold text-slate-700">Drag & Drop Images</p>
+              <p className="font-bold text-foreground">Drag & Drop Images</p>
               <p className="text-xs text-muted-foreground">JPG, PNG, WEBP (Max 5MB)</p>
             </div>
             <input 
@@ -303,7 +303,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           <div className="grid grid-cols-2 gap-4">
              {images.map((img, i) => (
                <div key={i} className={cn(
-                 "relative group rounded-2xl overflow-hidden border-2 aspect-square bg-slate-50",
+                 "relative group rounded-2xl overflow-hidden border-2 aspect-square bg-muted",
                  img.isPrimary ? "border-primary shadow-lg" : "border-muted"
                )}>
                   <Image src={img.url} alt="Product" fill className="object-cover" unoptimized />
@@ -312,7 +312,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className={cn("h-8 w-8 rounded-full", img.isPrimary ? "bg-primary text-white" : "bg-white text-slate-900")}
+                      className={cn("h-8 w-8 rounded-full", img.isPrimary ? "bg-primary text-white" : "bg-white text-foreground")}
                       onClick={() => setPrimary(i)}
                      >
                        <Star className={cn("w-4 h-4", img.isPrimary ? "fill-current" : "")} />
@@ -321,7 +321,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-full bg-white text-slate-900"
+                      className="h-8 w-8 rounded-full bg-white text-foreground"
                       onClick={() => moveImage(i, 'up')}
                      >
                        <ArrowUp className="w-4 h-4" />
@@ -330,7 +330,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-full bg-white text-slate-900"
+                      className="h-8 w-8 rounded-full bg-white text-foreground"
                       onClick={() => moveImage(i, 'down')}
                      >
                        <ArrowDown className="w-4 h-4" />
@@ -353,7 +353,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                </div>
              ))}
              {images.length === 0 && (
-               <div className="col-span-2 border rounded-2xl aspect-[4/1] flex items-center justify-center gap-3 text-muted-foreground bg-slate-50/50">
+               <div className="col-span-2 border rounded-2xl aspect-[4/1] flex items-center justify-center gap-3 text-muted-foreground bg-muted">
                   <ImageIcon className="w-5 h-5" />
                   <p className="text-xs font-bold uppercase tracking-widest">No images uploaded yet</p>
                </div>

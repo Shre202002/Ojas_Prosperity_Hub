@@ -26,20 +26,20 @@ export default function AdminTreesPage() {
 
   return (
     <div className="space-y-8 py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl text-white relative overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-primary p-8 rounded-2xl shadow-2xl text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="space-y-2 relative z-10">
           <h1 className="text-4xl font-headline font-bold">Global Network Audit</h1>
-          <p className="text-slate-400 max-w-lg font-medium">
+          <p className="text-muted-foreground max-w-lg font-medium">
             Review the Admin organization or inspect every global network root.
           </p>
         </div>
 
         <div className="relative w-full md:w-96 relative z-10">
-          <Search className="absolute left-4 top-4 w-5 h-5 text-slate-500" />
+          <Search className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
           <Input 
             placeholder="Search ANY distributor ID..." 
-            className="pl-12 h-14 rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+            className="pl-12 h-14 rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-muted-foreground"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
@@ -61,7 +61,7 @@ export default function AdminTreesPage() {
               <Globe className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Currently Viewing</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Currently Viewing</p>
               <p className="text-sm font-bold font-mono-data">{displayRootId || 'Loading...'}</p>
             </div>
           </CardContent>
@@ -72,7 +72,7 @@ export default function AdminTreesPage() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Audit Status</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Audit Status</p>
               <p className="text-sm font-bold">Unrestricted Access</p>
             </div>
           </CardContent>
@@ -84,31 +84,31 @@ export default function AdminTreesPage() {
           <TabsTrigger value="admin" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all">
             <Users className="w-4 h-4 mr-2" /> Admin Tree
           </TabsTrigger>
-          <TabsTrigger value="global" className="px-10 h-full rounded-xl data-[state=active]:bg-slate-900 data-[state=active]:text-white font-bold transition-all">
+          <TabsTrigger value="global" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all">
             <Network className="w-4 h-4 mr-2" /> Global Tree
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="admin" className="animate-in fade-in duration-500">
-          <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-[2.5rem]">
+          <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-2xl">
             <CardHeader className="border-b bg-white p-8">
               <CardTitle className="font-headline text-3xl font-bold">Admin Tree</CardTitle>
-              <CardDescription>All users under the Super Admin organization, shown on their left or right placement branch.</CardDescription>
+              <CardDescription>All users on the Admin's left and right legs. Use a member's join link to place a new member below them on the same side.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              {displayRootId && <GenealogyTree rootId={displayRootId} mode="placement" unrestricted={true} />}
+              {displayRootId && <GenealogyTree rootId={displayRootId} unrestricted={true} joinCodes={{ left: adminRoot?.leftReferralCode, right: adminRoot?.rightReferralCode }} />}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="global" className="animate-in fade-in duration-500">
-          <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-[2.5rem]">
+          <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-2xl">
             <CardHeader className="border-b bg-white p-8">
               <CardTitle className="font-headline text-3xl font-bold">Global Tree</CardTitle>
               <CardDescription>All registered users, including the Admin and independent roots.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="space-y-12">{globalRoots.map((root: any) => <GenealogyTree key={root.uid} rootId={root.uid} mode="placement" unrestricted={true} />)}</div>
+              <div className="space-y-12">{globalRoots.map((root: any) => <GenealogyTree key={root.uid} rootId={root.uid} unrestricted={true} />)}</div>
             </CardContent>
           </Card>
         </TabsContent>

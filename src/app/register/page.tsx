@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package, ShieldCheck, CreditCard, User, Users, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowRight, Loader2, Package, CreditCard, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder } from '@/lib/razorpay-actions';
-
-const ADMIN_EMAIL = 'sriyanshgupta24@gmail.com';
+import { AuthShell } from '@/components/layout/AuthShell';
+import { BRAND } from '@/lib/brand';
 
 function normalizeReferralCode(value: string) {
   const trimmed = value.trim();
@@ -41,8 +41,7 @@ function RegisterPageContent() {
   const auth = useAuth();
   const db = useFirestore();
 
-  const registrationType = searchParams.get('type') || 'referral';
-  const isIndividual = registrationType === 'individual';
+  const placementUnder = searchParams.get('under') || '';
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -65,27 +64,17 @@ function RegisterPageContent() {
   const [packagesError, setPackagesError] = useState('');
   const referralValidationId = useRef(0);
 
-  const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL;
-
   useEffect(() => { let active = true; setPackagesLoading(true); fetch('/api/packages').then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Could not load packages.'); return result; }).then(result => { if (active) { setPackages(result.data || []); setPackagesError(''); } }).catch(error => { if (active) setPackagesError(error.message || 'Could not load packages.'); }).finally(() => { if (active) setPackagesLoading(false); }); return () => { active = false; }; }, []);
 
   useEffect(() => {
-    if (!isIndividual) {
-      const storedRef = localStorage.getItem('sponsorId');
-      if (!searchParams.get('ref') && storedRef) {
-        setRefCode(normalizeReferralCode(storedRef));
-      }
+    const storedRef = localStorage.getItem('sponsorId');
+    if (!searchParams.get('ref') && storedRef) {
+      setRefCode(normalizeReferralCode(storedRef));
     }
-  }, [isIndividual]);
+  }, []);
 
   useEffect(() => {
-    if (!db || isIndividual) return;
-
-    if (isAdminEmail) {
-      setSponsorData({ name: 'System (Admin Mode)', uid: 'system', kycStatus: 'verified' });
-      setSponsorPosition(null);
-      return;
-    }
+    if (!db) return;
 
     if (refCode.length >= 5) {
       setSponsorData(null);
@@ -97,7 +86,7 @@ function RegisterPageContent() {
       setSponsorPosition(null);
       setKycError(null);
     }
-  }, [refCode, isAdminEmail, isIndividual]);
+  }, [refCode]);
 
   async function validateReferral(code: string) {
     if (!db) return;
@@ -114,7 +103,7 @@ function RegisterPageContent() {
         const referral = refSnap.data();
         const owner = {
           uid: referral.ownerId,
-          name: referral.ownerName || 'Ojas Member',
+          name: referral.ownerName || 'SJAPL Member',
           kycStatus: referral.ownerKycStatus,
           rank: referral.ownerRank,
           treeRootId: referral.treeRootId,
@@ -175,11 +164,11 @@ function RegisterPageContent() {
             key: orderRes.keyId,
             amount: orderRes.amount,
             currency: orderRes.currency,
-            name: 'Ojas Prosperity Hub',
+            name: 'Shri Jaya Ayur Neuro',
             description: `${selectedPackage.name} registration`,
             order_id: orderRes.orderId,
             prefill: { name, email, contact: phone },
-            theme: { color: '#1d6b52' },
+            theme: { color: '#274E37' },
             handler: async (response: any) => {
               try {
                 const verification = await fetch('/api/razorpay/verify', {
@@ -217,7 +206,7 @@ function RegisterPageContent() {
     if (!auth || !db || !selectedPackage) return;
 
     try {
-      if (!isIndividual && !isAdminEmail && !sponsorData?.uid) {
+      if (!sponsorData?.uid) {
         throw new Error('A valid referral code is required before registration.');
       }
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -237,8 +226,9 @@ function RegisterPageContent() {
           phone,
           packageId: selectedPackage.id,
           bv: selectedPackage.bv,
-          sponsorCode: isIndividual || isAdminEmail ? null : refCode,
-          registrationType: isIndividual ? 'individual' : 'referral',
+          sponsorCode: refCode,
+          registrationType: 'referral',
+          placementUnder,
           sponsorPosition,
           paymentOrderId: orderId,
         }),
@@ -256,22 +246,15 @@ function RegisterPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 selection:bg-primary/20">
-      <Card className="w-full max-w-2xl border-muted shadow-2xl overflow-hidden rounded-[2.5rem] bg-white">
-        <CardHeader className="text-center space-y-4 p-10 bg-background border-b border-muted">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20 rotate-3">
-             {isIndividual ? <User className="w-8 h-8" /> : <Users className="w-8 h-8" />}
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="text-4xl font-headline font-bold text-primary">
-              {isIndividual ? 'Individual Partner' : 'Join the Network'}
-            </CardTitle>
-            <CardDescription className="text-lg font-medium text-muted-foreground">
-              {isIndividual ? 'Start your own independent wellness legacy.' : 'Step into your future in natural healthcare.'}
-            </CardDescription>
-          </div>
+    <AuthShell wide>
+      <Card className="border-border/60 shadow-xl overflow-hidden">
+        <CardHeader className="space-y-2 p-6 sm:p-8 bg-secondary/50 border-b">
+          <CardTitle className="text-3xl text-primary">Join {BRAND.short}</CardTitle>
+          <CardDescription>
+            Step {step} of 2: {step === 1 ? 'your details and sponsor' : 'choose a package and pay'}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="p-10">
+        <CardContent className="p-6 sm:p-8">
           {verifying ? (
             <div className="text-center py-20 space-y-6">
               <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
@@ -280,81 +263,61 @@ function RegisterPageContent() {
             </div>
           ) : step === 1 ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="h-14 rounded-xl border-muted bg-background" />
+                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="h-11" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone</Label>
-                  <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91..." className="h-14 rounded-xl border-muted bg-background" />
+                  <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91..." className="h-11" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" className="h-14 rounded-xl border-muted bg-background" />
-                {isAdminEmail && (
-                  <p className="text-xs font-bold text-accent flex items-center gap-1 mt-1">
-                    <ShieldCheck className="w-3 h-3" /> Admin Registration Mode Detected
-                  </p>
-                )}
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" className="h-11" />
               </div>
 
-              {!isIndividual && (
-                <div className="space-y-2">
-                  <Label htmlFor="refCode" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Code</Label>
-                  <div className="relative">
-                    <Input 
-                      id="refCode"
-                      value={refCode}
-                      onChange={(e) => setRefCode(e.target.value)}
-                      onBlur={() => setRefCode(normalizeReferralCode(refCode))}
-                      placeholder={isAdminEmail ? "Bypassed for Admin" : "Enter code or referral link"}
-                      className="h-14 uppercase font-mono-data rounded-xl border-muted bg-background"
-                      disabled={isAdminEmail}
-                    />
-                    {validatingRef && <Loader2 className="absolute right-4 top-4 w-6 h-6 animate-spin text-muted-foreground" />}
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="refCode" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Code</Label>
+                <div className="relative">
+                  <Input 
+                    id="refCode"
+                    value={refCode}
+                    onChange={(e) => setRefCode(e.target.value)}
+                    onBlur={() => setRefCode(normalizeReferralCode(refCode))}
+                    placeholder="Enter code or referral link"
+                    className="h-11 uppercase font-mono-data"
+                  />
+                  {validatingRef && <Loader2 className="absolute right-4 top-4 w-6 h-6 animate-spin text-muted-foreground" />}
                 </div>
-              )}
+              </div>
 
-              {isIndividual ? (
-                <Alert className="bg-secondary/5 border-secondary/20 rounded-2xl">
-                  <ShieldCheck className="h-4 w-4 text-secondary" />
-                  <AlertTitle className="text-secondary font-bold">Independent Registration</AlertTitle>
-                  <AlertDescription className="text-secondary/80">
-                    You are registering without a sponsor. You will build your own root team.
+              {sponsorData ? (
+                <Alert className="bg-primary/5 border-primary/20 rounded-lg">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary font-bold">Valid Sponsor</AlertTitle>
+                  <AlertDescription className="text-primary/80">
+                    You are being referred by <strong>{sponsorData.name}</strong> on the <strong>{sponsorPosition}</strong> branch.
                   </AlertDescription>
                 </Alert>
-              ) : (
-                <>
-                  {!isAdminEmail && sponsorData ? (
-                    <Alert className="bg-primary/5 border-primary/20 rounded-2xl">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                      <AlertTitle className="text-primary font-bold">Valid Sponsor</AlertTitle>
-                      <AlertDescription className="text-primary/80">
-                        You are being referred by <strong>{sponsorData.name}</strong> on the <strong>{sponsorPosition}</strong> branch.
-                      </AlertDescription>
-                    </Alert>
-                  ) : !isAdminEmail && (refCode.length >= 5 || kycError) && !validatingRef ? (
-                    <Alert variant="destructive" className="rounded-2xl shadow-lg shadow-destructive/10">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle className="font-bold">
-                        {kycError?.includes('KYC') ? 'Sponsor unavailable' : 'Invalid Referral'}
-                      </AlertTitle>
-                      <AlertDescription>
-                        {kycError || "A valid referral code is mandatory to join via this path."}
-                      </AlertDescription>
-                    </Alert>
-                  ) : null}
-                </>
-              )}
+              ) : (refCode.length >= 5 || kycError) && !validatingRef ? (
+                <Alert variant="destructive" className="rounded-lg shadow-lg shadow-destructive/10">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle className="font-bold">
+                    {kycError?.includes('KYC') ? 'Sponsor unavailable' : 'Invalid Referral'}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {kycError || "A valid referral code is mandatory to join via this path."}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
 
               <div className="space-y-2">
                 <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
                 <div className="relative">
-                  <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-xl border-muted bg-background pr-12" />
+                  <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className="h-11 pr-12" />
                   <button
                     type="button"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -367,11 +330,11 @@ function RegisterPageContent() {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="ghost" onClick={() => router.push('/join')} className="h-16 px-8 rounded-2xl">Back</Button>
+                <Button variant="ghost" onClick={() => router.push('/join')} className="h-12 px-6">Back</Button>
                 <Button 
                   onClick={() => setStep(2)} 
-                  disabled={(!isIndividual && !isAdminEmail && !sponsorData) || !email || !password || !name || validatingRef} 
-                  className="flex-1 h-16 text-lg font-bold gap-2 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90"
+                  disabled={!sponsorData || !email || !password || !name || validatingRef} 
+                  className="flex-1 h-12 font-semibold gap-2"
                 >
                   Choose Package <ArrowRight className="w-5 h-5" />
                 </Button>
@@ -379,12 +342,12 @@ function RegisterPageContent() {
             </div>
           ) : (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              {packagesLoading ? <div className="flex items-center justify-center rounded-2xl border border-dashed p-12 text-muted-foreground"><Loader2 className="mr-3 h-5 w-5 animate-spin" />Loading current packages...</div> : packagesError ? <Alert variant="destructive" className="rounded-2xl"><AlertCircle className="h-4 w-4" /><AlertTitle>Packages unavailable</AlertTitle><AlertDescription>{packagesError}</AlertDescription></Alert> : packages.length === 0 ? <Alert className="rounded-2xl"><AlertCircle className="h-4 w-4" /><AlertTitle>No active packages</AlertTitle><AlertDescription>Please contact Admin before continuing registration.</AlertDescription></Alert> : <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {packagesLoading ? <div className="flex items-center justify-center rounded-lg border border-dashed p-12 text-muted-foreground"><Loader2 className="mr-3 h-5 w-5 animate-spin" />Loading current packages...</div> : packagesError ? <Alert variant="destructive" className="rounded-lg"><AlertCircle className="h-4 w-4" /><AlertTitle>Packages unavailable</AlertTitle><AlertDescription>{packagesError}</AlertDescription></Alert> : packages.length === 0 ? <Alert className="rounded-lg"><AlertCircle className="h-4 w-4" /><AlertTitle>No active packages</AlertTitle><AlertDescription>Please contact Admin before continuing registration.</AlertDescription></Alert> : <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {packages.map((pkg) => (
                   <div 
                     key={pkg.id}
                     onClick={() => setSelectedPackage(pkg)}
-                    className={`relative p-6 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 ${
+                    className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                       selectedPackage?.id === pkg.id 
                         ? 'border-primary bg-primary/5 shadow-2xl shadow-primary/10' 
                         : 'border-muted hover:border-primary/20 bg-background'
@@ -400,7 +363,7 @@ function RegisterPageContent() {
                       </div>
                       <div className="space-y-2 pt-4 border-t border-dashed border-muted">
                         <div className="text-3xl font-mono-data font-bold text-accent">₹{pkg.price.toLocaleString()}</div>
-                        <Badge variant="secondary" className="font-mono-data text-[10px] rounded-full px-3 bg-secondary/20 text-foreground">
+                        <Badge variant="secondary" className="font-mono-data text-[10px] rounded-full px-3 bg-secondary text-secondary-foreground">
                           {pkg.bv} BV
                         </Badge>
                       </div>
@@ -410,11 +373,11 @@ function RegisterPageContent() {
               </div>}
 
               <div className="flex gap-4">
-                <Button variant="ghost" onClick={() => setStep(1)} className="h-16 px-8 font-bold rounded-2xl hover:bg-background">Back</Button>
+                <Button variant="ghost" onClick={() => setStep(1)} className="h-12 px-6">Back</Button>
                 <Button 
                   onClick={startPayment}
                   disabled={loading || packagesLoading || Boolean(packagesError) || !selectedPackage || password.length < 6}
-                  className="flex-1 h-16 text-lg font-bold gap-3 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-2xl"
+                  className="flex-1 h-12 font-semibold gap-2"
                 >
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                     <>
@@ -431,7 +394,7 @@ function RegisterPageContent() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </AuthShell>
   );
 }
 
