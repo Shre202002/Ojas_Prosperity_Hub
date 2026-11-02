@@ -26,15 +26,27 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { slugify } from '@/lib/slug';
+import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 
 const CATEGORIES = [
+  "Men's Wellness",
+  "Women's Wellness",
+  "Nutrition & Immunity",
+  "Digestive & Liver Wellness",
   "Wellness Tonics",
   "Herbal Capsules",
   "Daily Nutrition",
   "Skin & Hair Care",
   "Personal Care",
-  "Digestive Health"
+  "Digestive Health",
+  "Immunity & Wellness",
+  "Digestive & Liver Care",
+  "Joint & Pain Care",
+  "Women's Health",
+  "Weight Management",
+  "Oral Care"
 ];
 
 interface ProductFormProps {
@@ -58,6 +70,15 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     bvValue: initialData?.bvValue || '',
     stock: initialData?.stock || '',
     status: initialData?.status || 'active',
+    // Storefront details (all optional)
+    mrp: initialData?.mrp ?? '',
+    maxOrderQty: initialData?.maxOrderQty ?? '',
+    packSize: initialData?.packSize || '',
+    shortDescription: initialData?.shortDescription || '',
+    benefits: Array.isArray(initialData?.benefits) ? initialData.benefits.join('\n') : (initialData?.benefits || ''),
+    usage: initialData?.usage || '',
+    isFeatured: Boolean(initialData?.isFeatured),
+    isBestSeller: Boolean(initialData?.isBestSeller),
   });
 
   const [images, setImages] = useState<any[]>(initialData?.images || []);
@@ -79,14 +100,16 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           continue;
         }
 
-        const imageId = Math.random().toString(36).substring(2, 15);
-        const productId = initialData?.id || 'temp';
-        const storagePath = `products/${productId}/${imageId}_${file.name}`;
-        const url = URL.createObjectURL(file);
+        // Upload to image storage so the photo survives a reload (a blob: URL would not).
+        const token = localStorage.getItem('sjapl_session_token');
+        const body = new FormData();
+        body.append('file', file);
+        const res = await fetch('/api/admin/upload', { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) { toast({ variant: 'destructive', title: 'Upload failed', description: out.error || file.name }); continue; }
 
         newImages.push({
-          url,
-          storagePath,
+          url: out.url,
           isPrimary: newImages.length === 0,
           order: newImages.length
         });
@@ -160,11 +183,20 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         }
       }
 
+      const benefitLines = String(formData.benefits).split('\n').map(line => line.trim()).filter(Boolean);
+      const previousBenefits = new Map<string, string>((initialData?.benefitItems || []).map((x: any) => [x.title, x.description]));
       const productData = {
         ...formData,
         price: Number(formData.price),
         bvValue: Number(formData.bvValue),
         stock: formData.stock !== '' ? Number(formData.stock) : null,
+        mrp: formData.mrp !== '' ? Number(formData.mrp) : null,
+        maxOrderQty: formData.maxOrderQty !== '' ? Number(formData.maxOrderQty) : null,
+        benefits: benefitLines,
+        // Keep the storefront's detailed benefit and usage blocks in step with what the admin edits here.
+        benefitItems: benefitLines.map(title => ({ title, description: previousBenefits.get(title) || '' })),
+        ...(initialData?.howToUse ? { howToUse: { ...initialData.howToUse, dosage: formData.usage } } : {}),
+        slug: initialData?.slug || slugify(formData.name),
         images,
         updatedAt: serverTimestamp(),
       };
@@ -274,6 +306,40 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
               />
             </div>
           </div>
+
+          <div className="space-y-6 border-t pt-6">
+            <p className="text-sm text-muted-foreground">Shown on the public website. All optional.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Max qty per order</Label>
+                <Input type="number" min={1} value={formData.maxOrderQty} onChange={e => setFormData({...formData, maxOrderQty: e.target.value})} placeholder="No limit" className="h-12 rounded-xl font-mono-data" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">MRP (₹, struck through)</Label>
+                <Input type="number" value={formData.mrp} onChange={e => setFormData({...formData, mrp: e.target.value})} placeholder="Higher than price" className="h-12 rounded-xl font-mono-data" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pack size</Label>
+                <Input value={formData.packSize} onChange={e => setFormData({...formData, packSize: e.target.value})} placeholder="500ml" className="h-12 rounded-xl" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Short description</Label>
+              <Input value={formData.shortDescription} onChange={e => setFormData({...formData, shortDescription: e.target.value})} placeholder="One line shown on cards and slides" maxLength={160} className="h-12 rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Benefits (one per line)</Label>
+              <Textarea value={formData.benefits} onChange={e => setFormData({...formData, benefits: e.target.value})} placeholder={'Supports daily energy\nHerbal formulation'} className="min-h-[100px] rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">How to use</Label>
+              <Input value={formData.usage} onChange={e => setFormData({...formData, usage: e.target.value})} placeholder="15ml twice daily with warm water" className="h-12 rounded-xl" />
+            </div>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm font-medium"><Checkbox checked={formData.isFeatured} onCheckedChange={v => setFormData({...formData, isFeatured: v === true})} /> Featured on home page</label>
+              <label className="flex items-center gap-2 text-sm font-medium"><Checkbox checked={formData.isBestSeller} onCheckedChange={v => setFormData({...formData, isBestSeller: v === true})} /> Best seller</label>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -312,7 +378,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className={cn("h-8 w-8 rounded-full", img.isPrimary ? "bg-primary text-white" : "bg-white text-foreground")}
+                      className={cn("h-8 w-8 rounded-full", img.isPrimary ? "bg-primary text-primary-foreground" : "bg-white text-foreground")}
                       onClick={() => setPrimary(i)}
                      >
                        <Star className={cn("w-4 h-4", img.isPrimary ? "fill-current" : "")} />
@@ -346,7 +412,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                      </Button>
                   </div>
                   {img.isPrimary && (
-                    <div className="absolute top-2 left-2 bg-primary text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                    <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">
                       Primary
                     </div>
                   )}

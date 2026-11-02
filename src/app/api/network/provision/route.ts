@@ -8,6 +8,8 @@ import { createMatchingLots } from '@/lib/matching';
 import { recordWalletTransaction, purchaseEntries, directCommissionEntry } from '@/lib/wallet-transactions';
 
 export const runtime = 'nodejs';
+// Errors that carry the HTTP status the caller should see (instead of guessing from the message text).
+class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const superAdminEmail = () => String(process.env.SUPER_ADMIN_EMAIL || process.env.SUPERADMIN_EMAIL || '').trim().toLowerCase();
 const makeCode = (prefix: string) => `${prefix}-${Array.from(randomBytes(7), b => ALPHABET[b % ALPHABET.length]).join('')}`;
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
     const registrationType = body.registrationType === 'admin' ? 'admin' : 'referral';
     const isAdminRegistration = registrationType === 'admin';
     const packageInfo = isAdminRegistration ? null : await getPackageConfig(packageId);
-    if (isAdminRegistration && email !== superAdminEmail()) throw new Error('Administrator access is restricted to the configured Super Admin email.');
+    if (isAdminRegistration && email !== superAdminEmail()) throw new HttpError(403, 'Administrator access is restricted to the configured Super Admin email.');
     const db = await getMongoDb();
     const session = (await getMongoClient()).startSession();
     let result;
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
           const referral = await db.collection('referralCodes').findOne({ code: String(body.sponsorCode || '').trim().toUpperCase() }, { session });
           if (!referral?.ownerId || !['left', 'right'].includes(referral.position)) throw new Error('A valid referral code is required.');
           const sponsor = await distributors.findOne({ uid: referral.ownerId }, { session });
-          if (!sponsor || (sponsor.rank !== 'Admin' && sponsor.kycStatus !== 'verified')) throw new Error('This sponsor must complete KYC before referring new members.');
+          if (!sponsor || (sponsor.rank !== 'Admin' && sponsor.kycStatus !== 'verified')) throw new HttpError(400, 'This sponsor must complete KYC before referring new members.');
           sponsorId = referral.ownerId; position = referral.position;
           // Admin may start placement from any member, but only inside the leg the referral code belongs to.
           let candidateId = sponsorId;
@@ -115,6 +117,7 @@ export async function POST(request: NextRequest) {
     } finally { await session.endSession(); }
   } catch (error: any) {
     const message = error?.message || 'Could not provision the network member.';
+    if (error instanceof HttpError) return NextResponse.json({ error: message }, { status: error.status });
     return NextResponse.json({ error: message }, { status: message.includes('Authentication') ? 401 : message.includes('required') || message.includes('not found') || message.includes('verified') || message.includes('match') || message.includes('linked') ? 400 : 500 });
   }
 }

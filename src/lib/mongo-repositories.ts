@@ -26,7 +26,6 @@ export async function ensureMongoIndexes() {
     db.collection('commissions').createIndex({ sourceUserId: 1, status: 1, createdAt: -1 }),
     db.collection('commissions').createIndex({ commissionType: 1, beneficiaryId: 1, status: 1, createdAt: -1 }),
     db.collection('commissions').createIndex({ createdAt: -1, status: 1 }),
-    db.collection('settings').createIndex({ _id: 1 }, { unique: true }),
     db.collection('conversions').createIndex({ userId: 1, source: 1, createdAt: -1 }),
     db.collection('withdrawals').createIndex({ userId: 1, status: 1, createdAt: -1 }),
     db.collection('matchingLots').createIndex({ ownerId: 1, sourceTransactionId: 1, side: 1 }, { unique: true }),

@@ -14,8 +14,18 @@ export default {
         sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
         body: ['var(--font-body)', 'system-ui', 'sans-serif'],
         headline: ['var(--font-display)', 'Georgia', 'serif'],
+        serif: ['var(--font-display)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
         deva: ['var(--font-deva)', 'sans-serif'],
-        code: ['monospace'],
+      },
+      // Text in the primary colour uses a darker green so it stays readable on light backgrounds; fills keep the exact brand green.
+      textColor: {
+        primary: { DEFAULT: 'hsl(var(--primary-text))', foreground: 'hsl(var(--primary-foreground))' },
+        // Mint text would vanish on light pages, so accent text reads as the darker green; use text-chart-1 on dark panels.
+        accent: { DEFAULT: 'hsl(var(--primary-text))', foreground: 'hsl(var(--accent-foreground))' },
+      },
+      boxShadow: {
+        DEFAULT: 'var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) hsl(var(--shadow-color) / var(--shadow-opacity))',
       },
       colors: {
         background: 'hsl(var(--background))',

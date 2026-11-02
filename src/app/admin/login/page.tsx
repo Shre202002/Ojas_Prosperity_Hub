@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
         <Card className="bg-white/[0.06] backdrop-blur-xl border-white/15 text-white shadow-2xl">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-accent" /> {isSetupMode ? 'Initialize master account' : 'Secure gateway'}
+              <ShieldCheck className="w-5 h-5 text-chart-1" /> {isSetupMode ? 'Initialize master account' : 'Secure gateway'}
             </CardTitle>
             <CardDescription className="text-white/60">
               {isSetupMode ? 'Choose a master password to begin.' : 'Enter your credentials to open the management tools.'}
@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
                   {!isSetupMode && (
                     <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
                       <DialogTrigger asChild>
-                        <button type="button" className="text-xs font-semibold text-accent hover:text-white transition-colors">Forgot password?</button>
+                        <button type="button" className="text-xs font-semibold text-chart-1 hover:text-white transition-colors">Forgot password?</button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>

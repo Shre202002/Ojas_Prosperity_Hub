@@ -20,6 +20,7 @@ import {
   WalletCards,
   Menu,
   Loader2,
+  GalleryHorizontal,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const adminNav: NavItem[] = [
   { name: 'Wallets & Income', href: '/dashboard/admin/wallet', icon: WalletCards },
   { name: 'KYC Review Hub', href: '/dashboard/admin/kyc', icon: Fingerprint },
   { name: 'Product Catalog', href: '/dashboard/admin/products', icon: ShoppingBag },
+  { name: 'Hero Banners', href: '/dashboard/admin/hero', icon: GalleryHorizontal },
   { name: 'Ledger Audit', href: '/dashboard/admin/transactions', icon: History },
   { name: 'Transaction Ledger', href: '/dashboard/admin/ledger', icon: History },
   { name: 'Global Trees & Add Member', href: '/dashboard/admin/trees', icon: Globe },
@@ -94,7 +96,7 @@ function SidebarBody({ isAdmin, pathname, onNavigate, onSignOut }: { isAdmin: bo
         </nav>
       </ScrollArea>
       <div className="p-3 border-t border-sidebar-border">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-white" onClick={onSignOut}>
+        <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground" onClick={onSignOut}>
           <LogOut className="h-4 w-4" /> Sign out
         </Button>
       </div>

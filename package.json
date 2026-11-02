@@ -15,7 +15,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:integration": "node --test --test-timeout=1200000 --test-concurrency=1 tests/integration/app.integration.test.mjs"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.28.0",
@@ -45,11 +46,13 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
+    "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "genkit": "^1.28.0",
     "lucide-react": "^0.475.0",
     "mongodb": "^6.18.0",
     "next": "15.5.9",
+    "nodemailer": "^10.3.1",
     "patch-package": "^8.0.0",
     "razorpay": "^2.9.2",
     "react": "^19.2.1",
@@ -63,6 +66,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
     "genkit-cli": "^1.28.0",

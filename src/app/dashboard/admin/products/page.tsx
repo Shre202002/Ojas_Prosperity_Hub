@@ -264,7 +264,7 @@ export default function AdminProductsPage() {
                     <TableCell>
                       <Badge className={cn(
                         "font-bold text-[10px] uppercase tracking-widest",
-                        p.status === 'active' ? "bg-primary text-white" : 
+                        p.status === 'active' ? "bg-primary text-primary-foreground" : 
                         p.status === 'inactive' ? "bg-slate-200 text-muted-foreground" : "bg-destructive text-white"
                       )}>
                         {p.status}

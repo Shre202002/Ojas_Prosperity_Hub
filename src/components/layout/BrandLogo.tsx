@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/SiteImage';
 import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +22,7 @@ export function BrandLogo({ size = 44, showName = true, href = '/', className, t
           <span className={cn('font-headline text-xl font-bold', tone === 'light' ? 'text-white' : 'text-primary')}>
             {BRAND.name}
           </span>
-          <span className={cn('font-deva text-[11px] tracking-wide', tone === 'light' ? 'text-accent' : 'text-accent')}>
+          <span className={cn('font-deva text-[11px] tracking-wide', tone === 'light' ? 'text-chart-1' : 'text-accent')}>
             {BRAND.tagline}
           </span>
         </span>

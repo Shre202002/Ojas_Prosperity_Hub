@@ -26,7 +26,7 @@ export default function AdminTreesPage() {
 
   return (
     <div className="space-y-8 py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-primary p-8 rounded-2xl shadow-2xl text-white relative overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-primary p-8 rounded-2xl shadow-2xl text-primary-foreground relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="space-y-2 relative z-10">
           <h1 className="text-4xl font-headline font-bold">Global Network Audit</h1>
@@ -81,10 +81,10 @@ export default function AdminTreesPage() {
 
       <Tabs defaultValue="admin" className="space-y-8">
         <TabsList className="bg-white p-1 rounded-2xl shadow-sm h-14 border">
-          <TabsTrigger value="admin" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all">
+          <TabsTrigger value="admin" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all">
             <Users className="w-4 h-4 mr-2" /> Admin Tree
           </TabsTrigger>
-          <TabsTrigger value="global" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-bold transition-all">
+          <TabsTrigger value="global" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all">
             <Network className="w-4 h-4 mr-2" /> Global Tree
           </TabsTrigger>
         </TabsList>

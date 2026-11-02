@@ -3,6 +3,9 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { PlanPickerDialog } from '@/components/store/PlanPickerDialog';
+import { useCart } from '@/lib/cart';
+import { isPlanFilled } from '@/lib/bv-plan';
 import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, updateProfile } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +44,14 @@ function RegisterPageContent() {
   const auth = useAuth();
   const db = useFirestore();
 
+  const { items, totalBv, plan: cartPlan, clear: clearCart } = useCart();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailCode, setEmailCode] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
   const placementUnder = searchParams.get('under') || '';
 
   const [step, setStep] = useState(1);
@@ -64,7 +75,7 @@ function RegisterPageContent() {
   const [packagesError, setPackagesError] = useState('');
   const referralValidationId = useRef(0);
 
-  useEffect(() => { let active = true; setPackagesLoading(true); fetch('/api/packages').then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Could not load packages.'); return result; }).then(result => { if (active) { setPackages(result.data || []); setPackagesError(''); } }).catch(error => { if (active) setPackagesError(error.message || 'Could not load packages.'); }).finally(() => { if (active) setPackagesLoading(false); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; setPackagesLoading(true); fetch('/api/packages').then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Could not load packages.'); return result; }).then(result => { if (active) { setPackages(result.data || []); const pre = (result.data || []).find((p: any) => p.id === cartPlan?.id) ?? (result.data || []).find((p: any) => isPlanFilled(p, totalBv)); if (pre) setSelectedPackage(pre); setPackagesError(''); } }).catch(error => { if (active) setPackagesError(error.message || 'Could not load packages.'); }).finally(() => { if (active) setPackagesLoading(false); }); return () => { active = false; }; }, []);
 
   useEffect(() => {
     const storedRef = localStorage.getItem('sponsorId');
@@ -143,13 +154,25 @@ function RegisterPageContent() {
     }
   }
 
+  const emailCall = async (method: 'POST' | 'PUT') => {
+    setEmailBusy(true); setEmailError('');
+    try {
+      const res = await fetch('/api/auth/verify-email', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: emailCode }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Could not verify email.');
+      if (method === 'POST') setEmailSent(true); else setEmailVerified(true);
+    } catch (e: any) { setEmailError(e.message); } finally { setEmailBusy(false); }
+  };
+
   const startPayment = async () => {
-    if (!selectedPackage || !email || !name || password.length < 6) return;
+    if (!selectedPackage || !email || !name || password.length < 6 || !isPlanFilled(selectedPackage, totalBv)) return;
+    setPickerOpen(false);
     setLoading(true);
 
     try {
       const orderRes = await createRazorpayOrder({
         packageId: selectedPackage.id,
+        items: items.map((i) => ({ id: i.id, qty: i.qty })),
       });
 
       if (!orderRes.success) throw new Error(orderRes.error);
@@ -168,7 +191,7 @@ function RegisterPageContent() {
             description: `${selectedPackage.name} registration`,
             order_id: orderRes.orderId,
             prefill: { name, email, contact: phone },
-            theme: { color: '#274E37' },
+            theme: { color: '#21c45d' },
             handler: async (response: any) => {
               try {
                 const verification = await fetch('/api/razorpay/verify', {
@@ -237,7 +260,8 @@ function RegisterPageContent() {
       if (!response.ok) throw new Error(result.error || 'Could not create your network profile.');
 
       toast({ title: 'Welcome aboard!', description: 'Payment confirmed and your account is ready.' });
-      router.push('/dashboard');
+      clearCart();
+      router.push('/dashboard/kyc');
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Activation failed', description: e.message });
       setVerifying(false);
@@ -315,6 +339,21 @@ function RegisterPageContent() {
               ) : null}
 
               <div className="space-y-2">
+                {emailVerified ? <p className="text-sm font-medium text-primary">Email verified ✓</p> : (
+                  <>
+                    <Button type="button" variant="outline" disabled={emailBusy || !/^\S+@\S+\.\S+$/.test(email)} onClick={() => emailCall('POST')}>{emailSent ? 'Resend code' : 'Send verification code'}</Button>
+                    {emailSent && (
+                      <div className="flex gap-2">
+                        <Input inputMode="numeric" maxLength={6} placeholder="6-digit code" value={emailCode} onChange={e => setEmailCode(e.target.value)} className="h-11" />
+                        <Button type="button" disabled={emailBusy || emailCode.length !== 6} onClick={() => emailCall('PUT')}>Verify</Button>
+                      </div>
+                    )}
+                    {emailError && <p role="alert" className="text-sm text-destructive">{emailError}</p>}
+                  </>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
                 <div className="relative">
                   <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className="h-11 pr-12" />
@@ -333,7 +372,7 @@ function RegisterPageContent() {
                 <Button variant="ghost" onClick={() => router.push('/join')} className="h-12 px-6">Back</Button>
                 <Button 
                   onClick={() => setStep(2)} 
-                  disabled={!sponsorData || !email || !password || !name || validatingRef} 
+                  disabled={!sponsorData || !email || !password || !name || validatingRef || !emailVerified} 
                   className="flex-1 h-12 font-semibold gap-2"
                 >
                   Choose Package <ArrowRight className="w-5 h-5" />
@@ -346,7 +385,7 @@ function RegisterPageContent() {
                 {packages.map((pkg) => (
                   <div 
                     key={pkg.id}
-                    onClick={() => setSelectedPackage(pkg)}
+                    onClick={() => { if (selectedPackage?.id !== pkg.id) clearCart(); setSelectedPackage(pkg); setPickerOpen(true); }}
                     className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                       selectedPackage?.id === pkg.id 
                         ? 'border-primary bg-primary/5 shadow-2xl shadow-primary/10' 
@@ -372,11 +411,14 @@ function RegisterPageContent() {
                 ))}
               </div>}
 
+              {selectedPackage && <Button type="button" variant="outline" onClick={() => setPickerOpen(true)} className="w-full">{isPlanFilled(selectedPackage, totalBv) ? `Products selected (${totalBv} BV), edit` : `Choose products for ${selectedPackage.name}`}</Button>}
+              <PlanPickerDialog plan={selectedPackage} open={pickerOpen} onOpenChange={setPickerOpen} onConfirm={startPayment} busy={loading} />
+
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={() => setStep(1)} className="h-12 px-6">Back</Button>
                 <Button 
                   onClick={startPayment}
-                  disabled={loading || packagesLoading || Boolean(packagesError) || !selectedPackage || password.length < 6}
+                  disabled={loading || packagesLoading || Boolean(packagesError) || !selectedPackage || password.length < 6 || !isPlanFilled(selectedPackage, totalBv)}
                   className="flex-1 h-12 font-semibold gap-2"
                 >
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (

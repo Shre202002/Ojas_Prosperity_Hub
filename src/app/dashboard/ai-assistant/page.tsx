@@ -57,7 +57,7 @@ export default function AIAssistantPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <div className="bg-primary p-3 rounded-2xl text-white shadow-lg">
+        <div className="bg-primary p-3 rounded-2xl text-primary-foreground shadow-lg">
           <Sparkles className="w-8 h-8" />
         </div>
         <div>
@@ -68,7 +68,7 @@ export default function AIAssistantPage() {
 
       <Tabs defaultValue="health" className="space-y-6">
         <TabsList className="bg-white border p-1 rounded-2xl shadow-sm h-14">
-          <TabsTrigger value="health" className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg font-bold">
+          <TabsTrigger value="health" className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-bold">
             <HeartPulse className="w-4 h-4 mr-2" /> Ayurvedic Protocols
           </TabsTrigger>
           <TabsTrigger value="business" className="rounded-xl px-8 h-full data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-lg font-bold">
@@ -230,7 +230,7 @@ export default function AIAssistantPage() {
                    </CardContent>
                  </Card>
 
-                 <Card className="md:col-span-2 border-none shadow-xl bg-primary text-white">
+                 <Card className="md:col-span-2 border-none shadow-xl bg-primary text-primary-foreground">
                    <CardContent className="p-8 flex items-center justify-between gap-8">
                      <div className="space-y-2">
                         <div className="text-xs font-bold uppercase tracking-widest opacity-60">Immediate Next Step</div>

@@ -1,20 +1,19 @@
+// Starter product data. The live storefront reads the `products` collection (Admin > Products);
+// this list is only used by scripts/seed-products.mjs to create the first draft, and is never shown on the site by itself.
 export interface Product {
   id: number;
   slug: string;
   name: string;
-  brand: string;
   category: string;
+  /** MRP in INR. 0 = not priced yet (kept as an inactive draft until a price is set in Admin). */
   price: number;
+  /** Selling price in INR. 0 = not priced yet. */
   salePrice: number;
-  currency: string;
-  discount: number;
-  stock: number;
+  stock: number | null;
   sku: string;
   packSize: string;
   image: string;
   gallery: string[];
-  rating: number;
-  reviews: number;
   shortDescription: string;
   description: string;
   benefits: string[];
@@ -23,137 +22,31 @@ export interface Product {
   isBestSeller: boolean;
 }
 
+// Details taken from the printed pack. Confirm the wording and ingredients against the approved label before publishing.
 export const PRODUCTS: Product[] = [
   {
     id: 1,
-    slug: "veer-shakti",
-    name: "Veer Shakti",
-    brand: "Shri Jaya Ayur Neuro",
-    category: "Men's Wellness",
-    price: 1499,
-    salePrice: 1199,
-    currency: "INR",
-    discount: 20,
-    stock: 100,
-    sku: "AK-VS-500",
+    slug: "special-15",
+    name: "Special 15",
+    category: "Herbal Wellness",
+    price: 0,
+    salePrice: 0,
+    stock: null,
+    sku: "SPECIAL-15-500",
     packSize: "500ml",
-    image: "/assets/products/ojas-veer-shakti.png",
-    gallery: [
-      "/assets/products/ojas-veer-shakti.png"
-    ],
-    rating: 4.8,
-    reviews: 128,
-    shortDescription: "Premium Ayurvedic wellness tonic for men's vitality, stamina, and overall wellness.",
-    description: "Veer Shakti is a carefully crafted herbal wellness tonic designed to support men's active lifestyle, energy levels, and overall well-being.",
+    image: "/assets/products/special-15.webp",
+    gallery: ["/assets/products/special-15.webp"],
+    shortDescription: "A herbal wellness formulation with the goodness of Noni.",
+    description: "Special 15 is a balanced herbal wellness formulation enriched with Noni, combined with traditional Ayurvedic herbs such as Ashwagandha, Giloy, Brahmi and Neem. It is designed to nourish the body naturally and support overall health and vitality.",
     benefits: [
-      "Supports strength and stamina",
-      "Promotes vitality and wellness",
-      "Supports physical performance",
-      "Supports daily energy",
-      "100% herbal formulation",
-      "Suitable for regular use"
+      "Supports healthy energy levels",
+      "Supports the immune system",
+      "Supports liver function and digestion",
+      "Supports mental alertness",
+      "Supports overall well-being"
     ],
-    usage: "Take 15ml twice daily with milk or lukewarm water.",
-    isFeatured: true,
-    isBestSeller: true
-  },
-  {
-    id: 2,
-    slug: "nari-shakti",
-    name: "Nari Shakti",
-    brand: "Shri Jaya Ayur Neuro",
-    category: "Women's Wellness",
-    price: 1499,
-    salePrice: 1199,
-    currency: "INR",
-    discount: 20,
-    stock: 100,
-    sku: "AK-NS-500",
-    packSize: "500ml",
-    image: "/assets/products/ojas-nari-shakti.png",
-    gallery: [
-      "/assets/products/ojas-nari-shakti.png"
-    ],
-    rating: 4.9,
-    reviews: 96,
-    shortDescription: "Herbal wellness tonic formulated to support women's health, vitality, and daily wellness.",
-    description: "Nari Shakti is an Ayurvedic wellness tonic designed to support women's overall health, vitality, and active lifestyle.",
-    benefits: [
-      "Supports women's wellness",
-      "Supports daily vitality",
-      "Supports hormonal wellness",
-      "Promotes overall well-being",
-      "Supports active lifestyle",
-      "Traditional Ayurvedic formulation"
-    ],
-    usage: "Take 15ml twice daily with water.",
+    usage: "15 to 20 ml twice daily. Shake well before use. Store in a cool, dry place away from direct sunlight and keep out of reach of children.",
     isFeatured: true,
     isBestSeller: false
-  },
-  {
-    id: 3,
-    slug: "sea-thorn",
-    name: "Sea Thorn",
-    brand: "Shri Jaya Ayur Neuro",
-    category: "Nutrition & Immunity",
-    price: 1699,
-    salePrice: 1299,
-    currency: "INR",
-    discount: 24,
-    stock: 100,
-    sku: "AK-ST-500",
-    packSize: "500ml",
-    image: "/assets/products/sea-thorn.png",
-    gallery: [
-      "/assets/products/sea-thorn.png"
-    ],
-    rating: 4.9,
-    reviews: 142,
-    shortDescription: "Sea Buckthorn nutritional supplement rich in antioxidants, vitamins, and omega fatty acids.",
-    description: "Sea Thorn is a premium nutritional wellness supplement enriched with Sea Buckthorn to support immunity, skin health, and overall wellness.",
-    benefits: [
-      "Rich in antioxidants",
-      "Supports immunity",
-      "Supports skin wellness",
-      "Supports hair wellness",
-      "Contains Omega 3, 6, 7 & 9",
-      "Suitable for men and women"
-    ],
-    usage: "Take 15ml twice daily with water.",
-    isFeatured: true,
-    isBestSeller: true
-  },
-  {
-    id: 4,
-    slug: "liver-amrit",
-    name: "Liver Amrit",
-    brand: "Shri Jaya Ayur Neuro",
-    category: "Digestive & Liver Wellness",
-    price: 1599,
-    salePrice: 1249,
-    currency: "INR",
-    discount: 22,
-    stock: 100,
-    sku: "AK-LA-500",
-    packSize: "500ml",
-    image: "/assets/products/liver-amrit.png",
-    gallery: [
-      "/assets/products/liver-amrit.png"
-    ],
-    rating: 4.8,
-    reviews: 85,
-    shortDescription: "Herbal wellness tonic designed to support digestive wellness and overall health.",
-    description: "Liver Amrit is a traditional herbal wellness tonic formulated to support digestive wellness and maintain overall well-being.",
-    benefits: [
-      "Supports digestive wellness",
-      "Supports liver health",
-      "Supports overall wellness",
-      "Supports natural body functions",
-      "Herbal nutritional support",
-      "Suitable for daily use"
-    ],
-    usage: "Take 15ml twice daily with water.",
-    isFeatured: false,
-    isBestSeller: true
   }
 ];

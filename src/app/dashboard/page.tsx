@@ -112,7 +112,7 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-headline font-bold">{distributor.name}</h1>
               <Badge className={cn(
                 "font-bold px-3",
-                distributor.status === 'active' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                distributor.status === 'active' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               )}>
                 {distributor.status?.toUpperCase()}
               </Badge>
@@ -139,7 +139,12 @@ export default function DashboardPage() {
         
         <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col gap-3 min-w-[320px]">
           <span className="text-xs font-bold uppercase tracking-widest text-primary/60">Your Branch Links</span>
-          {(['left', 'right'] as const).map((position) => {
+          {!isAdmin && distributor.kycStatus !== 'verified' ? (
+            <p className="text-sm text-muted-foreground">
+              Complete KYC to activate your referral links{distributor.kycStatus === 'pending' ? ' (your documents are under review)' : ''}.{' '}
+              {distributor.kycStatus !== 'pending' && <Link href="/dashboard/kyc" className="font-semibold text-primary underline underline-offset-4">Submit KYC</Link>}
+            </p>
+          ) : (['left', 'right'] as const).map((position) => {
             const code = position === 'left' ? distributor.leftReferralCode : distributor.rightReferralCode;
             return (
               <div key={position} className="flex items-center gap-2">
@@ -147,7 +152,7 @@ export default function DashboardPage() {
                 <code className="flex-1 bg-white px-3 py-2 rounded-lg text-xs font-mono-data border border-muted truncate">
                   {code || 'Not configured'}
                 </code>
-                <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-white" onClick={() => copyRefLink(position)} disabled={!code}>
+                <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-primary-foreground" onClick={() => copyRefLink(position)} disabled={!code}>
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
@@ -178,7 +183,7 @@ export default function DashboardPage() {
                       w.isMain ? "text-accent" : "text-primary"
                     )}>₹{w.val.toLocaleString()}</p>
                   </div>
-                  <Button size="icon" variant="ghost" className="group-hover:bg-primary group-hover:text-white rounded-full">
+                  <Button size="icon" variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground rounded-full">
                     <ArrowUpRight className="w-5 h-5" />
                   </Button>
                 </CardContent>
@@ -193,7 +198,7 @@ export default function DashboardPage() {
             <TrendingUp className="w-5 h-5 text-primary" /> Business Performance
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-none shadow-md overflow-hidden bg-primary text-white">
+            <Card className="border-none shadow-md overflow-hidden bg-primary text-primary-foreground">
               <CardHeader className="border-b border-white/10">
                 <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Current Level BV (L/R)</CardTitle>
               </CardHeader>

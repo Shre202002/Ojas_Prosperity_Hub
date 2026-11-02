@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/components/SiteImage';
 import { Leaf, ShieldCheck, Network } from 'lucide-react';
 import { BRAND } from '@/lib/brand';
 import { BrandLogo } from './BrandLogo';
@@ -25,14 +25,14 @@ export function AuthShell({ children, wide = false }: { children: React.ReactNod
         />
         <BrandLogo tone="light" size={56} />
         <div className="relative space-y-8 max-w-md">
-          <p className="font-deva text-accent text-lg">{BRAND.tagline}</p>
+          <p className="font-deva text-chart-1 text-lg">{BRAND.tagline}</p>
           <h1 className="font-headline text-5xl font-bold leading-[1.1]">
             Wellness rooted in Ayurveda. A network built on trust.
           </h1>
           <ul className="space-y-4 text-white/80">
             {points.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-start gap-3">
-                <Icon className="w-5 h-5 mt-0.5 text-accent shrink-0" />
+                <Icon className="w-5 h-5 mt-0.5 text-chart-1 shrink-0" />
                 <span>{text}</span>
               </li>
             ))}

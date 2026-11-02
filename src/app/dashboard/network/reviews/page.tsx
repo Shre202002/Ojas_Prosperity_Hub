@@ -94,7 +94,7 @@ export default function KYCReviewQueue() {
         <div className="flex items-center justify-between px-4">
           <h3 className="font-headline text-2xl font-bold text-primary flex items-center gap-3">
             Pending Approval
-            <Badge className="bg-primary text-white font-mono-data rounded-full h-6 px-2">
+            <Badge className="bg-primary text-primary-foreground font-mono-data rounded-full h-6 px-2">
               {pendingSubmissions.length}
             </Badge>
           </h3>
@@ -183,7 +183,7 @@ export default function KYCReviewQueue() {
                     </div>
                     <Badge className={cn(
                       "font-bold uppercase tracking-widest text-[10px] px-3",
-                      sub.status === 'verified' ? 'bg-primary text-white' : 'bg-destructive text-white'
+                      sub.status === 'verified' ? 'bg-primary text-primary-foreground' : 'bg-destructive text-white'
                     )}>
                       {sub.status.toUpperCase()}
                     </Badge>
