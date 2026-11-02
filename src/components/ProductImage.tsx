@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from '@/components/SiteImage';
+import Image from 'next/image';
+import { siteImage } from '@/lib/site-images';
 import { Leaf } from 'lucide-react';
 
 // Some catalogue products have no photo yet; show a branded placeholder instead of a broken image.
@@ -15,5 +16,5 @@ export function ProductImage({ src, alt, className, sizes = '(min-width: 1024px)
       </div>
     );
   }
-  return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={className} onError={() => setFailed(true)} />;
+  return <Image src={siteImage(src) as string} alt={alt} fill sizes={sizes} priority={priority} className={className} onError={() => setFailed(true)} />;
 }

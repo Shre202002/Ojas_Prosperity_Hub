@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import Image from '@/components/SiteImage';
+import Image from 'next/image';
+import { siteImage } from '@/lib/site-images';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Check, MapPin, ShieldCheck, Truck } from 'lucide-react';
@@ -50,7 +51,7 @@ function Story({ image, flip, title, children }: { image?: string; flip: boolean
     <section className={`grid items-center gap-8 py-10 ${image ? 'lg:grid-cols-2 lg:gap-14' : ''}`}>
       {image && (
         <div className={`relative aspect-square w-full overflow-hidden rounded-lg border bg-white ${flip ? 'lg:order-2' : ''}`}>
-          <Image src={image} alt="" fill sizes="(min-width: 1024px) 560px, 92vw" className="object-cover" />
+          <Image src={siteImage(image) as string} alt="" fill sizes="(min-width: 1024px) 560px, 92vw" className="object-cover" />
         </div>
       )}
       <div className="max-w-xl">
