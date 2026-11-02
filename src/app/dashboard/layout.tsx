@@ -165,13 +165,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="mt-4 flex gap-4 sm:mt-5 lg:gap-6">
             {isAdmin ? (
-              <motion.aside data-vx-motion initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="vx-card sticky top-4 hidden max-h-[calc(100vh-2rem)] w-60 shrink-0 flex-col self-start overflow-y-auto p-3 md:flex lg:w-64">
-                <nav aria-label="Sidebar" className="space-y-1">
+              <motion.aside data-vx-motion initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="vx-card hidden w-60 shrink-0 flex-col self-stretch p-3 md:flex lg:w-64">
+                <nav aria-label="Sidebar" className="sticky top-4 space-y-1">
                   {primary.map((item) => <SideLink key={item.href} item={item} on={active === item.href} />)}
                   <p className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--vx-accent)' }}>Management</p>
                   {adminNav.map((item) => <SideLink key={item.href} item={item} on={active === item.href} />)}
                 </nav>
-                <button onClick={handleSignOut} className="mt-4 flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium" style={{ background: 'var(--vx-soft)' }}><LogOut className="h-4 w-4" />Sign out</button>
+                <div className="mt-auto pt-4"><button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium" style={{ background: 'var(--vx-soft)' }}><LogOut className="h-4 w-4" />Sign out</button></div>
               </motion.aside>
             ) : (
               <motion.aside data-vx-motion initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="sticky top-4 hidden h-fit shrink-0 flex-col gap-4 md:flex">

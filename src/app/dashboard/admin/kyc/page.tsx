@@ -60,9 +60,9 @@ export default function AdminKYCReviewHub() {
   const visible = rows.filter(row => `${row.user?.name || ''} ${row.user?.email || ''} ${row.distributor.uid}`.toLowerCase().includes(search.toLowerCase()));
   return (
     <div className="space-y-8 py-8">
-      <div className="bg-primary text-primary-foreground p-8 rounded-xl flex flex-col md:flex-row justify-between gap-4">
-        <div><h1 className="text-4xl font-headline font-bold">Global KYC Review Hub</h1><p className="text-muted-foreground">Review every paid non-admin member, including members with no submission.</p></div>
-        <div className="relative md:w-80"><Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members..." className="pl-10 bg-white/10 border-white/10 text-white" /></div>
+      <div className="vx-banner flex flex-col justify-between gap-4 p-6 sm:p-8 md:flex-row">
+        <div><h1 className="text-4xl font-headline font-bold">Global KYC Review Hub</h1><p className="relative z-10">Review every paid non-admin member, including members with no submission.</p></div>
+        <div className="relative md:w-80"><Search className="absolute left-3 top-3 w-4 h-4 text-white/70" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members..." className="pl-10 text-white placeholder:text-white/65 border-white/25 bg-white/10" /></div>
       </div>
       {loading ? <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" /> : (
         <div className="grid gap-5">

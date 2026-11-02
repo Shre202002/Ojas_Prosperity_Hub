@@ -25,3 +25,26 @@
 /* Inner pages use the shared shadcn tokens, which follow the .dark class set on <html> by the dashboard layout. */
 .vx-panel { background: var(--vx-card); color: hsl(var(--foreground)); border-radius: 22px; box-shadow: var(--vx-shadow); }
 @media (max-width: 640px) { .vx-card { border-radius: 18px; } }
+
+/* Hero banner: white text on a deep green gradient (readable in both themes). */
+.vx-banner { background: linear-gradient(135deg, #0b3321 0%, #0f5c34 55%, #17a34a 120%); color: #fff; border-radius: 22px; box-shadow: var(--vx-shadow); position: relative; overflow: hidden; }
+.vx-banner::after { content: ''; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.14), transparent 70%); pointer-events: none; }
+.vx[data-theme='dark'] .vx-banner { background: linear-gradient(135deg, #04130c 0%, #0a3b23 60%, #0f6b33 120%); }
+.vx-banner h1, .vx-banner h2 { color: #fff; }
+.vx-banner p { color: rgba(255,255,255,.82); }
+
+/* Genealogy tree: nested list with real connector lines. */
+.gt, .gt ul { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; }
+.gt ul { padding-top: 28px; position: relative; }
+.gt li { position: relative; display: flex; flex-direction: column; align-items: center; padding: 28px 10px 0; }
+.gt > li { padding-top: 0; }
+.gt li::before, .gt li::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 28px; border-top: 2px solid var(--tree-line, var(--vx-line)); }
+.gt li::after { right: auto; left: 50%; border-left: 2px solid var(--tree-line, var(--vx-line)); }
+.gt > li::before, .gt > li::after { display: none; }
+.gt li:only-child::before, .gt li:only-child::after { display: none; }
+.gt li:first-child::before, .gt li:last-child::after { border-top: 0; }
+.gt li:last-child::before { border-right: 2px solid var(--tree-line, var(--vx-line)); border-radius: 0 12px 0 0; }
+.gt li:first-child::after { border-radius: 12px 0 0 0; }
+.gt ul::before { content: ''; position: absolute; top: 0; left: 50%; height: 28px; border-left: 2px solid var(--vx-line); }
+.gt-card { transition: transform .25s ease, box-shadow .25s ease; }
+.gt-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px -10px var(--gt-glow, rgba(0,0,0,.25)); }

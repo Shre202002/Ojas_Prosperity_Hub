@@ -5,7 +5,6 @@ import { useFirestore, useCollection, useMemoFirebase, collection, query } from 
 import { GenealogyTree } from '@/components/network/GenealogyTree';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Network, Users, Search, ShieldCheck, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -22,35 +21,35 @@ export default function AdminTreesPage() {
 
   const adminRoot = distributors?.find((item: any) => item.rank === 'Admin') || distributors?.find((item: any) => !item.sponsorId);
   const displayRootId = rootId || adminRoot?.uid;
+  const viewing = distributors?.find((item: any) => item.uid === displayRootId);
+  const viewingName = viewing?.name || (distributors ? 'Member not found' : 'Loading...');
   const globalRoots = distributors?.filter((item: any) => !item.sponsorId) || [];
 
   return (
     <div className="space-y-8 py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-primary p-8 rounded-2xl shadow-2xl text-primary-foreground relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        <div className="space-y-2 relative z-10">
-          <h1 className="text-4xl font-headline font-bold">Global Network Audit</h1>
-          <p className="text-muted-foreground max-w-lg font-medium">
-            Review the Admin organization or inspect every global network root.
-          </p>
+      <div className="vx-banner flex flex-col justify-between gap-6 p-6 sm:p-8 md:flex-row md:items-center">
+        <div className="relative z-10 space-y-2">
+          <h1 className="text-3xl font-headline font-bold sm:text-4xl">Global Network Audit</h1>
+          <p className="max-w-lg font-medium">Review the Admin organization or inspect every global network root.</p>
         </div>
 
-        <div className="relative w-full md:w-96 relative z-10">
-          <Search className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
-          <Input 
-            placeholder="Search ANY distributor ID..." 
-            className="pl-12 h-14 rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-muted-foreground"
+        <div className="relative z-10 w-full md:w-96">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/70" />
+          <Input
+            placeholder="Search any member by name or ID..."
+            aria-label="Search any member by name or ID"
+            className="h-14 rounded-2xl border-white/25 bg-white/10 pl-12 pr-32 text-white backdrop-blur placeholder:text-white/65 focus-visible:ring-white/50"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && searchTerm) {
-                setRootId(searchTerm);
+                const q = searchTerm.trim().toLowerCase();
+                const hit = distributors?.find((d: any) => d.uid === searchTerm.trim() || String(d.name || '').toLowerCase() === q || String(d.name || '').toLowerCase().includes(q));
+                setRootId(hit?.uid || searchTerm.trim());
               }
             }}
           />
-          <div className="absolute right-3 top-3.5">
-            <Badge className="bg-primary hover:bg-primary font-bold">Admin Mode</Badge>
-          </div>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-3 py-1 text-[11px] font-bold" style={{ background: 'var(--tree-admin)', color: '#1a1300' }}>Admin Mode</span>
         </div>
       </div>
 
@@ -62,7 +61,7 @@ export default function AdminTreesPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Currently Viewing</p>
-              <p className="text-sm font-bold font-mono-data">{displayRootId || 'Loading...'}</p>
+              <p className="text-sm font-bold">{displayRootId ? viewingName : 'Loading...'}</p>{viewing?.rank && <p className="text-[11px] text-muted-foreground">{viewing.rank}</p>}
             </div>
           </CardContent>
         </Card>
