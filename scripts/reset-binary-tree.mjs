@@ -24,7 +24,7 @@ try {
     ['users', keep],
     ['sessions', keep],
     ['referralCodes', { ownerId: { $ne: admin.uid } }],
-    ['kycSubmissions', { distributorId: { $ne: admin.uid } }],
+    ['kycSubmissions', {}],
     ['matchingLots', {}],
     ['matchingLotAudit', {}],
     ['commissions', {}],
@@ -42,7 +42,7 @@ try {
   }
   if (!includePayments) console.log('  transactions, companyLedger, walletBvAudit: kept (pass --include-payments to wipe)');
   if (confirm) {
-    await db.collection('distributors').updateOne({ uid: admin.uid }, { $set: { leftChildId: null, rightChildId: null, leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, parentId: null, position: null, leg: null, sponsorId: null, updatedAt: new Date() } });
+    await db.collection('distributors').updateOne({ uid: admin.uid }, { $set: { leftChildId: null, rightChildId: null, leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, commissionBvBalance: 0, bvBalance: 0, incentiveBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, parentId: null, position: null, leg: null, sponsorId: null, updatedAt: new Date() } });
     console.log('  Admin tree slots and balances reset.');
   } else {
     console.log('Nothing changed. Re-run with --confirm to apply.');

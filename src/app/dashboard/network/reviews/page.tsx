@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, doc, updateDoc, collection, query, where, serverTimestamp } from '@/lib/app-auth';
+import { useEffect, useState } from 'react';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase, doc, getDoc, updateDoc, collection, query, where, serverTimestamp } from '@/lib/app-auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,27 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
+type Member = { name: string; email?: string };
+
+// Looks up the member behind each submission so cards show a name instead of an ID.
+function useMemberNames(ids: string[]) {
+  const [members, setMembers] = useState<Record<string, Member>>({});
+  const key = ids.join('|');
+  useEffect(() => {
+    let live = true;
+    const missing = ids.filter((id) => !members[id]);
+    if (!missing.length) return;
+    Promise.all(missing.map(async (id) => {
+      try { const r = await getDoc(doc({}, 'distributors', id)); const d: any = r.exists() ? r.data() : null; return [id, { name: d?.name || 'Unknown member', email: d?.email }] as const; }
+      catch { return [id, { name: 'Unknown member' }] as const; }
+    })).then((rows) => { if (live) setMembers((m) => ({ ...m, ...Object.fromEntries(rows) })); });
+    return () => { live = false; };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  return members;
+}
+
+const reviewedOn = (v: any) => { const d = v?.toDate ? v.toDate() : v ? new Date(v) : null; return d && !isNaN(d.getTime()) ? d.toLocaleDateString() : 'Recently'; };
+
 export default function KYCReviewQueue() {
   const auth = useAuth();
   const { user } = useUser(auth);
@@ -35,8 +56,14 @@ export default function KYCReviewQueue() {
   
   const { data: submissions, loading } = useCollection(submissionsQuery, 'reviews');
 
-  const pendingSubmissions = submissions?.filter(s => s.status === 'pending') || [];
-  const historySubmissions = submissions?.filter(s => s.status !== 'pending') || [];
+  // A reviewer never reviews their own KYC here, so their own record is left out.
+  const others = (submissions || []).filter((s: any) => s.distributorId !== user?.uid);
+  const members = useMemberNames(Array.from(new Set(others.map((s: any) => String(s.distributorId)))));
+  const nameOf = (s: any) => members[s.distributorId]?.name || 'Loading...';
+  const term = searchTerm.trim().toLowerCase();
+  const matches = (s: any) => !term || `${nameOf(s)} ${members[s.distributorId]?.email || ''} ${s.distributorId}`.toLowerCase().includes(term);
+  const pendingSubmissions = others.filter((s: any) => s.status === 'pending' && matches(s));
+  const historySubmissions = others.filter((s: any) => s.status !== 'pending' && matches(s));
 
   async function handleKYCDecision(submissionId: string, status: 'verified' | 'rejected', reason?: string) {
     if (!db || !user) return;
@@ -82,7 +109,7 @@ export default function KYCReviewQueue() {
         <div className="relative w-full md:w-80">
           <Search className="absolute left-4 top-3.5 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search by ID or Name..." 
+            placeholder="Search by name..." 
             className="pl-12 h-14 rounded-2xl border-muted bg-background font-medium"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -121,7 +148,7 @@ export default function KYCReviewQueue() {
                     </Avatar>
                     <div className="space-y-1">
                       <div className="flex items-center gap-3">
-                        <h4 className="text-2xl font-headline font-bold text-foreground">Distributor #{sub.distributorId.slice(0, 8)}</h4>
+                        <h4 className="text-2xl font-headline font-bold text-foreground">{nameOf(sub)}</h4>
                         <Badge variant="outline" className="font-mono-data text-[10px] tracking-widest text-muted-foreground border-muted">
                           SUBMITTED: {new Date(sub.submittedAt).toLocaleDateString()}
                         </Badge>
@@ -177,8 +204,8 @@ export default function KYCReviewQueue() {
                         {sub.status === 'verified' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
                       </div>
                       <div>
-                        <p className="font-bold text-foreground">Member ID: {sub.distributorId.slice(0, 10)}</p>
-                        <p className="text-xs text-muted-foreground font-medium">Reviewed on {sub.reviewedAt?.toDate ? sub.reviewedAt.toDate().toLocaleDateString() : 'Recently'}</p>
+                        <p className="font-bold text-foreground">{nameOf(sub)}</p>
+                        <p className="text-xs text-muted-foreground font-medium">{members[sub.distributorId]?.email ? `${members[sub.distributorId]?.email} · ` : ''}Reviewed on {reviewedOn(sub.reviewedAt)}</p>
                       </div>
                     </div>
                     <Badge className={cn(
