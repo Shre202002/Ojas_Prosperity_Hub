@@ -26,7 +26,7 @@ export function HideOnScrollHeader({ children }: { children: ReactNode }) {
     <header
       ref={ref}
       data-hidden={hidden}
-      className="sticky top-0 z-40 border-b border-border/40 bg-background/60 backdrop-blur-md supports-[backdrop-filter]:bg-background/50 transition-transform duration-300 ease-out data-[hidden=true]:-translate-y-full motion-reduce:transition-none"
+      className="sticky top-0 z-40 border-b border-border bg-background shadow-sm transition-transform duration-300 ease-out data-[hidden=true]:-translate-y-full motion-reduce:transition-none"
     >
       {children}
     </header>

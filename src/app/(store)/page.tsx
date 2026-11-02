@@ -33,10 +33,10 @@ const WHY = [
 // The 2.6 MB source PNGs are served resized through the Next image optimizer.
 const heroImg = (n: number) => siteImage(`/assets/Hero_section/${n}.jpg`) as string;
 const HERO_SLIDES = [
-  { image: heroImg(1), title: 'Special 15 with Noni', caption: 'Enriched with 15 powerful herbs.', alt: 'Shri Special 15 with Noni juice on a rock by a turquoise lagoon' },
-  { image: heroImg(2), title: 'Sea Buckthorn & Tulsi', caption: 'Omega-rich juice and Panchamrit Tulsi Drop.', alt: 'Sea Buckthorn Juice and Panchamrit Tulsi Drop in a mountain meadow' },
-  { image: heroImg(3), title: 'Digestive & Liver Care', caption: 'Constipation Churn and LivoCare Syrup.', alt: 'Constipation Churn and LivoCare Syrup on a wooden table in a field' },
-  { image: heroImg(4), title: 'Ortho Go Oil', caption: 'For joint and muscle care.', alt: 'Ortho Go Oil on a river stone' },
+  { image: heroImg(1), eyebrow: 'Herbal Wellness Juice', title: 'Special 15 with Noni', caption: 'Enriched with 15 powerful herbs.', description: 'A daily herbal juice that blends Noni with Ashwagandha, Giloy, Shilajit and more to support immunity, energy, digestion and overall vitality.', points: ['Supports immunity', 'Boosts energy', 'Liver wellness', 'Mental alertness'], cta: { label: 'Shop Special 15', href: '/products/special-15-noni-juice-500ml' }, alt: 'Shri Special 15 with Noni juice on a rock by a turquoise lagoon' },
+  { image: heroImg(2), eyebrow: 'Daily Immunity', title: 'Sea Buckthorn & Tulsi', caption: 'Omega-rich juice and Panchamrit Tulsi Drop.', description: 'Himalayan Sea Buckthorn juice with Amla and Turmeric, paired with concentrated drops of five Tulsi varieties for natural defences through every season.', points: ['Omega 3, 6, 7 & 9', 'Five Tulsi types', 'Throat comfort', 'Antioxidant support'], cta: { label: 'Shop Sea Buckthorn', href: '/products/sea-buckthorn-juice-body-detox-500ml' }, alt: 'Sea Buckthorn Juice and Panchamrit Tulsi Drop in a mountain meadow' },
+  { image: heroImg(3), eyebrow: 'Digestive & Liver Care', title: 'Churn & LivoCare', caption: 'Constipation Churn and LivoCare Syrup.', description: 'An Isabgol and Triphala churna for easy bowel movement, with Bhumi Amla and Kalmegh liver syrup that supports digestion and natural detox.', points: ['Easy bowel movement', 'Eases gas & bloating', 'Liver function', 'Natural detox'], cta: { label: 'Shop LivoCare', href: '/products/shri-livocare-syrup-300ml' }, alt: 'Constipation Churn and LivoCare Syrup on a wooden table in a field' },
+  { image: heroImg(4), eyebrow: 'Joint & Muscle Care', title: 'Ortho Go Oil', caption: 'For joint and muscle care.', description: 'An Ayurvedic massage oil made with 14 herbal oils, including Camphor, Wintergreen, Boswellia and Nirgundi, to soothe joint stiffness and tired muscles.', points: ['Soothes discomfort', 'Eases stiffness', 'Supports mobility', '14 herbal oils'], cta: { label: 'Shop Ortho Go Oil', href: '/products/shri-ortho-go-oil-50ml' }, alt: 'Ortho Go Oil on a river stone' },
 ];
 
 export default async function HomePage() {
@@ -56,7 +56,7 @@ export default async function HomePage() {
   return (
     <>
       <h1 className="sr-only">{BRAND.name}: Ayurvedic wellness store</h1>
-      <ApertureCarousel slides={HERO_SLIDES} height="var(--hero-h)" className="[--hero-h:calc(100svh-4rem)] md:[--hero-h:calc(100svh-5.5rem)] min-h-[480px] [&_.ap-img]:object-[72%_40%] md:[&_.ap-img]:object-[60%_40%] xl:[&_.ap-img]:object-center" autoplay={6500} ariaLabel="Featured products" />
+      <ApertureCarousel slides={HERO_SLIDES} height="var(--hero-h)" className="[--hero-h:calc(100svh-6.5rem)] md:[--hero-h:calc(100svh-8.5rem)] min-h-[560px] [&_.ap-img]:object-[72%_40%] md:[&_.ap-img]:object-[60%_40%] xl:[&_.ap-img]:object-center" autoplay={6500} ariaLabel="Featured products" />
 
       {categories.length > 0 && (
         <section className="py-16 sm:py-20">

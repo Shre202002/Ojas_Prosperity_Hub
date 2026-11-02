@@ -19,6 +19,13 @@ export type Slide = {
   image?: string
   title?: string
   caption?: string
+  /** Small label above the title (e.g. product category). */
+  eyebrow?: string
+  /** One or two sentences about the product. */
+  description?: string
+  /** Short benefit chips. */
+  points?: string[]
+  cta?: { label: string; href: string }
   alt?: string
   /** Palette and seed of the painted landscape used when `image` is empty. */
   palette?: LandPalette
@@ -216,13 +223,21 @@ const AP_CSS = [
   ".ap-layer{position:absolute;inset:0;overflow:hidden}",
   ".ap-img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;display:block;pointer-events:none}",
   ".ap-ring{position:absolute;left:0;top:0;border-radius:50%;border:1px solid var(--ap-ink);pointer-events:none;opacity:0}",
-  ".ap-shade{position:absolute;inset:auto 0 0 0;height:45%;background:linear-gradient(to top,rgba(0,0,0,.55),rgba(0,0,0,0));pointer-events:none}",
-  ".ap-text{position:absolute;left:clamp(20px,4vw,56px);bottom:clamp(40px,7vh,72px);right:clamp(20px,4vw,56px);pointer-events:none}",
+  ".ap-shade{position:absolute;inset:auto 0 0 0;height:75%;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.4) 55%,rgba(0,0,0,0));pointer-events:none}",
+  ".ap-text{position:absolute;left:clamp(20px,4vw,56px);bottom:clamp(44px,8vh,84px);right:clamp(20px,4vw,56px);max-width:720px;pointer-events:none}",
   ".ap-line{display:block;overflow:hidden}",
   ".ap-line>span{display:block;animation:ap-rise .9s cubic-bezier(.2,.8,.2,1) both}",
   ".ap-title{font:500 clamp(34px,6vw,84px)/1 ui-serif,Georgia,'Times New Roman',serif;letter-spacing:-.02em}",
   ".ap-cap{margin-top:12px;font:400 14px/1.4 ui-sans-serif,system-ui,sans-serif;opacity:.8;max-width:42ch}",
   ".ap-cap>span{animation-delay:.08s}",
+  ".ap-eyebrow{margin-bottom:10px;font:600 12px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;opacity:.85}",
+  ".ap-desc{margin-top:12px;max-width:52ch;font:400 15px/1.55 ui-sans-serif,system-ui,sans-serif;opacity:.92;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}",
+  ".ap-points{display:none;flex-wrap:wrap;gap:8px;margin-top:14px}",
+  ".ap-points li{list-style:none;padding:6px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ap-ink) 45%,transparent);background:rgba(255,255,255,.1);backdrop-filter:blur(4px);font:500 12px/1 ui-sans-serif,system-ui,sans-serif}",
+  "@media (min-width:640px){.ap-points{display:flex}.ap-desc{font-size:16px}}",
+  ".ap-cta{display:inline-block;margin-top:18px;padding:12px 26px;border-radius:999px;background:var(--ap-ink);color:#111;font:600 14px/1 ui-sans-serif,system-ui,sans-serif;text-decoration:none;pointer-events:auto;transition:transform .2s ease}",
+  ".ap-cta:hover{transform:translateY(-2px)}",
+  ".ap-cta:focus-visible{outline:2px solid var(--ap-ink);outline-offset:3px}",
   ".ap-count{position:absolute;right:clamp(20px,4vw,56px);bottom:clamp(40px,7vh,72px);font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;pointer-events:none}",
   ".ap-track{position:absolute;left:clamp(20px,4vw,56px);right:clamp(20px,4vw,56px);bottom:clamp(20px,3.5vh,36px);height:1px;background:color-mix(in srgb,var(--ap-ink) 28%,transparent);pointer-events:none}",
   ".ap-fill{height:100%;background:var(--ap-ink);transform-origin:left;transform:scaleX(0)}",
@@ -411,7 +426,8 @@ export default function ApertureCarousel({
       ) : null}
       <div ref={ringRef} className="ap-ring" aria-hidden="true" />
       <div className="ap-shade" aria-hidden="true" />
-      <div className="ap-text" key={"t" + shown} aria-hidden="true">
+      <div className="ap-text" key={"t" + shown}>
+        {s.eyebrow ? <span className="ap-line ap-eyebrow"><span>{s.eyebrow}</span></span> : null}
         {s.title ? (
           <span className="ap-line ap-title">
             <span>{s.title}</span>
@@ -421,6 +437,17 @@ export default function ApertureCarousel({
           <span className="ap-line ap-cap">
             <span>{s.caption}</span>
           </span>
+        ) : null}
+        {s.description ? <p className="ap-desc">{s.description}</p> : null}
+        {s.points && s.points.length ? (
+          <ul className="ap-points" aria-label="Key benefits">
+            {s.points.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+        ) : null}
+        {s.cta ? (
+          <a className="ap-cta" href={s.cta.href} onPointerDown={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()}>
+            {s.cta.label}
+          </a>
         ) : null}
       </div>
       <div className="ap-count" aria-hidden="true">
