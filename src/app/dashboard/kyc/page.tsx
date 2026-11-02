@@ -103,7 +103,7 @@ export default function KYCPage() {
             <AlertCircle className="w-4 h-4" /> REJECTED
           </Badge>
         ) : (
-          <Badge variant="outline" className="border-muted h-10 px-6 font-bold text-sm gap-2 rounded-xl bg-white text-muted-foreground">
+          <Badge variant="outline" className="border-muted h-10 px-6 font-bold text-sm gap-2 rounded-xl bg-card text-muted-foreground">
             <AlertCircle className="w-4 h-4" /> NOT SUBMITTED
           </Badge>
         )}
@@ -111,7 +111,7 @@ export default function KYCPage() {
 
       {latestSubmission?.status === 'verified' ? (
         <Card className="border-none shadow-2xl bg-primary/5 p-12 text-center space-y-6 rounded-2xl border border-primary/10">
-          <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center text-primary mx-auto shadow-xl">
+          <div className="w-24 h-24 bg-card rounded-2xl flex items-center justify-center text-primary mx-auto shadow-xl">
             <ShieldCheck className="w-12 h-12" />
           </div>
           <div className="space-y-2">
@@ -122,7 +122,7 @@ export default function KYCPage() {
           </div>
         </Card>
       ) : latestSubmission?.status === 'pending' ? (
-        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-2xl bg-white border border-muted">
+        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-2xl bg-card border border-muted">
           <div className="w-24 h-24 bg-primary/5 rounded-2xl flex items-center justify-center text-[hsl(var(--status-pending))] mx-auto shadow-sm">
             <Clock className="w-12 h-12" />
           </div>
@@ -136,10 +136,10 @@ export default function KYCPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Card className="border border-muted shadow-xl rounded-xl bg-white overflow-hidden">
+            <Card className="border border-muted shadow-xl rounded-xl bg-card overflow-hidden">
               <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
                 <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                  <div className="p-2 bg-card rounded-xl shadow-sm">
                     <FileText className="w-5 h-5 text-primary" />
                   </div>
                   Required Evidence
@@ -153,7 +153,7 @@ export default function KYCPage() {
                 ].map((doc, i) => (
                   <div key={i} className="p-5 border-2 border-dashed border-muted rounded-[1.5rem] hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center group-hover:bg-white transition-colors">
+                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center group-hover:bg-card transition-colors">
                         <doc.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
                       </div>
                       <div className="flex-1">
@@ -169,10 +169,10 @@ export default function KYCPage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="border border-muted shadow-xl rounded-xl bg-white">
+            <Card className="border border-muted shadow-xl rounded-xl bg-card">
               <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
                 <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                  <div className="p-2 bg-card rounded-xl shadow-sm">
                     <ShieldCheck className="w-5 h-5 text-accent" />
                   </div>
                   Details & Confirmation

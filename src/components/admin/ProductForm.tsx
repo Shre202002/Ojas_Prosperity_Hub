@@ -378,7 +378,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className={cn("h-8 w-8 rounded-full", img.isPrimary ? "bg-primary text-primary-foreground" : "bg-white text-foreground")}
+                      className={cn("h-8 w-8 rounded-full", img.isPrimary ? "bg-primary text-primary-foreground" : "bg-card text-foreground")}
                       onClick={() => setPrimary(i)}
                      >
                        <Star className={cn("w-4 h-4", img.isPrimary ? "fill-current" : "")} />
@@ -387,7 +387,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-full bg-white text-foreground"
+                      className="h-8 w-8 rounded-full bg-card text-foreground"
                       onClick={() => moveImage(i, 'up')}
                      >
                        <ArrowUp className="w-4 h-4" />
@@ -396,7 +396,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
                       type="button"
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-full bg-white text-foreground"
+                      className="h-8 w-8 rounded-full bg-card text-foreground"
                       onClick={() => moveImage(i, 'down')}
                      >
                        <ArrowDown className="w-4 h-4" />

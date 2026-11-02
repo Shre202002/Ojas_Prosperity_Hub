@@ -55,9 +55,9 @@ export default function AdminTreesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-md bg-white">
+        <Card className="border-none shadow-md bg-card">
           <CardContent className="p-6 flex items-center gap-4">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
+            <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl">
               <Globe className="w-6 h-6" />
             </div>
             <div>
@@ -66,7 +66,7 @@ export default function AdminTreesPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-md bg-white">
+        <Card className="border-none shadow-md bg-card">
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-3 bg-primary/10 text-primary rounded-2xl">
               <ShieldCheck className="w-6 h-6" />
@@ -80,7 +80,7 @@ export default function AdminTreesPage() {
       </div>
 
       <Tabs defaultValue="admin" className="space-y-8">
-        <TabsList className="bg-white p-1 rounded-2xl shadow-sm h-14 border">
+        <TabsList className="bg-card p-1 rounded-2xl shadow-sm h-14 border">
           <TabsTrigger value="admin" className="px-10 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all">
             <Users className="w-4 h-4 mr-2" /> Admin Tree
           </TabsTrigger>
@@ -90,8 +90,8 @@ export default function AdminTreesPage() {
         </TabsList>
 
         <TabsContent value="admin" className="animate-in fade-in duration-500">
-          <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-2xl">
-            <CardHeader className="border-b bg-white p-8">
+          <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md overflow-hidden rounded-2xl">
+            <CardHeader className="border-b bg-card p-8">
               <CardTitle className="font-headline text-3xl font-bold">Admin Tree</CardTitle>
               <CardDescription>All users on the Admin's left and right legs. Use a member's join link to place a new member below them on the same side.</CardDescription>
             </CardHeader>
@@ -102,8 +102,8 @@ export default function AdminTreesPage() {
         </TabsContent>
 
         <TabsContent value="global" className="animate-in fade-in duration-500">
-          <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden rounded-2xl">
-            <CardHeader className="border-b bg-white p-8">
+          <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md overflow-hidden rounded-2xl">
+            <CardHeader className="border-b bg-card p-8">
               <CardTitle className="font-headline text-3xl font-bold">Global Tree</CardTitle>
               <CardDescription>All registered users, including the Admin and independent roots.</CardDescription>
             </CardHeader>

@@ -142,7 +142,7 @@ export default function AdminProductsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-none shadow-md bg-white">
+        <Card className="border-none shadow-md bg-card">
           <CardContent className="p-6">
             <div className="space-y-1">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Active Inventory</p>
@@ -150,7 +150,7 @@ export default function AdminProductsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-md bg-white">
+        <Card className="border-none shadow-md bg-card">
           <CardContent className="p-6">
             <div className="space-y-1">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total SKU Count</p>
@@ -160,7 +160,7 @@ export default function AdminProductsPage() {
         </Card>
       </div>
 
-      <Card className="border-none shadow-xl bg-white overflow-hidden rounded-2xl">
+      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-2xl">
         <CardHeader className="bg-muted border-b pb-6 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="relative w-full md:w-96">
@@ -173,7 +173,7 @@ export default function AdminProductsPage() {
               />
             </div>
             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border">
+               <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-xl border">
                  <Filter className="w-4 h-4 text-muted-foreground" />
                  <select 
                   className="bg-transparent text-sm font-bold outline-none cursor-pointer"
@@ -231,7 +231,7 @@ export default function AdminProductsPage() {
                             unoptimized
                           />
                         ) : (
-                          <ImageIcon className="w-6 h-6 text-slate-300" />
+                          <ImageIcon className="w-6 h-6 text-muted-foreground" />
                         )}
                       </div>
                     </TableCell>
@@ -265,7 +265,7 @@ export default function AdminProductsPage() {
                       <Badge className={cn(
                         "font-bold text-[10px] uppercase tracking-widest",
                         p.status === 'active' ? "bg-primary text-primary-foreground" : 
-                        p.status === 'inactive' ? "bg-slate-200 text-muted-foreground" : "bg-destructive text-white"
+                        p.status === 'inactive' ? "bg-muted text-muted-foreground" : "bg-destructive text-white"
                       )}>
                         {p.status}
                       </Badge>

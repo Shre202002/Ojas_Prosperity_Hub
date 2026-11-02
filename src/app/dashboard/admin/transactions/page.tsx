@@ -111,7 +111,7 @@ export default function AdminTransactionsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-none shadow-md bg-white">
+        <Card className="border-none shadow-md bg-card">
           <CardContent className="p-6">
             <div className="space-y-1">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Volume</p>
@@ -120,7 +120,7 @@ export default function AdminTransactionsPage() {
           </CardContent>
         </Card>
         {['paid', 'pending', 'failed'].map(s => (
-          <Card key={s} className="border-none shadow-md bg-white">
+          <Card key={s} className="border-none shadow-md bg-card">
             <CardContent className="p-6">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{s} Count</p>
@@ -131,7 +131,7 @@ export default function AdminTransactionsPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-xl bg-white overflow-hidden rounded-2xl">
+      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-2xl">
         <CardHeader className="bg-muted border-b pb-6 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="relative w-full md:w-96">
@@ -144,7 +144,7 @@ export default function AdminTransactionsPage() {
               />
             </div>
             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border">
+               <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-xl border">
                  <Filter className="w-4 h-4 text-muted-foreground" />
                  <select 
                   className="bg-transparent text-sm font-bold outline-none cursor-pointer"
@@ -230,7 +230,7 @@ export default function AdminTransactionsPage() {
                          <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-8 text-xs text-red-500 hover:bg-red-50 font-bold"
+                          className="h-8 text-xs text-red-500 hover:bg-red-500/10 font-bold"
                           onClick={() => handleRefund(t.id)}
                          >
                            Refund

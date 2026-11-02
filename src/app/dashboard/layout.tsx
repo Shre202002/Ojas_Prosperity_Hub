@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc, signOut } from '@/lib/app-auth';
 import {
   LayoutDashboard, Network, User, ShieldCheck, LogOut, Package, ClipboardCheck, Sparkles, History, Globe, ShoppingBag,
-  Fingerprint, WalletCards, Menu, Loader2, GalleryHorizontal, Moon, Sun, ChevronDown, Settings2, type LucideIcon,
+  Fingerprint, WalletCards, Menu, Loader2, GalleryHorizontal, Moon, Sun, ChevronDown, type LucideIcon,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -63,6 +63,16 @@ function SheetNav({ items, active, label, onNavigate }: { items: NavItem[]; acti
   );
 }
 
+function SideLink({ item, on }: { item: NavItem; on: boolean }) {
+  return (
+    <Link href={item.href} aria-current={on ? 'page' : undefined} className="relative flex items-center gap-3 rounded-full px-3 py-2.5 text-[13px] font-medium">
+      {on && <motion.span data-vx-motion layoutId="vx-side" className="absolute inset-0 rounded-full" style={{ background: 'var(--vx-on)' }} transition={{ type: 'spring', stiffness: 380, damping: 32 }} />}
+      <item.icon className="relative h-4 w-4 shrink-0" style={{ color: on ? 'var(--vx-on-fg)' : 'var(--vx-ink)' }} />
+      <span className="relative truncate" style={{ color: on ? 'var(--vx-on-fg)' : 'var(--vx-ink)', opacity: on ? 1 : 0.8 }}>{item.name}</span>
+    </Link>
+  );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -73,6 +83,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [dark, setDark] = useState(false);
 
   useEffect(() => { try { setDark(localStorage.getItem('sjapl_dash_theme') === 'dark'); } catch { /* storage unavailable */ } }, []);
+  // Portals (menus, dialogs, sheets) render outside .vx, so the dark class lives on <html> while the dashboard is open.
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    return () => document.documentElement.classList.remove('dark');
+  }, [dark]);
   const setTheme = (d: boolean) => { setDark(d); try { localStorage.setItem('sjapl_dash_theme', d ? 'dark' : 'light'); } catch { /* ignore */ } };
 
   const distributorRef = useMemoFirebase(() => (user && db ? doc(db, 'distributors', user.uid) : null), [db, user?.uid]);
@@ -101,7 +116,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <motion.header data-vx-motion initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex items-center gap-2 sm:gap-3">
             <div className="vx-pill flex items-center p-1.5"><BrandLogo href="/dashboard" size={36} showName={false} /></div>
 
-            <nav aria-label="Dashboard" className="vx-pill vx-scroll hidden min-w-0 max-w-full gap-1 overflow-x-auto p-1.5 md:mx-auto md:flex">
+            <nav aria-label="Dashboard" className={`vx-pill vx-scroll hidden min-w-0 max-w-full gap-1 overflow-x-auto p-1.5 md:mx-auto ${isAdmin ? '' : 'md:flex'}`}>
               {primary.map((item) => {
                 const on = active === item.href;
                 return (
@@ -111,22 +126,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </Link>
                 );
               })}
-              {isAdmin && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="relative flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-medium lg:px-4" style={adminActive ? { background: 'var(--vx-on)', color: 'var(--vx-on-fg)' } : { color: 'var(--vx-ink)', opacity: 0.75 }}>
-                      <Settings2 className="h-3.5 w-3.5" />Admin<ChevronDown className="h-3 w-3" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64">
-                    <DropdownMenuLabel>Management</DropdownMenuLabel><DropdownMenuSeparator />
-                    {adminNav.map((i) => <DropdownMenuItem key={i.href} onClick={() => router.push(i.href)}><i.icon className="mr-2 h-4 w-4" />{i.name}</DropdownMenuItem>)}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </nav>
 
-            <div className="ml-auto flex items-center gap-2 sm:gap-3 md:ml-0">
+            <div className={`ml-auto flex items-center gap-2 sm:gap-3 ${isAdmin ? '' : 'md:ml-0'}`}>
               <div className="vx-pill flex items-center gap-0.5 p-1">
                 {[{ d: false, I: Sun, l: 'Light mode' }, { d: true, I: Moon, l: 'Dark mode' }].map(({ d, I, l }) => (
                   <button key={l} aria-label={l} aria-pressed={dark === d} onClick={() => setTheme(d)} className="grid h-8 w-8 place-items-center rounded-full sm:h-9 sm:w-9" style={dark === d ? { background: 'var(--vx-soft)' } : undefined}><I className="h-4 w-4" /></button>
@@ -162,25 +164,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </motion.header>
 
           <div className="mt-4 flex gap-4 sm:mt-5 lg:gap-6">
-            <motion.aside data-vx-motion initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="sticky top-4 hidden h-fit shrink-0 flex-col gap-4 md:flex">
-              <div className="vx-pill flex flex-col gap-1 p-1">
-                {primary.map((item) => {
-                  const on = active === item.href;
-                  return (
-                    <Link key={item.href} href={item.href} aria-label={item.name} title={item.name} className="relative grid h-9 w-9 place-items-center rounded-full">
-                      {on && <motion.span data-vx-motion layoutId="vx-rail" className="absolute inset-0 rounded-full" style={{ background: 'var(--vx-on)' }} transition={{ type: 'spring', stiffness: 380, damping: 32 }} />}
-                      <item.icon className="relative h-4 w-4" style={{ color: on ? 'var(--vx-on-fg)' : 'var(--vx-ink)' }} />
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="vx-pill flex flex-col p-1">
-                <button aria-label="Sign out" title="Sign out" onClick={handleSignOut} className="grid h-9 w-9 place-items-center rounded-full"><LogOut className="h-4 w-4" /></button>
-              </div>
-            </motion.aside>
+            {isAdmin ? (
+              <motion.aside data-vx-motion initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="vx-card sticky top-4 hidden max-h-[calc(100vh-2rem)] w-60 shrink-0 flex-col self-start overflow-y-auto p-3 md:flex lg:w-64">
+                <nav aria-label="Sidebar" className="space-y-1">
+                  {primary.map((item) => <SideLink key={item.href} item={item} on={active === item.href} />)}
+                  <p className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--vx-accent)' }}>Management</p>
+                  {adminNav.map((item) => <SideLink key={item.href} item={item} on={active === item.href} />)}
+                </nav>
+                <button onClick={handleSignOut} className="mt-4 flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium" style={{ background: 'var(--vx-soft)' }}><LogOut className="h-4 w-4" />Sign out</button>
+              </motion.aside>
+            ) : (
+              <motion.aside data-vx-motion initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="sticky top-4 hidden h-fit shrink-0 flex-col gap-4 md:flex">
+                <div className="vx-pill flex flex-col gap-1 p-1">
+                  {primary.map((item) => {
+                    const on = active === item.href;
+                    return (
+                      <Link key={item.href} href={item.href} aria-label={item.name} title={item.name} className="relative grid h-9 w-9 place-items-center rounded-full">
+                        {on && <motion.span data-vx-motion layoutId="vx-rail" className="absolute inset-0 rounded-full" style={{ background: 'var(--vx-on)' }} transition={{ type: 'spring', stiffness: 380, damping: 32 }} />}
+                        <item.icon className="relative h-4 w-4" style={{ color: on ? 'var(--vx-on-fg)' : 'var(--vx-ink)' }} />
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="vx-pill flex flex-col p-1">
+                  <button aria-label="Sign out" title="Sign out" onClick={handleSignOut} className="grid h-9 w-9 place-items-center rounded-full"><LogOut className="h-4 w-4" /></button>
+                </div>
+              </motion.aside>
+            )}
 
             <main className="min-w-0 flex-1 pb-4">
-              {isHome ? children : <div className="vx-light-panel p-3 sm:p-5 lg:p-6">{children}</div>}
+              {isHome ? children : <div className="vx-panel p-3 sm:p-5 lg:p-6">{children}</div>}
             </main>
           </div>
         </div>

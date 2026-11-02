@@ -67,7 +67,7 @@ export default function AIAssistantPage() {
       </div>
 
       <Tabs defaultValue="health" className="space-y-6">
-        <TabsList className="bg-white border p-1 rounded-2xl shadow-sm h-14">
+        <TabsList className="bg-card border p-1 rounded-2xl shadow-sm h-14">
           <TabsTrigger value="health" className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-bold">
             <HeartPulse className="w-4 h-4 mr-2" /> Ayurvedic Protocols
           </TabsTrigger>
@@ -116,7 +116,7 @@ export default function AIAssistantPage() {
 
             <div className="space-y-6">
               {!healthResult && !loading && (
-                <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-white rounded-2xl border-2 border-dashed opacity-50">
+                <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-card rounded-2xl border-2 border-dashed opacity-50">
                   <Leaf className="w-16 h-16 text-primary/20 mb-4" />
                   <p className="text-muted-foreground italic font-medium">Your personalized Ayurvedic protocol will appear here.</p>
                 </div>
@@ -132,7 +132,7 @@ export default function AIAssistantPage() {
               )}
 
               {healthResult && (
-                <Card className="border-none shadow-2xl bg-white animate-in zoom-in-95 duration-500">
+                <Card className="border-none shadow-2xl bg-card animate-in zoom-in-95 duration-500">
                   <CardHeader className="bg-primary/5 rounded-t-3xl border-b border-primary/10">
                     <CardTitle className="text-primary flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5" /> Your Personalized Protocol
@@ -144,7 +144,7 @@ export default function AIAssistantPage() {
                       <div className="grid gap-3">
                         {healthResult.productRecommendations.map((prod, i) => (
                           <div key={i} className="flex gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50">
-                            <div className="bg-white p-2 rounded-full h-fit shadow-sm">
+                            <div className="bg-card p-2 rounded-full h-fit shadow-sm">
                               <Leaf className="w-5 h-5 text-primary" />
                             </div>
                             <div>
@@ -191,7 +191,7 @@ export default function AIAssistantPage() {
 
              {businessResult && (
                <div className="grid md:grid-cols-2 gap-6">
-                 <Card className="md:col-span-2 border-none shadow-xl bg-white">
+                 <Card className="md:col-span-2 border-none shadow-xl bg-card">
                    <CardHeader>
                     <CardTitle className="text-2xl font-headline font-bold text-primary">Strategic Overview</CardTitle>
                    </CardHeader>

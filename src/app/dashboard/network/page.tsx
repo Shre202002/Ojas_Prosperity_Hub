@@ -38,13 +38,13 @@ export default function NetworkPage() {
         </div>
       </div>
 
-      <div className="bg-white px-6 py-3 rounded-2xl border flex items-center gap-3 text-sm font-medium text-muted-foreground shadow-sm w-fit">
+      <div className="bg-card px-6 py-3 rounded-2xl border flex items-center gap-3 text-sm font-medium text-muted-foreground shadow-sm w-fit">
         <Info className="w-4 h-4 text-primary" />
         <span>Node expansion is restricted to your own downline.</span>
       </div>
 
-      <Card className="border-none shadow-xl bg-white/50 backdrop-blur-md overflow-hidden">
-        <CardHeader className="border-b bg-white">
+      <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md overflow-hidden">
+        <CardHeader className="border-b bg-card">
           <CardTitle className="font-headline text-2xl font-bold">Binary Placement</CardTitle>
           <CardDescription>Your left and right legs, with team counts on each side.</CardDescription>
         </CardHeader>

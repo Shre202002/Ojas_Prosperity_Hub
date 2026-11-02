@@ -1,25 +1,27 @@
 /* Scoped design tokens for the dashboard demo. Light by default, dark via data-theme="dark". */
 .vx {
-  --vx-bg: #e9e9ee; --vx-shell: #f1f0f4; --vx-card: #ffffff; --vx-soft: #f1f1f4; --vx-ink: #111114; --vx-mute: #8b8b95;
-  --vx-line: #e7e7ec; --vx-pill: #ffffff; --vx-on: #111114; --vx-on-fg: #ffffff; --vx-accent: #e8531f; --vx-accent-soft: #fdeee8;
-  --vx-good: #16a34a; --vx-bad: #e0412f; --vx-shadow: 0 1px 2px rgba(20,20,30,.04), 0 8px 24px rgba(20,20,30,.05);
+  /* Light: soft mint-white surfaces, deep forest ink, brand green accent, gold highlight */
+  --vx-bg: #e8f1ec; --vx-shell: #f3f8f5; --vx-card: #ffffff; --vx-soft: #edf4f0; --vx-ink: #10241a; --vx-mute: #6b8076;
+  --vx-line: #dbe8e0; --vx-pill: #ffffff; --vx-on: #0f3d2a; --vx-on-fg: #ffffff; --vx-accent: #17a34a; --vx-accent-soft: #e0f5e8;
+  --tree-admin: #d4a017; --tree-member: #17a34a; --tree-root: #0f3d2a;
+  --vx-gold: #d4a017; --vx-good: #15803d; --vx-bad: #dc2f2f; --vx-shadow: 0 1px 2px rgba(16,36,26,.05), 0 8px 24px rgba(16,36,26,.06);
   background: var(--vx-bg); color: var(--vx-ink); min-height: 100vh; font-family: var(--font-body, ui-sans-serif, system-ui, sans-serif);
   transition: background-color .6s ease, color .6s ease;
 }
 .vx[data-theme='dark'] {
-  --vx-bg: #000000; --vx-shell: #09090b; --vx-card: #131316; --vx-soft: #1b1b20; --vx-ink: #f4f4f6; --vx-mute: #8e8e98;
-  --vx-line: #25252b; --vx-pill: #131316; --vx-on: #f2f2f5; --vx-on-fg: #0b0b0d; --vx-accent-soft: #2a1710;
-  --vx-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --vx-bg: #050b08; --vx-shell: #0a1410; --vx-card: #111d17; --vx-soft: #17261f; --vx-ink: #e8f3ed; --vx-mute: #86a091;
+  --vx-line: #223329; --vx-pill: #111d17; --vx-on: #34d399; --vx-on-fg: #04130c; --vx-accent: #34d399; --vx-accent-soft: #12281d;
+  --tree-admin: #f0c34a; --tree-member: #34d399; --tree-root: #cfe3d8;
+  --vx-gold: #f0c34a; --vx-good: #4ade80; --vx-bad: #f87171; --vx-shadow: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4);
 }
 .vx *:not([data-vx-motion]) { transition-property: background-color, border-color, color, fill, stroke; transition-duration: .5s; transition-timing-function: ease; }
 .vx-card { background: var(--vx-card); border-radius: 22px; box-shadow: var(--vx-shadow); }
 .vx-pill { background: var(--vx-pill); border-radius: 999px; box-shadow: var(--vx-shadow); }
-.vx-orange { background: radial-gradient(120% 140% at 80% 20%, #f58a63 0%, #ee6a3a 38%, #e24e1c 100%); color: #fff; }
+.vx-orange { background: radial-gradient(120% 140% at 80% 20%, #34c26a 0%, #17a34a 40%, #0f6b33 100%); color: #fff; }
 .vx-stripes { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 5px); }
 .vx-scroll::-webkit-scrollbar { height: 0; width: 0; }
 @keyframes vx-shimmer { 0% { background-position: -300px 0 } 100% { background-position: 300px 0 } }
 .vx-skel { background: linear-gradient(90deg, var(--vx-soft) 0, var(--vx-line) 50%, var(--vx-soft) 100%); background-size: 600px 100%; animation: vx-shimmer 1.2s linear infinite; border-radius: 14px; }
-/* Existing inner pages (network, wallets, admin...) are styled for a light surface; keep them on a white panel in both themes. */
-.vx-light-panel { background: #ffffff; color: hsl(var(--foreground)); border-radius: 22px; box-shadow: var(--vx-shadow); color-scheme: light; }
-.vx-light-panel * { transition-property: none; }
+/* Inner pages use the shared shadcn tokens, which follow the .dark class set on <html> by the dashboard layout. */
+.vx-panel { background: var(--vx-card); color: hsl(var(--foreground)); border-radius: 22px; box-shadow: var(--vx-shadow); }
 @media (max-width: 640px) { .vx-card { border-radius: 18px; } }
