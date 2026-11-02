@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
-/** Sticky translucent header: slides away while scrolling down, returns on any scroll up. */
+/** Solid header in normal page flow: it takes its own space above the content and never overlaps it. */
 export function HideOnScrollHeader({ children }: { children: ReactNode }) {
   const [hidden, setHidden] = useState(false);
   const last = useRef(0);
@@ -15,7 +15,7 @@ export function HideOnScrollHeader({ children }: { children: ReactNode }) {
       const delta = y - last.current;
       // Ignore tiny jitters and iOS rubber-banding; always show near the top or while focus is inside (keyboard users).
       if (Math.abs(delta) < 8) return;
-      setHidden(delta > 0 && y > 80 && !ref.current?.contains(document.activeElement));
+      setHidden(false);
       last.current = y;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -26,7 +26,7 @@ export function HideOnScrollHeader({ children }: { children: ReactNode }) {
     <header
       ref={ref}
       data-hidden={hidden}
-      className="sticky top-0 z-40 border-b border-border bg-background shadow-sm transition-transform duration-300 ease-out data-[hidden=true]:-translate-y-full motion-reduce:transition-none"
+      className="relative z-40 border-b border-border bg-background shadow-sm"
     >
       {children}
     </header>

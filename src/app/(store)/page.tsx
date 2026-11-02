@@ -56,7 +56,7 @@ export default async function HomePage() {
   return (
     <>
       <h1 className="sr-only">{BRAND.name}: Ayurvedic wellness store</h1>
-      <ApertureCarousel slides={HERO_SLIDES} height="var(--hero-h)" className="[--hero-h:calc(100svh-6.5rem)] md:[--hero-h:calc(100svh-8.5rem)] min-h-[560px] [&_.ap-img]:object-[72%_40%] md:[&_.ap-img]:object-[60%_40%] xl:[&_.ap-img]:object-center" autoplay={6500} ariaLabel="Featured products" />
+      <ApertureCarousel slides={HERO_SLIDES} height="var(--hero-h)" className="[--hero-h:calc(100svh-6.5rem)] md:[--hero-h:calc(100svh-8.5rem)] min-h-[560px] [&_.ap-img]:object-[72%_8%] md:[&_.ap-img]:object-[60%_8%] xl:[&_.ap-img]:object-[50%_8%]" autoplay={6500} ariaLabel="Featured products" />
 
       {categories.length > 0 && (
         <section className="py-16 sm:py-20">
