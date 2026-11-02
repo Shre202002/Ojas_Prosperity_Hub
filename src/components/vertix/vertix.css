@@ -1,0 +1,25 @@
+/* Scoped design tokens for the dashboard demo. Light by default, dark via data-theme="dark". */
+.vx {
+  --vx-bg: #e9e9ee; --vx-shell: #f1f0f4; --vx-card: #ffffff; --vx-soft: #f1f1f4; --vx-ink: #111114; --vx-mute: #8b8b95;
+  --vx-line: #e7e7ec; --vx-pill: #ffffff; --vx-on: #111114; --vx-on-fg: #ffffff; --vx-accent: #e8531f; --vx-accent-soft: #fdeee8;
+  --vx-good: #16a34a; --vx-bad: #e0412f; --vx-shadow: 0 1px 2px rgba(20,20,30,.04), 0 8px 24px rgba(20,20,30,.05);
+  background: var(--vx-bg); color: var(--vx-ink); min-height: 100vh; font-family: var(--font-body, ui-sans-serif, system-ui, sans-serif);
+  transition: background-color .6s ease, color .6s ease;
+}
+.vx[data-theme='dark'] {
+  --vx-bg: #000000; --vx-shell: #09090b; --vx-card: #131316; --vx-soft: #1b1b20; --vx-ink: #f4f4f6; --vx-mute: #8e8e98;
+  --vx-line: #25252b; --vx-pill: #131316; --vx-on: #f2f2f5; --vx-on-fg: #0b0b0d; --vx-accent-soft: #2a1710;
+  --vx-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+.vx *:not([data-vx-motion]) { transition-property: background-color, border-color, color, fill, stroke; transition-duration: .5s; transition-timing-function: ease; }
+.vx-card { background: var(--vx-card); border-radius: 22px; box-shadow: var(--vx-shadow); }
+.vx-pill { background: var(--vx-pill); border-radius: 999px; box-shadow: var(--vx-shadow); }
+.vx-orange { background: radial-gradient(120% 140% at 80% 20%, #f58a63 0%, #ee6a3a 38%, #e24e1c 100%); color: #fff; }
+.vx-stripes { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 5px); }
+.vx-scroll::-webkit-scrollbar { height: 0; width: 0; }
+@keyframes vx-shimmer { 0% { background-position: -300px 0 } 100% { background-position: 300px 0 } }
+.vx-skel { background: linear-gradient(90deg, var(--vx-soft) 0, var(--vx-line) 50%, var(--vx-soft) 100%); background-size: 600px 100%; animation: vx-shimmer 1.2s linear infinite; border-radius: 14px; }
+/* Existing inner pages (network, wallets, admin...) are styled for a light surface; keep them on a white panel in both themes. */
+.vx-light-panel { background: #ffffff; color: hsl(var(--foreground)); border-radius: 22px; box-shadow: var(--vx-shadow); color-scheme: light; }
+.vx-light-panel * { transition-property: none; }
+@media (max-width: 640px) { .vx-card { border-radius: 18px; } }

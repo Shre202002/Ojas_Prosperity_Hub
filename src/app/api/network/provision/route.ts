@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         }
         let sponsorId = null, parentId = null, position = null, leg = null, parent = null;
         if (!isAdminRegistration) {
-          const referral = await db.collection('referralCodes').findOne({ code: String(body.sponsorCode || '').trim().toUpperCase() }, { session });
+          const referral = await db.collection('referralCodes').findOne({ code: String(body.sponsorCode || '').trim().toUpperCase().replace(/^OJAS-/, 'SJAPL-') }, { session });
           if (!referral?.ownerId || !['left', 'right'].includes(referral.position)) throw new Error('A valid referral code is required.');
           const sponsor = await distributors.findOne({ uid: referral.ownerId }, { session });
           if (!sponsor || (sponsor.rank !== 'Admin' && sponsor.kycStatus !== 'verified')) throw new HttpError(400, 'This sponsor must complete KYC before referring new members.');

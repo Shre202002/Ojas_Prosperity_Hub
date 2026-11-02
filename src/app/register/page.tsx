@@ -29,12 +29,13 @@ function normalizeReferralCode(value: string) {
     const referralEntry = Array.from(parsed.searchParams.entries())
       .find(([key]) => key.toLowerCase() === 'ref');
     const referralFromUrl = referralEntry?.[1];
-    if (referralFromUrl) return referralFromUrl.trim().toUpperCase();
+    if (referralFromUrl) return referralFromUrl.trim().toUpperCase().replace(/^OJAS-/, 'SJAPL-');
   } catch {
     // Treat non-URL input as a referral code below.
   }
 
-  return trimmed.toUpperCase();
+  // Codes issued before the rebrand started with OJAS-; they now start with SJAPL-.
+  return trimmed.toUpperCase().replace(/^OJAS-/, 'SJAPL-');
 }
 
 function RegisterPageContent() {

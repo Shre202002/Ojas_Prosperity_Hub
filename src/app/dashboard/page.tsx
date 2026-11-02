@@ -1,27 +1,21 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc } from '@/lib/app-auth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { 
-  Wallet, 
-  TrendingUp, 
-  Users, 
-  Copy, 
-  ShieldCheck, 
-  AlertCircle,
-  ArrowUpRight,
-  Target,
-  Trophy,
-  UserPlus,
-  Loader2,
-  Crown
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AlertCircle, ArrowRight, Copy, Crown, Layers, Loader2, ShieldCheck, Target, TrendingUp, Trophy, UserPlus, Users, Wallet } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc } from '@/lib/app-auth';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { CountUp, Delta, GlassCard, PageHead, ProgressBar, container, item } from '@/components/vertix/primitives';
+
+const TARGET_BV = 5000;
+const money = (n: number) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; };
+
+function Centered({ children }: { children: React.ReactNode }) {
+  return <div className="flex min-h-[60vh] items-center justify-center">{children}</div>;
+}
 
 export default function DashboardPage() {
   const auth = useAuth();
@@ -29,10 +23,7 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const distributorRef = useMemoFirebase(() => (
-    user && db ? doc(db, 'distributors', user.uid) : null
-  ), [db, user?.uid]);
-  
+  const distributorRef = useMemoFirebase(() => (user && db ? doc(db, 'distributors', user.uid) : null), [db, user?.uid]);
   const { data: distributor, loading, error } = useDoc(distributorRef);
 
   useEffect(() => {
@@ -41,291 +32,183 @@ export default function DashboardPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ email: user.email, name: user.displayName }),
-    })).catch((provisionError) => {
-      console.error('Referral link repair failed:', provisionError);
-    });
+    })).catch((provisionError) => { console.error('Referral link repair failed:', provisionError); });
   }, [user?.uid]);
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-        <p className="text-muted-foreground font-medium">Loading your business metrics...</p>
+    <Centered>
+      <div className="text-center">
+        <Loader2 className="mx-auto h-10 w-10 animate-spin" style={{ color: 'var(--vx-accent)' }} />
+        <p className="mt-3 text-sm" style={{ color: 'var(--vx-mute)' }}>Loading your business metrics...</p>
       </div>
-    </div>
+    </Centered>
   );
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md border-destructive/20 bg-destructive/5">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" /> Connection Error
-            </CardTitle>
-            <CardDescription>We couldn't retrieve your data. Please check your network or permissions.</CardDescription>
-          </CardHeader>
-        </Card>
+  if (error) return (
+    <Centered>
+      <div className="vx-card max-w-md p-6">
+        <p className="flex items-center gap-2 font-semibold text-[var(--vx-bad)]"><AlertCircle className="h-5 w-5" /> Connection Error</p>
+        <p className="mt-2 text-sm" style={{ color: 'var(--vx-mute)' }}>We couldn't retrieve your data. Please check your network or permissions.</p>
       </div>
-    );
-  }
+    </Centered>
+  );
 
   if (!distributor) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="max-w-md text-center p-8 space-y-6 border-none shadow-2xl rounded-2xl">
-        <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
-          <UserPlus className="w-10 h-10" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-headline font-bold">Profile Not Found</h2>
-          <p className="text-muted-foreground">It looks like you haven't completed your distributor registration yet.</p>
-        </div>
-        <Link href="/register" className="block">
-          <Button className="w-full h-12 font-bold gap-2">
-            Complete Registration <ArrowRight className="w-4 h-4" />
-          </Button>
-        </Link>
-      </Card>
-    </div>
+    <Centered>
+      <div className="vx-card max-w-md space-y-5 p-8 text-center">
+        <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl" style={{ background: 'var(--vx-accent-soft)', color: 'var(--vx-accent)' }}><UserPlus className="h-8 w-8" /></span>
+        <div><h2 className="text-2xl font-semibold">Profile Not Found</h2><p className="mt-2 text-sm" style={{ color: 'var(--vx-mute)' }}>It looks like you haven't completed your distributor registration yet.</p></div>
+        <Link href="/register" className="flex h-12 items-center justify-center gap-2 rounded-full text-sm font-semibold" style={{ background: 'var(--vx-on)', color: 'var(--vx-on-fg)' }}>Complete Registration <ArrowRight className="h-4 w-4" /></Link>
+      </div>
+    </Centered>
   );
+
+  const isAdmin = distributor.rank === 'Admin';
+  const kyc = String(distributor.kycStatus || 'none');
+  const leftBV = Number(distributor.leftBV || 0), rightBV = Number(distributor.rightBV || 0);
+  const leftCount = Number(distributor.leftCount || 0), rightCount = Number(distributor.rightCount || 0);
+  const incentive = Number(distributor.incentiveBalance || 0), shopping = Number(distributor.shoppingBalance || 0);
+  const pct = (v: number) => Math.min(100, Math.round((v / TARGET_BV) * 100));
+  const chart = [{ side: 'Left', bv: leftBV }, { side: 'Right', bv: rightBV }];
 
   const copyRefLink = (position: 'left' | 'right') => {
     const code = position === 'left' ? distributor.leftReferralCode : distributor.rightReferralCode;
-    const link = `${window.location.origin}/register?ref=${code}`;
-    navigator.clipboard.writeText(link);
+    navigator.clipboard.writeText(`${window.location.origin}/register?ref=${code}`);
     toast({ title: `${position === 'left' ? 'Left' : 'Right'} referral link copied!`, description: 'Share this link to place a new member in that branch.' });
   };
 
-  const isAdmin = distributor.rank === 'Admin';
+  const wallets = [
+    { label: 'Incentive', val: incentive, on: true },
+    { label: 'Shopping', val: shopping, on: shopping > 0 },
+    { label: 'Repurchase', val: 0, on: false },
+  ];
+  const stats = [
+    { label: 'Incentive Balance', value: incentive, prefix: '₹', hero: true, icon: Wallet, note: 'Available now' },
+    { label: 'Left BV', value: leftBV, icon: TrendingUp, note: `${leftCount} members` },
+    { label: 'Right BV', value: rightBV, icon: TrendingUp, note: `${rightCount} members` },
+    { label: 'Team Size', value: leftCount + rightCount, icon: Users, note: 'Left + right' },
+  ];
+  const earnings = [
+    { label: 'Direct Sponsor', val: 0 }, { label: 'Sales Matching', val: 0 }, { label: 'Sales Level', val: 0 },
+    { label: 'Repurchase', val: 0 }, { label: 'Royalty Club', val: 0 }, { label: 'Total Incentive', val: incentive, hot: true },
+  ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto py-8 px-4">
-      {/* Header Band */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-xl shadow-sm border border-muted">
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-background rounded-2xl flex items-center justify-center font-headline text-3xl font-bold text-primary border-4 border-white shadow-xl relative">
-            {distributor.name?.[0] || 'U'}
-            {isAdmin && <Crown className="w-6 h-6 text-accent absolute -top-2 -right-2 drop-shadow-md" />}
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-headline font-bold">{distributor.name}</h1>
-              <Badge className={cn(
-                "font-bold px-3",
-                distributor.status === 'active' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-              )}>
-                {distributor.status?.toUpperCase()}
-              </Badge>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground font-mono-data">
-              <span>ID: {distributor.uid?.slice(0, 8).toUpperCase()}</span>
-              <span className="flex items-center gap-1">
-                <ShieldCheck className={cn(
-                  "w-4 h-4",
-                  distributor.kycStatus === 'verified' ? 'text-primary' : 
-                  distributor.kycStatus === 'pending' ? 'text-[hsl(var(--status-pending))]' : 'text-muted-foreground'
-                )} />
-                KYC: {distributor.kycStatus?.toUpperCase()}
-              </span>
-              <Badge variant="outline" className={cn(
-                "font-bold",
-                isAdmin ? 'text-accent border-accent/20 bg-accent/5' : 'text-primary border-primary/20 bg-primary/5'
-              )}>
-                {distributor.rank?.toUpperCase()}
-              </Badge>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col gap-3 min-w-[320px]">
-          <span className="text-xs font-bold uppercase tracking-widest text-primary/60">Your Branch Links</span>
-          {!isAdmin && distributor.kycStatus !== 'verified' ? (
-            <p className="text-sm text-muted-foreground">
-              Complete KYC to activate your referral links{distributor.kycStatus === 'pending' ? ' (your documents are under review)' : ''}.{' '}
-              {distributor.kycStatus !== 'pending' && <Link href="/dashboard/kyc" className="font-semibold text-primary underline underline-offset-4">Submit KYC</Link>}
-            </p>
-          ) : (['left', 'right'] as const).map((position) => {
-            const code = position === 'left' ? distributor.leftReferralCode : distributor.rightReferralCode;
-            return (
-              <div key={position} className="flex items-center gap-2">
-                <span className="w-12 text-xs font-bold uppercase text-muted-foreground">{position}</span>
-                <code className="flex-1 bg-white px-3 py-2 rounded-lg text-xs font-mono-data border border-muted truncate">
-                  {code || 'Not configured'}
-                </code>
-                <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-primary hover:text-primary-foreground" onClick={() => copyRefLink(position)} disabled={!code}>
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+    <motion.div variants={container} initial="hidden" animate="show">
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+        <PageHead title={`${greeting()}, ${String(distributor.name || 'Member').split(' ')[0]}`} sub="Stay on top of your network, monitor progress, and track your earnings." />
+        <motion.div variants={item} className="mb-6 flex flex-wrap items-center gap-2 text-xs lg:mb-0">
+          {isAdmin && <span className="flex items-center gap-1 rounded-full px-3 py-1.5 font-semibold" style={{ background: 'var(--vx-accent-soft)', color: 'var(--vx-accent)' }}><Crown className="h-3.5 w-3.5" />Admin</span>}
+          <span className="vx-pill flex items-center gap-1.5 px-3 py-1.5 font-medium"><ShieldCheck className="h-3.5 w-3.5" style={{ color: kyc === 'verified' ? 'var(--vx-good)' : 'var(--vx-mute)' }} />KYC: {kyc.toUpperCase()}</span>
+          <span className="vx-pill px-3 py-1.5 font-medium">{String(distributor.rank || 'Member').toUpperCase()}</span>
+          <span className="vx-pill px-3 py-1.5 font-mono font-medium">ID {String(distributor.uid || '').slice(0, 8).toUpperCase()}</span>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Wallets Group */}
-        <div className="lg:col-span-1 space-y-6">
-          <h3 className="font-headline text-xl font-bold flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-primary" /> Wallets
-          </h3>
-          <div className="grid gap-4">
-            {[
-              { label: 'Incentive Account', val: distributor.incentiveBalance || 0, isMain: true },
-              { label: 'Shopping Wallet', val: distributor.shoppingBalance || 0 },
-              { label: 'Repurchase Account', val: 0 },
-              { label: 'Recharge Account', val: 0 },
-            ].map((w, i) => (
-              <Card key={i} className="border-none shadow-md hover:shadow-lg transition-shadow overflow-hidden group">
-                <CardContent className="p-6 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{w.label}</p>
-                    <p className={cn(
-                      "text-2xl font-mono-data font-bold",
-                      w.isMain ? "text-accent" : "text-primary"
-                    )}>₹{w.val.toLocaleString()}</p>
-                  </div>
-                  <Button size="icon" variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground rounded-full">
-                    <ArrowUpRight className="w-5 h-5" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 xl:grid-cols-[1.1fr_1.1fr_1fr]">
+        <GlassCard className="lg:col-span-1">
+          <p className="text-sm" style={{ color: 'var(--vx-mute)' }}>Total Wallet Balance</p>
+          <p className="mt-3 break-words text-3xl font-semibold tracking-tight sm:text-4xl"><CountUp value={incentive + shopping} prefix="₹" duration={1600} /></p>
+          <p className="mt-2 text-xs" style={{ color: 'var(--vx-mute)' }}>Incentive + shopping wallets</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Link href="/dashboard/wallet" className="flex h-11 items-center justify-center gap-2 rounded-full text-sm font-medium transition-transform hover:scale-[1.03]" style={{ background: 'var(--vx-on)', color: 'var(--vx-on-fg)' }}>Open wallet</Link>
+            <Link href="/dashboard/network" className="flex h-11 items-center justify-center gap-2 rounded-full text-sm font-medium transition-transform hover:scale-[1.03]" style={{ background: 'var(--vx-soft)' }}>My network</Link>
           </div>
-        </div>
-
-        {/* Business/BV Group */}
-        <div className="lg:col-span-2 space-y-6">
-          <h3 className="font-headline text-xl font-bold flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" /> Business Performance
-          </h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-none shadow-md overflow-hidden bg-primary text-primary-foreground">
-              <CardHeader className="border-b border-white/10">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Current Level BV (L/R)</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 grid grid-cols-2 gap-8 divide-x divide-white/10">
-                <div className="text-center space-y-2">
-                  <p className="text-xs font-bold opacity-60 uppercase">Left</p>
-                  <p className="text-3xl font-mono-data font-bold">{distributor.leftBV || 0}</p>
-                </div>
-                <div className="text-center space-y-2">
-                  <p className="text-xs font-bold opacity-60 uppercase">Right</p>
-                  <p className="text-3xl font-mono-data font-bold">{distributor.rightBV || 0}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-md overflow-hidden bg-secondary text-foreground">
-              <CardHeader className="border-b border-black/5">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-60">Total Members (L/R)</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 grid grid-cols-2 gap-8 divide-x divide-black/5">
-                <div className="text-center space-y-2">
-                  <p className="text-xs font-bold opacity-70 uppercase">Left</p>
-                  <p className="text-3xl font-mono-data font-bold">{distributor.leftCount || 0}</p>
-                </div>
-                <div className="text-center space-y-2">
-                  <p className="text-xs font-bold opacity-70 uppercase">Right</p>
-                  <p className="text-3xl font-mono-data font-bold">{distributor.rightCount || 0}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="md:col-span-2 grid sm:grid-cols-2 gap-6">
-               <Card className="border border-muted shadow-sm bg-white">
-                 <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Next Level Target</p>
-                      <Target className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Target Left</p>
-                        <p className="font-mono-data font-bold">5,000</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Target Right</p>
-                        <p className="font-mono-data font-bold">5,000</p>
-                      </div>
-                    </div>
-                 </CardContent>
-               </Card>
-
-               <Card className="border border-muted shadow-sm bg-white">
-                 <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Next Target Remaining</p>
-                      <Trophy className="w-4 h-4 text-accent" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Remaining L</p>
-                        <p className="font-mono-data font-bold text-primary">{Math.max(0, 5000 - (distributor.leftBV || 0))}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Remaining R</p>
-                        <p className="font-mono-data font-bold text-primary">{Math.max(0, 5000 - (distributor.rightBV || 0))}</p>
-                      </div>
-                    </div>
-                 </CardContent>
-               </Card>
-            </div>
-          </div>
-        </div>
-
-        {/* Earnings Group */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-headline text-xl font-bold flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-primary" /> Earnings Overview
-            </h3>
-            <Link href="/dashboard/wallet"><Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5">View Detailed Statement</Button></Link>
-          </div>
-          <Card className="border border-muted shadow-sm bg-white overflow-hidden">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 divide-x divide-y md:divide-y-0 border-muted">
-              {[
-                { label: 'Direct Sponsor', val: 0 },
-                { label: 'Sales Matching', val: 0 },
-                { label: 'Sales Level', val: 0 },
-                { label: 'Repurchase', val: 0 },
-                { label: 'Royalty Club', val: 0 },
-                { label: 'Total Incentive', val: distributor.incentiveBalance || 0, highlight: true },
-              ].map((e, i) => (
-                <div key={i} className={cn(
-                  "p-6 space-y-2",
-                  e.highlight ? 'bg-primary/5' : ''
-                )}>
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-tighter leading-none">{e.label}</p>
-                  <p className={cn(
-                    "text-xl font-mono-data font-bold",
-                    e.highlight ? 'text-accent' : 'text-primary'
-                  )}>₹{e.val.toLocaleString()}</p>
-                </div>
+          <div className="mt-5 rounded-2xl p-3" style={{ background: 'var(--vx-soft)' }}>
+            <p className="mb-2 text-xs font-medium">Wallets</p>
+            <div className="grid grid-cols-3 gap-2">
+              {wallets.map((w) => (
+                <motion.div key={w.label} data-vx-motion whileHover={{ y: -3 }} className="min-w-0 rounded-xl p-2.5" style={{ background: 'var(--vx-card)' }}>
+                  <p className="truncate text-[11px] font-semibold">{w.label}</p>
+                  <p className="mt-1.5 truncate text-[13px] font-semibold">{money(w.val)}</p>
+                  <p className={`mt-1 text-[10px] font-medium ${w.on ? 'text-[var(--vx-good)]' : ''}`} style={w.on ? undefined : { color: 'var(--vx-mute)' }}>{w.on ? 'Active' : 'Empty'}</p>
+                </motion.div>
               ))}
             </div>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
+          </div>
+        </GlassCard>
 
-// Helper icon for missing distributor state
-function ArrowRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
+        <motion.div variants={item} className="vx-card grid grid-cols-2 gap-3 p-3 sm:p-4">
+          {stats.map((s) => (
+            <motion.div key={s.label} data-vx-motion whileHover={{ y: -4, scale: 1.02 }} className={`flex min-h-[132px] min-w-0 flex-col justify-between rounded-2xl p-3.5 sm:min-h-[150px] sm:p-4 ${s.hero ? 'vx-orange' : ''}`} style={s.hero ? undefined : { background: 'var(--vx-soft)' }}>
+              <div className="flex items-center justify-between gap-2 text-xs"><span className="truncate" style={s.hero ? { opacity: 0.85 } : { color: 'var(--vx-mute)' }}>{s.label}</span><s.icon className="h-4 w-4 shrink-0 opacity-70" /></div>
+              <p className="break-words text-2xl font-semibold tracking-tight sm:text-3xl"><CountUp value={s.value} prefix={s.prefix || ''} duration={1500} /></p>
+              <p className="truncate text-[11px]" style={s.hero ? { opacity: 0.8 } : { color: 'var(--vx-mute)' }}>{s.note}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <GlassCard className="lg:col-span-2 xl:col-span-1">
+          <h3 className="text-lg font-semibold">Business Performance</h3>
+          <p className="text-xs" style={{ color: 'var(--vx-mute)' }}>Current level BV on your left and right legs</p>
+          <div className="mt-4 rounded-2xl p-3" style={{ background: 'var(--vx-soft)' }}>
+            <div className="h-[190px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chart} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="var(--vx-line)" strokeDasharray="3 3" />
+                  <XAxis dataKey="side" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--vx-mute)' }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--vx-mute)' }} allowDecimals={false} />
+                  <Bar dataKey="bv" radius={[8, 8, 0, 0]} barSize={46} isAnimationActive animationDuration={1400}>
+                    <Cell fill="var(--vx-accent)" /><Cell fill="var(--vx-on)" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Next Level Target</h3><Target className="h-4 w-4" style={{ color: 'var(--vx-accent)' }} /></div>
+          <div className="mt-5 space-y-5">
+            {[{ l: 'Left', v: leftBV }, { l: 'Right', v: rightBV }].map((r) => (
+              <div key={r.l}>
+                <div className="mb-2 flex justify-between text-xs"><span className="font-medium">{r.l} BV</span><span style={{ color: 'var(--vx-mute)' }}>{r.v.toLocaleString('en-IN')} / {TARGET_BV.toLocaleString('en-IN')}</span></div>
+                <ProgressBar pct={pct(r.v)} />
+                <p className="mt-1.5 text-[11px]" style={{ color: 'var(--vx-mute)' }}>{Math.max(0, TARGET_BV - r.v).toLocaleString('en-IN')} BV remaining</p>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+
+        <GlassCard className="xl:col-span-1">
+          <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Your Branch Links</h3><Layers className="h-4 w-4" style={{ color: 'var(--vx-accent)' }} /></div>
+          {!isAdmin && kyc !== 'verified' ? (
+            <p className="mt-4 text-sm" style={{ color: 'var(--vx-mute)' }}>
+              Complete KYC to activate your referral links{kyc === 'pending' ? ' (your documents are under review)' : ''}.{' '}
+              {kyc !== 'pending' && <Link href="/dashboard/kyc" className="font-semibold underline underline-offset-4" style={{ color: 'var(--vx-accent)' }}>Submit KYC</Link>}
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {(['left', 'right'] as const).map((position) => {
+                const code = position === 'left' ? distributor.leftReferralCode : distributor.rightReferralCode;
+                return (
+                  <div key={position} className="flex items-center gap-2">
+                    <span className="w-11 text-[11px] font-bold uppercase" style={{ color: 'var(--vx-mute)' }}>{position}</span>
+                    <code className="min-w-0 flex-1 truncate rounded-xl px-3 py-2.5 text-xs" style={{ background: 'var(--vx-soft)' }}>{code || 'Not configured'}</code>
+                    <button onClick={() => copyRefLink(position)} disabled={!code} aria-label={`Copy ${position} referral link`} className="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 disabled:opacity-40" style={{ background: 'var(--vx-on)', color: 'var(--vx-on-fg)' }}><Copy className="h-4 w-4" /></button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </GlassCard>
+
+        <GlassCard className="lg:col-span-2 xl:col-span-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-lg font-semibold"><Trophy className="h-5 w-5" style={{ color: 'var(--vx-accent)' }} />Earnings Overview</h3>
+            <Link href="/dashboard/wallet" className="rounded-full px-4 py-2 text-xs font-semibold" style={{ background: 'var(--vx-soft)' }}>View detailed statement</Link>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+            {earnings.map((e, i) => (
+              <motion.div key={e.label} data-vx-motion initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + i * 0.07 }} className="min-w-0 rounded-2xl p-4" style={e.hot ? { background: 'var(--vx-accent-soft)' } : { background: 'var(--vx-soft)' }}>
+                <p className="truncate text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--vx-mute)' }}>{e.label}</p>
+                <p className="mt-2 truncate text-lg font-semibold" style={e.hot ? { color: 'var(--vx-accent)' } : undefined}>{money(e.val)}</p>
+                {e.hot && <Delta text="Total" />}
+              </motion.div>
+            ))}
+          </div>
+        </GlassCard>
+      </div>
+    </motion.div>
   );
 }
