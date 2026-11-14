@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from '@/components/SiteImage';
 import { Leaf, ShieldCheck, Network } from 'lucide-react';
 import { BRAND } from '@/lib/brand';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { BrandLogo } from './BrandLogo';
 
 const points = [
@@ -43,7 +44,8 @@ export function AuthShell({ children, wide = false }: { children: React.ReactNod
         </p>
       </aside>
 
-      <main className="flex flex-col items-center justify-center p-6 sm:p-10">
+      <main className="relative flex flex-col items-center justify-center p-6 sm:p-10">
+        <LanguageSwitcher className="absolute right-4 top-4" />
         <div className="lg:hidden mb-8">
           <BrandLogo />
         </div>

@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { ReferralTracker } from '@/components/ReferralTracker';
 import { BRAND } from '@/lib/brand';
 import { CartProvider } from '@/lib/cart';
+import { GoogleTranslateLoader } from '@/components/layout/GoogleTranslateLoader';
 
 const body = DM_Sans({ subsets: ['latin'], variable: '--font-body' });
 const display = Lora({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-display' });
@@ -36,6 +37,7 @@ export default function RootLayout({
             <ReferralTracker />
             {children}
             <Toaster />
+            <GoogleTranslateLoader />
           </CartProvider>
         </AuthProvider>
       </body>

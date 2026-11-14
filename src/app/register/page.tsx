@@ -9,6 +9,8 @@ import { isPlanFilled } from '@/lib/bv-plan';
 import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, updateProfile } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -295,7 +297,8 @@ function RegisterPageContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone</Label>
-                  <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91..." className="h-11" />
+                  <PhoneInput id="phone" value={phone} onChange={setPhone} />
+                  {phone && !isValidPhoneNumber(phone) && <p className="text-xs text-destructive">Enter a valid phone number.</p>}
                 </div>
               </div>
 
@@ -373,7 +376,7 @@ function RegisterPageContent() {
                 <Button variant="ghost" onClick={() => router.push('/join')} className="h-12 px-6">Back</Button>
                 <Button 
                   onClick={() => setStep(2)} 
-                  disabled={!sponsorData || !email || !password || !name || validatingRef || !emailVerified} 
+                  disabled={!sponsorData || !email || !password || !name || !phone || !isValidPhoneNumber(phone) || validatingRef || !emailVerified} 
                   className="flex-1 h-12 font-semibold gap-2"
                 >
                   Choose Package <ArrowRight className="w-5 h-5" />

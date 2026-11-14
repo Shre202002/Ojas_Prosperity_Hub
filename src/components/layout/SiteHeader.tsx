@@ -6,6 +6,7 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTi
 import { AccountLink } from '@/components/store/AccountLink';
 import { CartButton } from '@/components/store/CartButton';
 import { SITE } from '@/lib/site-config';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { BrandLogo } from './BrandLogo';
 import { HideOnScrollHeader } from './HideOnScrollHeader';
 
@@ -54,6 +55,7 @@ export function SiteHeader() {
 
           <div className="ml-auto flex items-center gap-1">
             <SearchForm id="site-search" className="mr-2 hidden w-56 xl:block" />
+            <LanguageSwitcher className="mr-1 hidden md:inline-flex" />
             <AccountLink />
             <CartButton />
             <Button asChild className="ml-2 hidden rounded-full px-6 md:inline-flex"><Link href="/shop">Shop now</Link></Button>
@@ -66,7 +68,8 @@ export function SiteHeader() {
                   <SheetTitle>Menu</SheetTitle>
                   <SheetDescription>Site pages.</SheetDescription>
                 </SheetHeader>
-                <SearchForm id="mobile-search" className="mt-10" />
+                <LanguageSwitcher className="mt-10" />
+                <SearchForm id="mobile-search" className="mt-4" />
                 <nav aria-label="Mobile" className="mt-6 flex flex-col gap-4 text-2xl font-semibold text-primary">
                   {NAV_LINKS.map((link) => (
                     <SheetClose asChild key={link.href}><Link href={link.href}>{link.name}</Link></SheetClose>

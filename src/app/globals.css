@@ -129,3 +129,14 @@
     background-image: linear-gradient(180deg, hsl(var(--secondary)) 0%, hsl(var(--background)) 100%);
   }
 }
+
+/* Google Translate: hide its banner/tooltips; our own LanguageSwitcher is the UI. */
+.goog-te-banner-frame, .goog-te-balloon-frame, #goog-gt-tt, .goog-tooltip, .skiptranslate > iframe { display: none !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+body { top: 0 !important; }
+
+/* Phone input (react-phone-number-input) styled to match <Input>. */
+.sjapl-phone { display: flex; align-items: center; gap: 0.5rem; height: 2.75rem; width: 100%; border: 1px solid hsl(var(--input)); border-radius: calc(var(--radius) - 2px); background: hsl(var(--background)); padding: 0 0.75rem; }
+.sjapl-phone:focus-within { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.sjapl-phone .PhoneInputInput { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 0.875rem; }
+.sjapl-phone .PhoneInputCountrySelect { color: #000; }
