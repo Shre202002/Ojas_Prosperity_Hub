@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomInt } from 'crypto';
 import { collection } from '@/lib/mongodb';
-import { sendMail } from '@/lib/mailer';
+import { otpEmail, sendMail } from '@/lib/mailer';
 
 export const runtime = 'nodejs';
 const hashCode = (email: string, code: string) => createHash('sha256').update(`${email}:${code}`).digest('hex');
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
   await c.replaceOne({ _id: email }, { _id: email, codeHash: hashCode(email, code), attempts: 0, verified: false, createdAt: new Date(), expiresAt: new Date(Date.now() + 15 * 60_000) }, { upsert: true });
   try {
-    await sendMail({ to: email, subject: 'Your verification code', text: `Your verification code is ${code}. It is valid for 15 minutes.`, html: `<p>Your verification code is <b style="font-size:20px">${code}</b>. It is valid for 15 minutes.</p>` });
+    await sendMail({ to: email, ...otpEmail(code, 15) });
   } catch (error) {
     console.error('Verification email failed:', error);
     await c.deleteOne({ _id: email }).catch(() => undefined); // don't lock the user out with the resend cooldown

@@ -2,15 +2,18 @@ import Link from 'next/link';
 import { ProductImage } from '@/components/ProductImage';
 import { formatPrice } from '@/lib/money';
 import type { ShopProduct } from '@/lib/catalog';
+import type { PickerProduct } from '@/lib/picker-products';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AddToCartButton } from './AddToCartButton';
 import { BvBadge } from './BvBadge';
 import { BvLeftHint } from './BvLeftHint';
 
 // Marketplace-style card: photo on white, two-line name, price row with MRP and percent off, BV under the price, one-tap add to cart.
-export function ProductCard({ product, priority = false }: { product: ShopProduct; priority?: boolean }) {
+export function ProductCard({ product, priority = false, highlight = false }: { product: ShopProduct | PickerProduct; priority?: boolean; highlight?: boolean }) {
   const lowStock = product.stock !== null && product.stock > 0 && product.stock <= 5;
   return (
-    <article className="group flex h-full flex-col rounded-lg border bg-card p-3 transition-shadow duration-200 hover:shadow-lg sm:p-4">
+    <article className={`group relative flex h-full flex-col rounded-lg border bg-card p-3 transition-shadow duration-200 hover:shadow-lg sm:p-4 ${highlight ? 'ring-2 ring-primary shadow-lg' : ''}`}>
+      {highlight && <span className="absolute -top-2 left-3 z-10 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-primary-foreground">Completes your plan</span>}
       <Link
         href={`/products/${product.slug}`}
         className="relative block aspect-square overflow-hidden rounded-md bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -48,6 +51,21 @@ export function ProductGrid({ products, priorityCount = 0 }: { products: ShopPro
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
       {products.map((product, index) => <ProductCard key={product.id} product={product} priority={index < priorityCount} />)}
+    </div>
+  );
+}
+
+/** Placeholder shown while the catalogue loads (same footprint as a ProductCard so the layout doesn't jump). */
+export function ProductCardSkeleton() {
+  return (
+    <div className="flex h-full flex-col rounded-lg border bg-card p-3 sm:p-4" aria-hidden>
+      <Skeleton className="aspect-square w-full rounded-md" />
+      <Skeleton className="mt-3 h-3 w-1/2" />
+      <Skeleton className="mt-2 h-4 w-5/6" />
+      <Skeleton className="mt-1 h-4 w-2/3" />
+      <Skeleton className="mt-3 h-6 w-1/3" />
+      <Skeleton className="mt-2 h-6 w-1/2" />
+      <Skeleton className="mt-4 h-10 w-full" />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomInt } from 'crypto';
 import { collection } from '@/lib/mongodb';
-import { sendMail } from '@/lib/mailer';
+import { otpEmail, sendMail } from '@/lib/mailer';
 
 export const runtime = 'nodejs';
 // Fallback when the SMS OTP cannot be delivered: prove ownership of the registration email instead.
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
   await c.replaceOne({ _id: phone as any }, { _id: phone as any, email, codeHash: hashCode(phone, email, code), attempts: 0, createdAt: new Date(), expiresAt: new Date(Date.now() + 10 * 60_000) }, { upsert: true });
   try {
-    await sendMail({ to: email, subject: 'Your phone verification code', text: `Your verification code is ${code}. It is valid for 10 minutes.`, html: `<p>Your verification code is <b style="font-size:20px">${code}</b>. It is valid for 10 minutes.</p>` });
+    await sendMail({ to: email, ...otpEmail(code, 10) });
   } catch (error) {
     console.error('Phone fallback email failed:', error);
     await c.deleteOne({ _id: phone as any }).catch(() => undefined);

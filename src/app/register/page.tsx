@@ -3,7 +3,9 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PlanPickerDialog } from '@/components/store/PlanPickerDialog';
+import dynamic from 'next/dynamic';
+import { prefetchPickerProducts } from '@/lib/picker-products';
+const PlanPickerDialog = dynamic(() => import('@/components/store/PlanPickerDialog').then((m) => m.PlanPickerDialog), { ssr: false });
 import { useCart } from '@/lib/cart';
 import { isPlanFilled } from '@/lib/bv-plan';
 import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, updateProfile } from '@/lib/app-auth';
@@ -52,6 +54,9 @@ function RegisterPageContent() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [otpOpen, setOtpOpen] = useState(false);
   const [verifiedPhone, setVerifiedPhone] = useState('');
+
+  // Warm the plan-picker code and catalogue while the member fills step 1, so the popup opens instantly.
+  useEffect(() => { prefetchPickerProducts(); void import('@/components/store/PlanPickerDialog'); }, []);
 
   const placementUnder = searchParams.get('under') || '';
 
@@ -390,7 +395,7 @@ function RegisterPageContent() {
               </div>}
 
               {selectedPackage && <Button type="button" variant="outline" onClick={() => setPickerOpen(true)} className="w-full">{isPlanFilled(selectedPackage, totalBv) ? `Products selected (${totalBv} BV), edit` : `Choose products for ${selectedPackage.name}`}</Button>}
-              <PlanPickerDialog plan={selectedPackage} open={pickerOpen} onOpenChange={setPickerOpen} onConfirm={startPayment} busy={loading} />
+              {(pickerOpen || selectedPackage) && <PlanPickerDialog plan={selectedPackage} open={pickerOpen} onOpenChange={setPickerOpen} onConfirm={startPayment} busy={loading} />}
 
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={() => setStep(1)} className="h-12 px-6">Back</Button>

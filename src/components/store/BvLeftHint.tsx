@@ -10,7 +10,7 @@ export function BvLeftHint({ bv }: { bv: number }) {
   const fits = canAddBv(plan, totalBv, bv);
   return (
     <p className={`mt-1 text-xs font-medium ${fits ? 'text-primary' : 'text-destructive'}`}>
-      {fits ? `Adds ${bv} BV → ${bvLeft(plan, totalBv + bv)} BV left` : `Too high: only ${bvLeft(plan, totalBv)} BV left`}
+      {fits ? `Adds ${bv} BV → ${bvLeft(plan, totalBv + bv)} BV left` : `Too high: only ${bvLeft(plan, totalBv)} BV left. Swap an item to fit`}
     </p>
   );
 }
