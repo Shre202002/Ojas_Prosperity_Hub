@@ -1,74 +1,90 @@
 'use client';
 
-import { useEffect, useId, useState, type ReactNode } from 'react';
-import { CheckCircle2, FileText, RefreshCw, Trash2, type LucideIcon } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Camera, FileText, RefreshCw, Trash2, UploadCloud } from 'lucide-react';
+import { fileProblem } from '@/lib/kyc-rules';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  icon: LucideIcon;
   title: string;
-  hint: string;
-  accept: string;
-  /** Opens the camera on phones (selfie). */
-  capture?: 'user';
+  /** Selfie: photos only, front camera, round face guide. */
+  variant?: 'document' | 'selfie';
   file: File | null;
   onFile: (file: File | null) => void;
-  /** File uploaded and every required detail entered. */
-  complete: boolean;
-  /** Detail fields; shown only once a file has been chosen. */
-  children?: ReactNode;
 };
 
-/** One KYC document: big click target, preview, and (after upload) the details that belong to it. */
-export function DocumentUpload({ icon: Icon, title, hint, accept, capture, file, onFile, complete, children }: Props) {
-  const inputId = useId();
+/** Upload area for one KYC document: drag & drop, camera or file picker, instant validation, preview. */
+export function DocumentUpload({ title, variant = 'document', file, onFile }: Props) {
+  const id = useId();
+  const selfie = variant === 'selfie';
+  const accept = selfie ? 'image/jpeg,image/png,image/webp' : 'image/jpeg,image/png,image/webp,application/pdf';
   const [preview, setPreview] = useState<string | null>(null);
-  const isImage = !!file && file.type.startsWith('image/');
+  const [error, setError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!file || !isImage) { setPreview(null); return; }
+    if (!file || !file.type.startsWith('image/')) { setPreview(null); return; }
     const url = URL.createObjectURL(file);
     setPreview(url);
     return () => URL.revokeObjectURL(url);
-  }, [file, isImage]);
+  }, [file]);
+
+  const accepts = (candidate: File | undefined | null) => {
+    if (!candidate) return;
+    const problem = fileProblem(candidate, selfie);
+    setError(problem || '');
+    if (!problem) onFile(candidate);
+  };
+
+  if (file) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+          <div className={cn('grid shrink-0 place-items-center overflow-hidden bg-muted', selfie ? 'h-20 w-20 rounded-full' : 'h-20 w-20 rounded-lg')}>
+            {preview ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={preview} alt={`${title} preview`} className="h-full w-full object-cover" /> : <FileText className="h-7 w-7 text-muted-foreground" aria-hidden />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{file.name}</p>
+            <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB · uploaded to this device</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-background px-3 text-xs font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><RefreshCw className="h-3.5 w-3.5" aria-hidden />Replace</button>
+              <button type="button" onClick={() => { onFile(null); setError(''); }} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Trash2 className="h-3.5 w-3.5" aria-hidden />Remove</button>
+            </div>
+          </div>
+        </div>
+        <input ref={fileRef} type="file" accept={accept} className="sr-only" tabIndex={-1} onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
+        {error && <p role="alert" className="text-xs font-medium text-destructive">{error}</p>}
+      </div>
+    );
+  }
 
   return (
-    <section className={cn('rounded-2xl border-2 p-4 transition-colors', complete ? 'border-primary/40 bg-primary/5' : file ? 'border-amber-300 bg-amber-50/50' : 'border-dashed border-muted bg-card')}>
-      <div className="flex items-center gap-3">
-        <div className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-xl', complete ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground')}>
-          {complete ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+    <div className="space-y-2">
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); accepts(e.dataTransfer.files?.[0]); }}
+        className={cn('rounded-2xl border-2 border-dashed p-5 text-center transition-colors duration-200', dragging ? 'border-primary bg-primary/10' : 'border-muted bg-background', error && 'border-destructive/50')}
+      >
+        <div className={cn('mx-auto grid place-items-center bg-primary/10 text-primary', selfie ? 'h-24 w-24 rounded-full' : 'h-12 w-12 rounded-xl')}>
+          {selfie ? <Camera className="h-9 w-9" aria-hidden /> : <UploadCloud className="h-6 w-6" aria-hidden />}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">{title} <span className="text-destructive" aria-label="required">*</span></p>
-          <p className="text-xs font-medium text-muted-foreground">{complete ? 'Done ✓' : file ? 'Now fill in the details below' : hint}</p>
+        <p className="mt-3 text-sm font-semibold">{selfie ? 'Take a clear photo of your face' : `Add your ${title.toLowerCase()}`}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{selfie ? 'JPG, PNG or WEBP · up to 8 MB' : 'Drag a file here, or choose one. JPG, PNG, WEBP or PDF · up to 8 MB'}</p>
+        <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+          <label htmlFor={`${id}-camera`} className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+            <Camera className="h-4 w-4" aria-hidden />Take photo
+            <input ref={cameraRef} id={`${id}-camera`} type="file" accept="image/*" capture={selfie ? 'user' : 'environment'} className="sr-only" onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
+          <label htmlFor={`${id}-file`} className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border bg-background px-5 text-sm font-semibold transition-colors hover:bg-secondary focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+            <UploadCloud className="h-4 w-4" aria-hidden />Upload file
+            <input id={`${id}-file`} type="file" accept={accept} className="sr-only" onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
         </div>
       </div>
-
-      {!file ? (
-        <label htmlFor={inputId} className="mt-3 flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-dashed border-primary/30 bg-background px-4 py-6 text-center transition-colors hover:bg-primary/5 focus-within:ring-2 focus-within:ring-primary/30">
-          <span className="text-sm font-semibold text-primary">Tap to upload</span>
-          <span className="text-xs text-muted-foreground">{accept.includes('pdf') ? 'JPG, PNG, WEBP or PDF · max 8 MB' : 'JPG, PNG or WEBP photo · max 8 MB'}</span>
-          <input id={inputId} type="file" accept={accept} capture={capture} className="sr-only" onChange={(e) => onFile(e.target.files?.[0] || null)} />
-        </label>
-      ) : (
-        <>
-          <div className="mt-3 flex items-center gap-3 rounded-xl border bg-background p-2">
-            <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted">
-              {preview ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={preview} alt={`${title} preview`} className="h-full w-full object-cover" /> : <FileText className="h-6 w-6 text-muted-foreground" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{file.name}</p>
-              <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-            </div>
-            <label htmlFor={inputId} className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary" title="Change file">
-              <RefreshCw className="h-4 w-4" /><span className="sr-only">Change file</span>
-              <input id={inputId} type="file" accept={accept} capture={capture} className="sr-only" onChange={(e) => { if (e.target.files?.[0]) onFile(e.target.files[0]); }} />
-            </label>
-            <button type="button" onClick={() => onFile(null)} className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Remove file"><Trash2 className="h-4 w-4" /><span className="sr-only">Remove file</span></button>
-          </div>
-          {children && <div className="mt-4 space-y-4">{children}</div>}
-        </>
-      )}
-    </section>
+      {error && <p role="alert" className="text-xs font-medium text-destructive">{error}</p>}
+    </div>
   );
 }

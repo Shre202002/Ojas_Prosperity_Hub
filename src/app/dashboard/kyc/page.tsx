@@ -1,29 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth, useUser, useFirestore, useDoc, useCollection, useMemoFirebase, doc, setDoc, query, collection, where } from '@/lib/app-auth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useEffect, useRef, useState } from 'react';
+import { useAuth, useUser, useFirestore, useDoc, useCollection, useMemoFirebase, doc, query, collection, where } from '@/lib/app-auth';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ShieldCheck, 
-  Upload, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
-  Camera,
-  FileText,
-  MapPin,
-  Loader2,
-  UserPlus
-} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Eye, EyeOff, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { DocumentUpload } from '@/components/kyc/DocumentUpload';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ADDRESS_TYPES, ID_TYPES, checkAddress, checkAddressProofNumber, checkIdNumber } from '@/lib/kyc-rules';
+import { KycStepper, KYC_STEPS } from '@/components/kyc/KycStepper';
+import { KycTips } from '@/components/kyc/KycTips';
+import { KycReview } from '@/components/kyc/KycReview';
+import { KycRejectedNotice, KycStatusCard } from '@/components/kyc/KycStatusCard';
+import { ADDRESS_TYPES, ID_ALSO_ADDRESS, ID_TYPES, checkAddress, checkAddressProofNumber, checkIdNumber, formatIdNumber, maskNumber } from '@/lib/kyc-rules';
+
+const DRAFT_KEY = 'sjapl_kyc_draft_v1';
+const EMPTY = { idType: '', idNumber: '', addressProofType: '', addressProofNumber: '', address: '' };
+const STEP_TITLES = ['Upload your ID proof', 'Upload your address proof', 'Take a live selfie', 'Review and submit'];
+
+function FieldError({ show, message }: { show: boolean; message?: string }) {
+  return show && message ? <p role="alert" className="text-xs font-medium text-destructive">{message}</p> : null;
+}
 
 export default function KYCPage() {
   const auth = useAuth();
@@ -31,52 +32,74 @@ export default function KYCPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const distributorRef = useMemoFirebase(() => (
-    user && db ? doc(db, 'distributors', user.uid) : null
-  ), [db, user?.uid]);
-  
+  const distributorRef = useMemoFirebase(() => (user && db ? doc(db, 'distributors', user.uid) : null), [db, user?.uid]);
   const { data: distributor } = useDoc(distributorRef);
-
-  const kycQuery = useMemoFirebase(() => (
-    db && user ? query(collection(db, 'kycSubmissions'), where('distributorId', '==', user.uid)) : null
-  ), [db, user?.uid]);
-  
+  const kycQuery = useMemoFirebase(() => (db && user ? query(collection(db, 'kycSubmissions'), where('distributorId', '==', user.uid)) : null), [db, user?.uid]);
   const { data: submissions, loading: loadingSubmissions } = useCollection(kycQuery, 'kyc');
   const latestSubmission = submissions?.[0];
 
+  const [step, setStep] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [formData, setFormData] = useState({
-    idType: '',
-    idNumber: '',
-    addressProofType: '',
-    addressProofNumber: '',
-    address: '',
-  });
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [showNumber, setShowNumber] = useState(false);
+  const [sameAsId, setSameAsId] = useState(false);
+  const [formData, setFormData] = useState(EMPTY);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const touch = (key: string) => setTouched((t) => ({ ...t, [key]: true }));
-  const idCheck = checkIdNumber(formData.idType, formData.idNumber);
-  const addrNoCheck = checkAddressProofNumber(formData.addressProofType, formData.addressProofNumber);
-  const addrCheck = checkAddress(formData.address);
   const [files, setFiles] = useState<{ idProof: File | null; addressProof: File | null; selfie: File | null }>({ idProof: null, addressProof: null, selfie: null });
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const touch = (key: string) => setTouched((t) => ({ ...t, [key]: true }));
 
-  const idComplete = !!files.idProof && idCheck.ok;
-  const addressComplete = !!files.addressProof && addrNoCheck.ok && addrCheck.ok;
-  const selfieComplete = !!files.selfie;
-  const completeCount = [idComplete, addressComplete, selfieComplete].filter(Boolean).length;
+  // Keep typed details (never files) across a refresh.
+  useEffect(() => {
+    try { const saved = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null'); if (saved?.formData) { setFormData({ ...EMPTY, ...saved.formData }); setSameAsId(!!saved.sameAsId); } } catch { /* storage blocked */ }
+  }, []);
+  useEffect(() => {
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, sameAsId })); } catch { /* storage blocked */ }
+  }, [formData, sameAsId]);
+
+  // Warn before leaving with chosen files that have not been sent.
+  const hasFiles = !!(files.idProof || files.addressProof || files.selfie);
+  useEffect(() => {
+    if (!hasFiles || justSubmitted) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasFiles, justSubmitted]);
+
+  // Move focus to the new step heading so keyboard and screen-reader users land in the right place.
+  const firstRender = useRef(true);
+  useEffect(() => { if (firstRender.current) { firstRender.current = false; return; } headingRef.current?.focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, [step]);
+
+  const canReuseId = ID_ALSO_ADDRESS.includes(formData.idType);
+  const useIdAsAddress = sameAsId && canReuseId;
+  const addrType = useIdAsAddress ? formData.idType : formData.addressProofType;
+  const addrNumber = useIdAsAddress ? formData.idNumber : formData.addressProofNumber;
+  const addrFile = useIdAsAddress ? files.idProof : files.addressProof;
+
+  const idCheck = checkIdNumber(formData.idType, formData.idNumber);
+  const addrNoCheck = checkAddressProofNumber(addrType, addrNumber);
+  const addrCheck = checkAddress(formData.address);
+  const done = [!!files.idProof && idCheck.ok, !!addrFile && addrNoCheck.ok && addrCheck.ok, !!files.selfie, consent];
+  const stepReady = step < 3 ? done[step] : done[0] && done[1] && done[2] && consent;
 
   async function handleSubmitKYC() {
-    if (!user || !db || !distributor || completeCount < 3) return;
+    if (!user || !db || !distributor || !(done[0] && done[1] && done[2] && consent) || uploading) return;
     setUploading(true);
     try {
-      const body = new FormData(); for (const [key, value] of Object.entries(formData)) body.append(key, value);
-      Object.entries(files).forEach(([type, file]) => { if (file) body.append(type, file); });
+      const body = new FormData();
+      body.append('idType', formData.idType); body.append('idNumber', formData.idNumber);
+      body.append('addressProofType', addrType); body.append('addressProofNumber', addrNumber); body.append('address', formData.address);
+      if (files.idProof) body.append('idProof', files.idProof);
+      if (addrFile) body.append('addressProof', addrFile);
+      if (files.selfie) body.append('selfie', files.selfie);
       const response = await fetch('/api/kyc', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('sjapl_session_token') || ''}` }, body });
-      const result = await response.json(); if (!response.ok) throw new Error(result.error || 'KYC submission failed.');
-      
-      toast({
-        title: 'KYC Submitted',
-        description: distributor.sponsorId ? 'Your sponsor and Admin team can review your documents.' : 'Your documents will be verified by the Admin team.',
-      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'KYC submission failed.');
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      setFiles({ idProof: null, addressProof: null, selfie: null });
+      setJustSubmitted(true);
+      toast({ title: 'KYC submitted', description: distributor.sponsorId ? 'Your sponsor and the Admin team can now review your documents.' : 'Your documents will be verified by the Admin team.' });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Submission failed', description: e.message });
     } finally {
@@ -85,129 +108,153 @@ export default function KYCPage() {
   }
 
   if (!distributor || loadingSubmissions) return (
-    <div className="flex items-center justify-center p-12">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <div className="mx-auto max-w-4xl space-y-6 py-8" aria-busy>
+      <Skeleton className="h-10 w-72" />
+      <Skeleton className="h-9 w-full" />
+      <Skeleton className="h-72 w-full rounded-2xl" />
     </div>
   );
 
   if (distributor.rank === 'Admin') return (
-    <Card className="max-w-xl mx-auto mt-20 p-10 text-center space-y-4">
-      <ShieldCheck className="w-12 h-12 text-primary mx-auto" />
-      <h1 className="text-2xl font-headline font-bold">Super Admin Verification Not Required</h1>
+    <Card className="mx-auto mt-20 max-w-xl space-y-4 p-10 text-center">
+      <ShieldCheck className="mx-auto h-12 w-12 text-primary" />
+      <h1 className="font-headline text-2xl font-bold">Super Admin Verification Not Required</h1>
       <p className="text-muted-foreground">Use the Admin KYC Review Hub to manage member verification.</p>
     </Card>
   );
 
+  const status = justSubmitted ? 'pending' : latestSubmission?.status;
+  if (status === 'verified' || status === 'pending') {
+    return <div className="mx-auto max-w-4xl py-8"><KycStatusCard status={justSubmitted ? 'submitted' : status} /></div>;
+  }
+
+  const idMeta = ID_TYPES.find((t) => t.value === formData.idType);
+  const addrMeta = ADDRESS_TYPES.find((t) => t.value === addrType);
+  const reviewRows = [
+    { title: 'ID proof', file: files.idProof, step: 0, lines: [`${idMeta?.label ?? ''}`, maskNumber(formData.idNumber)] },
+    { title: 'Address proof', file: addrFile, step: 1, lines: [`${addrMeta?.label ?? ''} · ${maskNumber(addrNumber)}`, formData.address.trim()] },
+    { title: 'Live selfie', file: files.selfie, step: 2, lines: ['Photo of your face'], round: true },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-headline font-bold text-primary">Identity Verification</h1>
-          <p className="text-muted-foreground font-medium">Verify your account to unlock full benefits and withdrawals.</p>
-        </div>
-        
-        {latestSubmission?.status === 'verified' ? (
-          <Badge className="bg-primary hover:bg-primary/90 h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-primary/20">
-            <CheckCircle2 className="w-4 h-4" /> VERIFIED
-          </Badge>
-        ) : latestSubmission?.status === 'pending' ? (
-          <Badge className="bg-[hsl(var(--status-pending))] text-white h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-amber-200">
-            <Clock className="w-4 h-4" /> PENDING REVIEW
-          </Badge>
-        ) : latestSubmission?.status === 'rejected' ? (
-          <Badge className="bg-destructive text-white h-10 px-6 font-bold text-sm gap-2 rounded-xl shadow-lg shadow-destructive/20">
-            <AlertCircle className="w-4 h-4" /> REJECTED
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="border-muted h-10 px-6 font-bold text-sm gap-2 rounded-xl bg-card text-muted-foreground">
-            <AlertCircle className="w-4 h-4" /> NOT SUBMITTED
-          </Badge>
-        )}
-      </div>
+    <div className="mx-auto max-w-5xl space-y-6 py-6 pb-28 md:py-8 md:pb-8">
+      <header className="space-y-2">
+        <h1 className="font-headline text-3xl font-bold text-primary md:text-4xl">Identity Verification</h1>
+        <p className="text-muted-foreground">Verify once to unlock withdrawals and referrals.</p>
+        <ul className="flex flex-wrap gap-x-5 gap-y-1 pt-1 text-sm text-muted-foreground">
+          <li className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" aria-hidden />Takes about 3 minutes</li>
+          <li className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />Reviewed in 24 to 48 hours</li>
+          <li className="flex items-center gap-1.5"><Lock className="h-4 w-4 text-primary" aria-hidden />Private and encrypted</li>
+        </ul>
+      </header>
 
-      {latestSubmission?.status === 'verified' ? (
-        <Card className="border-none shadow-2xl bg-primary/5 p-12 text-center space-y-6 rounded-2xl border border-primary/10">
-          <div className="w-24 h-24 bg-card rounded-2xl flex items-center justify-center text-primary mx-auto shadow-xl">
-            <ShieldCheck className="w-12 h-12" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-headline font-bold text-primary">Trust Verified</h2>
-            <p className="max-w-md mx-auto text-muted-foreground font-medium">
-              Your identity has been confirmed. You now have full access to all incentives, network features, and can now refer others.
-            </p>
-          </div>
-        </Card>
-      ) : latestSubmission?.status === 'pending' ? (
-        <Card className="border-none shadow-2xl p-12 text-center space-y-6 rounded-2xl bg-card border border-muted">
-          <div className="w-24 h-24 bg-primary/5 rounded-2xl flex items-center justify-center text-[hsl(var(--status-pending))] mx-auto shadow-sm">
-            <Clock className="w-12 h-12" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-headline font-bold text-primary">Awaiting Approval</h2>
-            <p className="max-w-md mx-auto text-muted-foreground font-medium">
-              Your documents are in the review queue. This process typically takes 24-48 business hours.
-            </p>
-          </div>
-        </Card>
-      ) : (
-        <div className="mx-auto w-full max-w-2xl space-y-5">
-          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
-            <div className="flex items-center justify-between text-sm font-semibold">
-              <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" />All 3 documents are required</span>
-              <span className="tabular-nums text-primary">{completeCount} of 3 completed</span>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-primary/10"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(completeCount / 3) * 100}%` }} /></div>
-          </div>
+      {status === 'rejected' && <KycRejectedNotice reason={latestSubmission?.rejectionReason} />}
 
-          <DocumentUpload icon={Camera} title="ID Proof" hint="PAN / Aadhaar / Passport / Voter ID / Driving Licence" accept="image/jpeg,image/png,image/webp,application/pdf" file={files.idProof} onFile={(f) => setFiles((c) => ({ ...c, idProof: f }))} complete={idComplete}>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Document type</Label>
-              <Select value={formData.idType} onValueChange={(v) => setFormData((d) => ({ ...d, idType: v, idNumber: '' }))}>
-                <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Choose ID type" /></SelectTrigger>
-                <SelectContent>{ID_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="idNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{ID_TYPES.find((t) => t.value === formData.idType)?.label ?? 'ID'} number</Label>
-              <Input id="idNumber" value={formData.idNumber} disabled={!formData.idType} onBlur={() => touch('idNumber')} onChange={(e) => setFormData((d) => ({ ...d, idNumber: e.target.value.toUpperCase() }))} placeholder={ID_TYPES.find((t) => t.value === formData.idType)?.placeholder ?? 'Choose a document type first'} className="h-12 rounded-xl bg-background font-mono-data" autoComplete="off" />
-              {!idCheck.ok && (touched.idNumber || formData.idNumber) && formData.idType && <p className="text-xs font-medium text-destructive">{idCheck.message}</p>}
-            </div>
-          </DocumentUpload>
+      <KycStepper step={step} done={done} onGo={setStep} />
 
-          <DocumentUpload icon={MapPin} title="Address Proof" hint="Aadhaar / Utility bill / Bank statement / Rent agreement" accept="image/jpeg,image/png,image/webp,application/pdf" file={files.addressProof} onFile={(f) => setFiles((c) => ({ ...c, addressProof: f }))} complete={addressComplete}>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Document type</Label>
-              <Select value={formData.addressProofType} onValueChange={(v) => setFormData((d) => ({ ...d, addressProofType: v, addressProofNumber: '' }))}>
-                <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Choose address proof type" /></SelectTrigger>
-                <SelectContent>{ADDRESS_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="addressProofNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{ADDRESS_TYPES.find((t) => t.value === formData.addressProofType)?.numberLabel ?? 'Document number'}</Label>
-              <Input id="addressProofNumber" value={formData.addressProofNumber} disabled={!formData.addressProofType} onBlur={() => touch('addressProofNumber')} onChange={(e) => setFormData((d) => ({ ...d, addressProofNumber: e.target.value.toUpperCase() }))} placeholder={formData.addressProofType ? 'Enter the number printed on the document' : 'Choose a document type first'} className="h-12 rounded-xl bg-background font-mono-data" autoComplete="off" />
-              {!addrNoCheck.ok && (touched.addressProofNumber || formData.addressProofNumber) && formData.addressProofType && <p className="text-xs font-medium text-destructive">{addrNoCheck.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Residential address</Label>
-              <textarea id="address" className="min-h-[110px] w-full rounded-xl border border-muted bg-background px-4 py-3 text-sm font-medium transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20" value={formData.address} onBlur={() => touch('address')} onChange={(e) => setFormData((d) => ({ ...d, address: e.target.value }))} placeholder="House / street, area, city, state and PIN code, exactly as on the document" />
-              {!addrCheck.ok && (touched.address || formData.address) && <p className="text-xs font-medium text-destructive">{addrCheck.message}</p>}
-            </div>
-          </DocumentUpload>
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px] md:items-start">
+        <section className="space-y-5 rounded-2xl border bg-card p-5 shadow-sm sm:p-6" aria-labelledby="kyc-step-title">
+          <h2 id="kyc-step-title" ref={headingRef} tabIndex={-1} className="font-headline text-2xl font-bold outline-none">{STEP_TITLES[step]}</h2>
 
-          <DocumentUpload icon={UserPlus} title="Live Selfie" hint="A clear photo of your face, no filters or sunglasses" accept="image/jpeg,image/png,image/webp" capture="user" file={files.selfie} onFile={(f) => setFiles((c) => ({ ...c, selfie: f }))} complete={selfieComplete} />
-
-          {latestSubmission?.status === 'rejected' && (
-            <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-destructive text-sm font-medium">
-              <div className="flex items-center gap-2 mb-1"><AlertCircle className="w-4 h-4" /><span className="font-bold">Rejection Reason:</span></div>
-              {latestSubmission.rejectionReason || 'Documents were unclear or invalid.'}
-            </div>
+          {step === 0 && (
+            <>
+              <DocumentUpload title="ID proof" file={files.idProof} onFile={(f) => setFiles((c) => ({ ...c, idProof: f }))} />
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Which ID are you uploading?</Label>
+                <Select value={formData.idType} onValueChange={(v) => setFormData((d) => ({ ...d, idType: v, idNumber: '' }))}>
+                  <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Choose ID type" /></SelectTrigger>
+                  <SelectContent>{ID_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="idNumber" className="text-sm font-semibold">{idMeta?.label ?? 'ID'} number</Label>
+                <div className="relative">
+                  <Input
+                    id="idNumber" value={formData.idNumber} disabled={!formData.idType} autoComplete="off" spellCheck={false}
+                    type={showNumber ? 'text' : 'password'} inputMode={formData.idType === 'aadhaar' ? 'numeric' : 'text'}
+                    onBlur={() => touch('idNumber')}
+                    onChange={(e) => setFormData((d) => ({ ...d, idNumber: formatIdNumber(d.idType, e.target.value) }))}
+                    placeholder={idMeta?.placeholder ?? 'Choose the ID type first'}
+                    aria-invalid={!idCheck.ok && !!formData.idNumber}
+                    className={cn('h-12 rounded-xl bg-background pr-24 font-mono-data tracking-wider', idCheck.ok && 'border-primary')}
+                  />
+                  <div className="absolute inset-y-0 right-2 flex items-center gap-1">
+                    {idCheck.ok && <CheckCircle2 className="h-5 w-5 text-primary" aria-label="Looks good" />}
+                    <button type="button" onClick={() => setShowNumber((s) => !s)} className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={showNumber ? 'Hide number' : 'Show number'}>
+                      {showNumber ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <FieldError show={!!formData.idType && !idCheck.ok && (!!touched.idNumber || !!formData.idNumber)} message={idCheck.ok ? '' : idCheck.message} />
+              </div>
+            </>
           )}
 
-          <Button onClick={handleSubmitKYC} disabled={uploading || completeCount < 3} className="w-full h-14 font-bold text-lg gap-3 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-[0.98]">
-            {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : completeCount < 3 ? `Complete all 3 documents (${completeCount}/3)` : 'Submit for Verification'}
-          </Button>
+          {step === 1 && (
+            <>
+              {canReuseId && (
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-primary/5 p-4">
+                  <input type="checkbox" checked={sameAsId} onChange={(e) => setSameAsId(e.target.checked)} className="mt-1 h-5 w-5 accent-[hsl(var(--primary))]" />
+                  <span className="text-sm"><span className="block font-semibold">My {idMeta?.label} is also my address proof</span><span className="text-muted-foreground">We will reuse the same file and number, so you do not upload it twice.</span></span>
+                </label>
+              )}
+              {!useIdAsAddress && (
+                <>
+                  <DocumentUpload title="address proof" file={files.addressProof} onFile={(f) => setFiles((c) => ({ ...c, addressProof: f }))} />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Which document is it?</Label>
+                    <Select value={formData.addressProofType} onValueChange={(v) => setFormData((d) => ({ ...d, addressProofType: v, addressProofNumber: '' }))}>
+                      <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Choose address proof type" /></SelectTrigger>
+                      <SelectContent>{ADDRESS_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addressProofNumber" className="text-sm font-semibold">{addrMeta?.numberLabel ?? 'Document number'}</Label>
+                    <Input id="addressProofNumber" value={formData.addressProofNumber} disabled={!formData.addressProofType} autoComplete="off" spellCheck={false} inputMode={formData.addressProofType === 'aadhaar' ? 'numeric' : 'text'}
+                      onBlur={() => touch('addressProofNumber')} onChange={(e) => setFormData((d) => ({ ...d, addressProofNumber: formatIdNumber(d.addressProofType, e.target.value) }))}
+                      placeholder={formData.addressProofType ? 'Number printed on the document' : 'Choose the document type first'} className={cn('h-12 rounded-xl bg-background font-mono-data tracking-wider', addrNoCheck.ok && 'border-primary')} />
+                    <FieldError show={!!formData.addressProofType && !addrNoCheck.ok && (!!touched.addressProofNumber || !!formData.addressProofNumber)} message={addrNoCheck.ok ? '' : addrNoCheck.message} />
+                  </div>
+                </>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-sm font-semibold">Residential address</Label>
+                <textarea id="address" value={formData.address} onBlur={() => touch('address')} onChange={(e) => setFormData((d) => ({ ...d, address: e.target.value }))}
+                  className="min-h-[110px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="House or street, area, city, state and PIN code, exactly as on the document" />
+                <div className="flex justify-between gap-2"><FieldError show={!addrCheck.ok && (!!touched.address || !!formData.address)} message={addrCheck.ok ? '' : addrCheck.message} /><span className="ml-auto text-xs tabular-nums text-muted-foreground">{formData.address.trim().length} characters</span></div>
+              </div>
+            </>
+          )}
+
+          {step === 2 && <DocumentUpload title="selfie" variant="selfie" file={files.selfie} onFile={(f) => setFiles((c) => ({ ...c, selfie: f }))} />}
+
+          {step === 3 && (
+            <>
+              <KycReview rows={reviewRows} onEdit={setStep} />
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-4">
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 h-5 w-5 accent-[hsl(var(--primary))]" />
+                <span className="text-sm">I confirm these documents belong to me and the details above are correct.</span>
+              </label>
+            </>
+          )}
+        </section>
+
+        <KycTips step={step} />
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+        <div className="mx-auto flex max-w-5xl gap-3">
+          {step > 0 && <Button type="button" variant="outline" onClick={() => setStep(step - 1)} disabled={uploading} className="h-12 gap-2 rounded-xl px-5"><ArrowLeft className="h-4 w-4" aria-hidden />Back</Button>}
+          {step < 3 ? (
+            <Button type="button" onClick={() => setStep(step + 1)} disabled={!stepReady} className="h-12 flex-1 gap-2 rounded-xl font-semibold md:flex-none md:px-8">Continue<ArrowRight className="h-4 w-4" aria-hidden /></Button>
+          ) : (
+            <Button type="button" onClick={handleSubmitKYC} disabled={!stepReady || uploading} className="h-12 flex-1 gap-2 rounded-xl font-semibold md:flex-none md:px-8">
+              {uploading ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden />Uploading securely…</> : 'Submit for verification'}
+            </Button>
+          )}
         </div>
-      )}
+        {!stepReady && step < 3 && <p className="mx-auto mt-2 max-w-5xl text-xs text-muted-foreground" aria-live="polite">{KYC_STEPS[step]}: add the file and fill every field to continue.</p>}
+      </div>
     </div>
   );
 }

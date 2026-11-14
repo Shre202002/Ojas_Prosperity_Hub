@@ -59,3 +59,29 @@ export const DOC_LABELS = {
   addressProof: 'Address proof',
   selfie: 'Live selfie',
 } as const;
+
+/** Formats an ID number as the member types: PAN/passport/etc. uppercase, Aadhaar in groups of 4. */
+export function formatIdNumber(type: unknown, raw: string): string {
+  if (type === 'aadhaar') return raw.replace(/\D/g, '').slice(0, 12).replace(/(\d{4})(?=\d)/g, '$1 ');
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+}
+
+/** Shows only the last 4 characters, e.g. XXXXXX234F. */
+export function maskNumber(value: string): string {
+  const v = value.replace(/\s/g, '');
+  return v.length <= 4 ? v : `${'X'.repeat(v.length - 4)}${v.slice(-4)}`;
+}
+
+export const MAX_FILE_BYTES = 8 * 1024 * 1024;
+
+/** Instant, friendly client-side file check (the server re-validates). Returns an error message or null. */
+export function fileProblem(file: File, imageOnly: boolean): string | null {
+  const okTypes = imageOnly ? ['image/jpeg', 'image/png', 'image/webp'] : ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+  if (!okTypes.includes(file.type)) return imageOnly ? 'Please use a photo (JPG, PNG or WEBP).' : 'Please use a JPG, PNG, WEBP or PDF file.';
+  if (file.size > MAX_FILE_BYTES) return `This file is ${(file.size / 1024 / 1024).toFixed(1)} MB. Please keep it under 8 MB.`;
+  if (file.size < 10 * 1024) return 'This file looks too small to be readable. Please upload a clearer copy.';
+  return null;
+}
+
+/** ID types whose document is also accepted as address proof. */
+export const ID_ALSO_ADDRESS: readonly string[] = ['aadhaar', 'passport', 'dl'];
