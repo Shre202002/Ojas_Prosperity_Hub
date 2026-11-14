@@ -8,12 +8,13 @@ import { prefetchPickerProducts } from '@/lib/picker-products';
 const PlanPickerDialog = dynamic(() => import('@/components/store/PlanPickerDialog').then((m) => m.PlanPickerDialog), { ssr: false });
 import { useCart } from '@/lib/cart';
 import { isPlanFilled } from '@/lib/bv-plan';
-import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, updateProfile } from '@/lib/app-auth';
+import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from '@/lib/app-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { PhoneOtpDialog } from '@/components/auth/PhoneOtpDialog';
-import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import { razorpayContact } from '@/lib/razorpay-contact';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,18 +24,6 @@ import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder } from '@/lib/razorpay-actions';
 import { AuthShell } from '@/components/layout/AuthShell';
 import { BRAND } from '@/lib/brand';
-
-// Razorpay only pre-fills (and so skips its own phone screen) when the number is in a format it accepts:
-// the plain 10 digits for Indian numbers, the full international number for everything else.
-function razorpayContact(phone: string) {
-  try {
-    const parsed = parsePhoneNumber(phone);
-    if (!parsed) return phone;
-    return parsed.country === 'IN' ? parsed.nationalNumber : parsed.number;
-  } catch {
-    return phone;
-  }
-}
 
 function normalizeReferralCode(value: string) {
   const trimmed = value.trim();
@@ -172,6 +161,16 @@ function RegisterPageContent() {
     }
   }
 
+  // Stop a duplicate email before the member pays, not after.
+  async function continueToPackages() {
+    try {
+      const res = await fetch('/api/auth/check-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      const result = await res.json();
+      if (result.status === 'registered') { toast({ variant: 'destructive', title: 'Email already registered', description: 'This email already has an account. Please sign in, or use a different email.' }); return; }
+    } catch { /* the server re-checks at activation */ }
+    if (verifiedPhone === phone) setStep(2); else setOtpOpen(true);
+  }
+
   const startPayment = async () => {
     if (!selectedPackage || !email || !name || password.length < 6 || !isPlanFilled(selectedPackage, totalBv)) return;
     setPickerOpen(false);
@@ -240,7 +239,11 @@ function RegisterPageContent() {
       if (!sponsorData?.uid) {
         throw new Error('A valid referral code is required before registration.');
       }
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password, phone);
+      // A previous attempt may have created the account but failed later (e.g. before activation): sign in and finish instead of failing.
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password, phone).catch(async (e: any) => {
+        if (!/already registered/i.test(e?.message || '')) throw e;
+        return signInWithEmailAndPassword(auth, email, password).catch(() => { throw new Error('This email is already registered with a different password. Sign in or reset your password.'); });
+      });
       const user = userCredential.user;
       await updateProfile(user, { displayName: name });
 
@@ -366,7 +369,7 @@ function RegisterPageContent() {
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={() => router.push('/join')} className="h-12 px-6">Back</Button>
                 <Button 
-                  onClick={() => (verifiedPhone === phone ? setStep(2) : setOtpOpen(true))}
+                  onClick={continueToPackages}
                   disabled={!sponsorData || !email || !password || !name || !phone || !isValidPhoneNumber(phone) || !/^\S+@\S+\.\S+$/.test(email) || validatingRef} 
                   className="flex-1 h-12 font-semibold gap-2"
                 >

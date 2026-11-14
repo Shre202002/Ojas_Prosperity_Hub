@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import { razorpayContact } from '@/lib/razorpay-contact';
 import { CheckCircle2, CreditCard, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,11 +19,6 @@ import { apiRequest } from '@/lib/app-auth';
 import { createRazorpayOrder } from '@/lib/razorpay-actions';
 
 const PlanPickerDialog = dynamic(() => import('@/components/store/PlanPickerDialog').then((m) => m.PlanPickerDialog), { ssr: false });
-
-// Same contact format the public register page hands to Razorpay (plain 10 digits for India).
-function razorpayContact(phone: string) {
-  try { const p = parsePhoneNumber(phone); return !p ? phone : p.country === 'IN' ? p.nationalNumber : p.number; } catch { return phone; }
-}
 
 export type OpenSlot = { parentUid: string; parentName: string; side: 'left' | 'right'; adminUid: string };
 
