@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { openKycDocument } from '@/lib/kyc-view';
 import { cn } from '@/lib/utils';
 
 type Member = { name: string; email?: string };
@@ -161,9 +162,11 @@ export default function KYCReviewQueue() {
                   </div>
 
                   <div className="flex items-center gap-3 w-full lg:w-auto">
-                    <Button variant="outline" className="h-14 px-6 rounded-2xl gap-2 font-bold flex-1 lg:flex-none border-muted hover:bg-background">
-                      <ExternalLink className="w-4 h-4" /> View Docs
-                    </Button>
+                    {(['idProof', 'addressProof', 'selfie'] as const).map((docType) => sub[docType] ? (
+                      <Button key={docType} type="button" variant="outline" onClick={() => openKycDocument(sub.id, docType).catch((e: any) => toast({ variant: 'destructive', title: 'Could not open document', description: e.message }))} className="h-14 px-4 rounded-2xl gap-2 font-bold flex-1 lg:flex-none border-muted hover:bg-background">
+                        <ExternalLink className="w-4 h-4" /> {docType === 'idProof' ? 'ID' : docType === 'addressProof' ? 'Address' : 'Selfie'}
+                      </Button>
+                    ) : null)}
                     <Button 
                       variant="destructive" 
                       className="h-14 px-6 rounded-2xl gap-2 font-bold flex-1 lg:flex-none shadow-lg shadow-destructive/20"

@@ -2,6 +2,10 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Image CDN is served from our own domain, so the storage vendor never shows in page URLs.
+  async rewrites() {
+    return [{ source: '/media/:path*', destination: 'https://ik.imagekit.io/ari07rsa2/:path*' }];
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

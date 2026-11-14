@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, requireUser } from '@/lib/server-auth';
 import { ObjectId } from 'mongodb';
 import { collection } from '@/lib/mongodb';
+import { publicSubmission } from '@/lib/kyc-docs';
+import { maskDeep } from '@/lib/site-images';
 
 export const runtime = 'nodejs';
 const PUBLIC_COLLECTIONS = new Set(['products', 'packages', 'referralCodes', 'heroSlides']);
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         if (owner) { d.ownerRank = owner.rank; d.ownerKycStatus = owner.kycStatus; }
       }
     }
-    return NextResponse.json({ data: docs });
+    return NextResponse.json({ data: name === 'kycSubmissions' ? docs.map((d: any) => publicSubmission(d)) : PUBLIC_COLLECTIONS.has(name) ? maskDeep(docs) : docs });
   } catch (error) { return response(error); }
 }
 

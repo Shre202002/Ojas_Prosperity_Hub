@@ -1,6 +1,7 @@
 // Server-side product catalogue for the public storefront.
 // Source of truth is the admin-managed `products` collection; the static list is only a fallback
 // so the site still renders if the database is empty or unreachable.
+import { maskImageUrl } from '@/lib/site-images';
 import { cache } from 'react';
 import { collection } from './mongodb';
 import { PRODUCTS, type Product } from './products';
@@ -83,7 +84,7 @@ function fromDb(doc: any): ShopProduct {
   const images = (Array.isArray(doc.images) ? doc.images : [])
     .filter((img: any) => img?.url)
     .sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0) || (a.order ?? 0) - (b.order ?? 0))
-    .map((img: any) => String(img.url));
+    .map((img: any) => String(maskImageUrl(String(img.url))));
   const benefits = Array.isArray(doc.benefits)
     ? doc.benefits.map(String)
     : String(doc.benefits || '').split('\n').map((line: string) => line.trim()).filter(Boolean);
@@ -130,7 +131,7 @@ function fromDb(doc: any): ShopProduct {
 function fromStatic(p: Product): ShopProduct {
   return build({
     id: `static-${p.id}`, slug: p.slug, name: p.name, category: p.category,
-    price: p.salePrice, mrp: p.price || null, images: p.gallery?.length ? p.gallery : [p.image],
+    price: p.salePrice, mrp: p.price || null, images: (p.gallery?.length ? p.gallery : [p.image]).map((u: string) => String(maskImageUrl(u))),
     shortDescription: p.shortDescription, description: p.description, benefits: p.benefits, usage: p.usage,
     packSize: p.packSize, sku: p.sku, stock: p.stock, isFeatured: p.isFeatured, isBestSeller: p.isBestSeller,
   });

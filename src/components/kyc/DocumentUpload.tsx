@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Camera, FileText, RefreshCw, Trash2, UploadCloud } from 'lucide-react';
 import { fileProblem } from '@/lib/kyc-rules';
+import { CameraCapture } from './CameraCapture';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -21,6 +22,7 @@ export function DocumentUpload({ title, variant = 'document', file, onFile }: Pr
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -74,17 +76,19 @@ export function DocumentUpload({ title, variant = 'document', file, onFile }: Pr
         <p className="mt-3 text-sm font-semibold">{selfie ? 'Take a clear photo of your face' : `Add your ${title.toLowerCase()}`}</p>
         <p className="mt-1 text-xs text-muted-foreground">{selfie ? 'JPG, PNG or WEBP · up to 8 MB' : 'Drag a file here, or choose one. JPG, PNG, WEBP or PDF · up to 8 MB'}</p>
         <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
-          <label htmlFor={`${id}-camera`} className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          <button type="button" onClick={() => (typeof navigator.mediaDevices?.getUserMedia === "function" ? setCameraOpen(true) : cameraRef.current?.click())} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             <Camera className="h-4 w-4" aria-hidden />Take photo
-            <input ref={cameraRef} id={`${id}-camera`} type="file" accept="image/*" capture={selfie ? 'user' : 'environment'} className="sr-only" onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
-          </label>
+          </button>
+          {/* Fallback for browsers without camera access: the phone's native camera via file input. */}
+          <input ref={cameraRef} type="file" accept="image/*" capture={selfie ? 'user' : 'environment'} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
           <label htmlFor={`${id}-file`} className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border bg-background px-5 text-sm font-semibold transition-colors hover:bg-secondary focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
             <UploadCloud className="h-4 w-4" aria-hidden />Upload file
-            <input id={`${id}-file`} type="file" accept={accept} className="sr-only" onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
+            <input ref={fileRef} id={`${id}-file`} type="file" accept={accept} className="sr-only" onChange={(e) => { accepts(e.target.files?.[0]); e.target.value = ''; }} />
           </label>
         </div>
       </div>
       {error && <p role="alert" className="text-xs font-medium text-destructive">{error}</p>}
+      <CameraCapture open={cameraOpen} facing={selfie ? 'user' : 'environment'} label={selfie ? 'selfie' : title.toLowerCase()} onCapture={(f) => accepts(f)} onClose={() => setCameraOpen(false)} onUseFile={() => fileRef.current?.click()} />
     </div>
   );
 }

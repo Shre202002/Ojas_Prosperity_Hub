@@ -10,8 +10,8 @@
     --card-foreground: 216.9 19.1% 26.7%;  /* #374151 */
     --popover: 0 0% 100%;  /* #ffffff */
     --popover-foreground: 216.9 19.1% 26.7%;  /* #374151 */
-    --primary: 142.1 71.2% 44.9%;  /* #21c45d */
-    --primary-foreground: 0 0% 0%;  /* #000000 */
+    --primary: 142.4 71.8% 29.2%;  /* #15803d: deep enough for white text (5:1) */
+    --primary-foreground: 0 0% 100%;  /* #ffffff */
     --primary-text: 142.4 71.8% 29.2%;  /* #15803d */
     --secondary: 203.6 100% 94.5%;  /* #e3f4ff */
     --secondary-foreground: 215 13.8% 34.1%;  /* #4b5563 */
