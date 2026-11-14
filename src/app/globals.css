@@ -130,10 +130,11 @@
   }
 }
 
-/* Google Translate: hide its banner/tooltips; our own LanguageSwitcher is the UI. */
-.goog-te-banner-frame, .goog-te-balloon-frame, #goog-gt-tt, .goog-tooltip, .skiptranslate > iframe { display: none !important; }
+/* Google Translate: hide its injected top bar/popups; our own LanguageSwitcher is the UI. */
+.VIpgJd-ZVi9od-ORHb-OEVmcd, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf, .VIpgJd-ZVi9od-aZ2wEe-OiiCO, .VIpgJd-ZVi9od-l4eHX-hSRGPd,
+iframe.skiptranslate, .goog-te-banner-frame, .goog-te-balloon-frame, #goog-gt-tt, .goog-tooltip { display: none !important; visibility: hidden !important; }
 .goog-text-highlight { background: none !important; box-shadow: none !important; }
-body { top: 0 !important; }
+html, body { top: 0 !important; margin-top: 0 !important; position: static !important; }
 
 /* Phone input (react-phone-number-input) styled to match <Input>. */
 .sjapl-phone { display: flex; align-items: center; gap: 0.5rem; height: 2.75rem; width: 100%; border: 1px solid hsl(var(--input)); border-radius: calc(var(--radius) - 2px); background: hsl(var(--background)); padding: 0 0.75rem; }
