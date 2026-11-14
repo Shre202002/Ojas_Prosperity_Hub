@@ -21,6 +21,9 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { DocumentUpload } from '@/components/kyc/DocumentUpload';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ADDRESS_TYPES, ID_TYPES, checkAddress, checkAddressProofNumber, checkIdNumber } from '@/lib/kyc-rules';
 
 export default function KYCPage() {
   const auth = useAuth();
@@ -43,16 +46,29 @@ export default function KYCPage() {
 
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
+    idType: '',
     idNumber: '',
+    addressProofType: '',
+    addressProofNumber: '',
     address: '',
   });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (key: string) => setTouched((t) => ({ ...t, [key]: true }));
+  const idCheck = checkIdNumber(formData.idType, formData.idNumber);
+  const addrNoCheck = checkAddressProofNumber(formData.addressProofType, formData.addressProofNumber);
+  const addrCheck = checkAddress(formData.address);
   const [files, setFiles] = useState<{ idProof: File | null; addressProof: File | null; selfie: File | null }>({ idProof: null, addressProof: null, selfie: null });
 
+  const idComplete = !!files.idProof && idCheck.ok;
+  const addressComplete = !!files.addressProof && addrNoCheck.ok && addrCheck.ok;
+  const selfieComplete = !!files.selfie;
+  const completeCount = [idComplete, addressComplete, selfieComplete].filter(Boolean).length;
+
   async function handleSubmitKYC() {
-    if (!user || !db || !distributor) return;
+    if (!user || !db || !distributor || completeCount < 3) return;
     setUploading(true);
     try {
-      const body = new FormData(); body.append('idNumber', formData.idNumber); body.append('address', formData.address);
+      const body = new FormData(); for (const [key, value] of Object.entries(formData)) body.append(key, value);
       Object.entries(files).forEach(([type, file]) => { if (file) body.append(type, file); });
       const response = await fetch('/api/kyc', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('sjapl_session_token') || ''}` }, body });
       const result = await response.json(); if (!response.ok) throw new Error(result.error || 'KYC submission failed.');
@@ -134,90 +150,62 @@ export default function KYCPage() {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <Card className="border border-muted shadow-xl rounded-xl bg-card overflow-hidden">
-              <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
-                <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-card rounded-xl shadow-sm">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  Required Evidence
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                {[
-                  { icon: Camera, label: 'ID Proof', sub: 'Aadhaar / PAN / Passport', type: 'idProof' as const },
-                  { icon: MapPin, label: 'Address Proof', sub: 'Utility Bill / Statement', type: 'addressProof' as const },
-                  { icon: UserPlus, label: 'Live Selfie', sub: 'Face must be clearly visible', type: 'selfie' as const }
-                ].map((doc, i) => (
-                  <div key={i} className="p-5 border-2 border-dashed border-muted rounded-[1.5rem] hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center group-hover:bg-card transition-colors">
-                        <doc.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-foreground">{doc.label}</p>
-                        <p className="text-xs text-muted-foreground font-medium">{doc.sub}</p>
-                      </div>
-                      <label className="text-xs font-bold text-primary cursor-pointer">{files[doc.type]?.name || 'Choose'}<input type="file" accept="image/*,application/pdf" className="hidden" onChange={event => setFiles(current => ({ ...current, [doc.type]: event.target.files?.[0] || null }))} /></label>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+        <div className="mx-auto w-full max-w-2xl space-y-5">
+          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+            <div className="flex items-center justify-between text-sm font-semibold">
+              <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" />All 3 documents are required</span>
+              <span className="tabular-nums text-primary">{completeCount} of 3 completed</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-primary/10"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(completeCount / 3) * 100}%` }} /></div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-muted shadow-xl rounded-xl bg-card">
-              <CardHeader className="bg-primary/5 border-b border-primary/10 pb-6">
-                <CardTitle className="font-headline text-xl font-bold flex items-center gap-3">
-                  <div className="p-2 bg-card rounded-xl shadow-sm">
-                    <ShieldCheck className="w-5 h-5 text-accent" />
-                  </div>
-                  Details & Confirmation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="idNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Document ID Number</Label>
-                  <Input 
-                    id="idNumber" 
-                    value={formData.idNumber} 
-                    onChange={e => setFormData({...formData, idNumber: e.target.value})}
-                    placeholder="Enter PAN or Aadhaar Number"
-                    className="h-14 rounded-xl font-mono-data border-muted bg-background"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Residential Address</Label>
-                  <textarea 
-                    id="address" 
-                    className="w-full min-h-[120px] rounded-xl border border-muted bg-background px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-shadow"
-                    value={formData.address}
-                    onChange={e => setFormData({...formData, address: e.target.value})}
-                    placeholder="Provide your complete permanent address"
-                  />
-                </div>
-                {latestSubmission?.status === 'rejected' && (
-                  <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-destructive text-sm font-medium">
-                    <div className="flex items-center gap-2 mb-1">
-                      <AlertCircle className="w-4 h-4" />
-                      <span className="font-bold">Rejection Reason:</span>
-                    </div>
-                    {latestSubmission.rejectionReason || 'Documents were unclear or invalid.'}
-                  </div>
-                )}
-                <Button 
-                  onClick={handleSubmitKYC} 
-                  disabled={uploading || !formData.idNumber || !formData.address || !files.idProof || !files.addressProof || !files.selfie}
-                  className="w-full h-16 font-bold text-lg gap-3 rounded-[1.5rem] shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-[0.98]"
-                >
-                  {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Submit for Verification'}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <DocumentUpload icon={Camera} title="ID Proof" hint="PAN / Aadhaar / Passport / Voter ID / Driving Licence" accept="image/jpeg,image/png,image/webp,application/pdf" file={files.idProof} onFile={(f) => setFiles((c) => ({ ...c, idProof: f }))} complete={idComplete}>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Document type</Label>
+              <Select value={formData.idType} onValueChange={(v) => setFormData((d) => ({ ...d, idType: v, idNumber: '' }))}>
+                <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Choose ID type" /></SelectTrigger>
+                <SelectContent>{ID_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="idNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{ID_TYPES.find((t) => t.value === formData.idType)?.label ?? 'ID'} number</Label>
+              <Input id="idNumber" value={formData.idNumber} disabled={!formData.idType} onBlur={() => touch('idNumber')} onChange={(e) => setFormData((d) => ({ ...d, idNumber: e.target.value.toUpperCase() }))} placeholder={ID_TYPES.find((t) => t.value === formData.idType)?.placeholder ?? 'Choose a document type first'} className="h-12 rounded-xl bg-background font-mono-data" autoComplete="off" />
+              {!idCheck.ok && (touched.idNumber || formData.idNumber) && formData.idType && <p className="text-xs font-medium text-destructive">{idCheck.message}</p>}
+            </div>
+          </DocumentUpload>
+
+          <DocumentUpload icon={MapPin} title="Address Proof" hint="Aadhaar / Utility bill / Bank statement / Rent agreement" accept="image/jpeg,image/png,image/webp,application/pdf" file={files.addressProof} onFile={(f) => setFiles((c) => ({ ...c, addressProof: f }))} complete={addressComplete}>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Document type</Label>
+              <Select value={formData.addressProofType} onValueChange={(v) => setFormData((d) => ({ ...d, addressProofType: v, addressProofNumber: '' }))}>
+                <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Choose address proof type" /></SelectTrigger>
+                <SelectContent>{ADDRESS_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="addressProofNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{ADDRESS_TYPES.find((t) => t.value === formData.addressProofType)?.numberLabel ?? 'Document number'}</Label>
+              <Input id="addressProofNumber" value={formData.addressProofNumber} disabled={!formData.addressProofType} onBlur={() => touch('addressProofNumber')} onChange={(e) => setFormData((d) => ({ ...d, addressProofNumber: e.target.value.toUpperCase() }))} placeholder={formData.addressProofType ? 'Enter the number printed on the document' : 'Choose a document type first'} className="h-12 rounded-xl bg-background font-mono-data" autoComplete="off" />
+              {!addrNoCheck.ok && (touched.addressProofNumber || formData.addressProofNumber) && formData.addressProofType && <p className="text-xs font-medium text-destructive">{addrNoCheck.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Residential address</Label>
+              <textarea id="address" className="min-h-[110px] w-full rounded-xl border border-muted bg-background px-4 py-3 text-sm font-medium transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20" value={formData.address} onBlur={() => touch('address')} onChange={(e) => setFormData((d) => ({ ...d, address: e.target.value }))} placeholder="House / street, area, city, state and PIN code, exactly as on the document" />
+              {!addrCheck.ok && (touched.address || formData.address) && <p className="text-xs font-medium text-destructive">{addrCheck.message}</p>}
+            </div>
+          </DocumentUpload>
+
+          <DocumentUpload icon={UserPlus} title="Live Selfie" hint="A clear photo of your face, no filters or sunglasses" accept="image/jpeg,image/png,image/webp" capture="user" file={files.selfie} onFile={(f) => setFiles((c) => ({ ...c, selfie: f }))} complete={selfieComplete} />
+
+          {latestSubmission?.status === 'rejected' && (
+            <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-destructive text-sm font-medium">
+              <div className="flex items-center gap-2 mb-1"><AlertCircle className="w-4 h-4" /><span className="font-bold">Rejection Reason:</span></div>
+              {latestSubmission.rejectionReason || 'Documents were unclear or invalid.'}
+            </div>
+          )}
+
+          <Button onClick={handleSubmitKYC} disabled={uploading || completeCount < 3} className="w-full h-14 font-bold text-lg gap-3 rounded-2xl shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-[0.98]">
+            {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : completeCount < 3 ? `Complete all 3 documents (${completeCount}/3)` : 'Submit for Verification'}
+          </Button>
         </div>
       )}
     </div>

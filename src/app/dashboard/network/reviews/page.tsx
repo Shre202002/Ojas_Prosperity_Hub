@@ -154,8 +154,8 @@ export default function KYCReviewQueue() {
                         </Badge>
                       </div>
                       <p className="text-muted-foreground font-medium flex items-center gap-4">
-                        <span className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-primary" /> ID: {sub.idNumber}</span>
-                        <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-primary" /> {sub.address.slice(0, 30)}...</span>
+                        <span className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-primary" /> {sub.idType ? `${String(sub.idType).toUpperCase()}: ` : 'ID: '}{sub.idNumber}</span>
+                        <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-primary" /> {sub.addressProofType ? `${String(sub.addressProofType).toUpperCase()} ${sub.addressProofNumber || ''} · ` : ''}{String(sub.address || '').slice(0, 30)}...</span>
                       </p>
                     </div>
                   </div>
