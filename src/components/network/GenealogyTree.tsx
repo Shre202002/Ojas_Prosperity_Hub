@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, ChevronDown, ChevronUp, PlusCircle, Crown, Link2, ShieldCheck, Shuffle, Minus, Plus, Maximize2, ChevronsDownUp, ChevronsUpDown, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AddMemberDialog, type OpenSlot } from './AddMemberDialog';
 
 // Admin referral codes per leg; when set, each member gets a "join under" link.
 type JoinCodes = { left?: string; right?: string };
@@ -18,6 +19,9 @@ const SOURCE: Record<Source, { label: string; legend: string; color: string; ico
   member: { label: 'Member link', legend: "Added via a member's referral link", color: 'var(--tree-member)', icon: Link2 },
   root: { label: 'Root', legend: 'Root / Admin', color: 'var(--tree-root)', icon: ShieldCheck },
 };
+
+// Set by the Admin tree: clicking an open slot opens the add-member popup for that exact slot.
+const AddSlotContext = createContext<((parentUid: string, parentName: string, side: 'left' | 'right') => void) | null>(null);
 
 // Expand-all / collapse-all is broadcast to every node; `tick` changes on each click so repeated clicks still apply.
 const ExpandSignal = createContext<{ mode: 'expand' | 'collapse' | null; tick: number }>({ mode: null, tick: 0 });
@@ -72,6 +76,7 @@ function TreeNode({ id, level, unrestricted, joinCodes }: TreeNodeProps) {
   const distributorRef = useMemoFirebase(() => (db ? doc(db, 'distributors', id) : null), [db, id]);
   const { data: node, loading } = useDoc(distributorRef);
   const sponsor = useSponsor(node?.sponsorId);
+  const addSlot = useContext(AddSlotContext);
 
   if (loading) return <li><div className="h-28 w-56 animate-pulse rounded-2xl bg-muted" /></li>;
   if (!node) return null;
@@ -146,23 +151,31 @@ function TreeNode({ id, level, unrestricted, joinCodes }: TreeNodeProps) {
         </div>
       </div>
 
-      {isExpanded && hasChildren && (
+      {((isExpanded && hasChildren) || (!hasChildren && addSlot)) && (
         <ul>
-          {node.leftChildId ? <TreeNode id={node.leftChildId} level={level + 1} unrestricted={unrestricted} joinCodes={joinCodes} /> : <EmptyNode position="Left" />}
-          {node.rightChildId ? <TreeNode id={node.rightChildId} level={level + 1} unrestricted={unrestricted} joinCodes={joinCodes} /> : <EmptyNode position="Right" />}
+          {node.leftChildId ? <TreeNode id={node.leftChildId} level={level + 1} unrestricted={unrestricted} joinCodes={joinCodes} /> : <EmptyNode position="Left" onAdd={addSlot ? () => addSlot(node.uid, node.name, 'left') : undefined} />}
+          {node.rightChildId ? <TreeNode id={node.rightChildId} level={level + 1} unrestricted={unrestricted} joinCodes={joinCodes} /> : <EmptyNode position="Right" onAdd={addSlot ? () => addSlot(node.uid, node.name, 'right') : undefined} />}
         </ul>
       )}
     </li>
   );
 }
 
-function EmptyNode({ position }: { position: string }) {
+function EmptyNode({ position, onAdd }: { position: string; onAdd?: () => void }) {
+  const cls = 'flex w-40 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/40 px-3 py-4 text-muted-foreground';
   return (
     <li>
-      <div className="flex w-40 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/40 px-3 py-4 text-muted-foreground">
-        <PlusCircle className="h-4 w-4 text-primary" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider">{position} slot open</span>
-      </div>
+      {onAdd ? (
+        <button type="button" onClick={onAdd} title={`Add a member to this ${position.toLowerCase()} slot`} className={cn(cls, 'cursor-pointer transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary')}>
+          <PlusCircle className="h-4 w-4 text-primary" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider">Add {position} member</span>
+        </button>
+      ) : (
+        <div className={cls}>
+          <PlusCircle className="h-4 w-4 text-primary" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider">{position} slot open</span>
+        </div>
+      )}
     </li>
   );
 }
@@ -173,7 +186,9 @@ function ToolButton({ onClick, label, children }: { onClick: () => void; label: 
   );
 }
 
-export function GenealogyTree({ rootId, unrestricted, joinCodes }: { rootId: string; unrestricted?: boolean; joinCodes?: JoinCodes }) {
+/** `addMemberAs` (the signed-in Admin's uid) turns open slots into buttons that open the add-member popup. */
+export function GenealogyTree({ rootId, unrestricted, joinCodes, addMemberAs }: { rootId: string; unrestricted?: boolean; joinCodes?: JoinCodes; addMemberAs?: string }) {
+  const [slot, setSlot] = useState<OpenSlot | null>(null);
   const [signal, setSignal] = useState<{ mode: 'expand' | 'collapse' | null; tick: number }>({ mode: null, tick: 0 });
   const [zoom, setZoom] = useState(1);
   const clamp = (n: number) => Math.min(1.4, Math.max(0.5, Math.round(n * 10) / 10));
@@ -194,6 +209,7 @@ export function GenealogyTree({ rootId, unrestricted, joinCodes }: { rootId: str
       </div>
 
       <div className="overflow-auto rounded-2xl border bg-muted/30 p-4 sm:p-8" style={{ backgroundImage: 'radial-gradient(hsl(var(--border)) 1px, transparent 1px)', backgroundSize: '18px 18px' }}>
+        <AddSlotContext.Provider value={addMemberAs ? (parentUid, parentName, side) => setSlot({ parentUid, parentName, side, adminUid: addMemberAs }) : null}>
         <ExpandSignal.Provider value={signal}>
           <div className="flex min-w-max justify-center pb-10" style={{ zoom } as CSSProperties}>
             <ul className="gt">
@@ -201,6 +217,8 @@ export function GenealogyTree({ rootId, unrestricted, joinCodes }: { rootId: str
             </ul>
           </div>
         </ExpandSignal.Provider>
+        </AddSlotContext.Provider>
+        <AddMemberDialog slot={slot} onClose={() => setSlot(null)} />
       </div>
       <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground"><Users className="h-3 w-3" />Click “Show” on a member to open their downline. Green dot = KYC verified, amber = pending, red = rejected.</p>
     </div>

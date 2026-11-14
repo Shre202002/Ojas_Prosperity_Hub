@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/server-auth';
 import { getPackageConfig } from '@/lib/package-config';
 import { appendCompanyLedger } from '@/lib/company-ledger';
 import { createMatchingLots } from '@/lib/matching';
+import { hashPassword } from '@/lib/password-hash';
 import { recordWalletTransaction, purchaseEntries, directCommissionEntry } from '@/lib/wallet-transactions';
 
 export const runtime = 'nodejs';
@@ -18,11 +19,30 @@ export async function POST(request: NextRequest) {
   try {
     const token = await requireUser(request);
     const body = await request.json();
-    const uid = token.uid;
-    const email = String(token.email || '').trim().toLowerCase();
+    // Admin-added member: the signed-in Admin registers someone else, so the new account gets its own uid/email.
+    const isAdminAdded = body.registrationType === 'admin_added';
+    if (isAdminAdded) {
+      const adminUser: any = await (await getMongoDb()).collection('users').findOne({ uid: token.uid });
+      const adminDist: any = await (await getMongoDb()).collection('distributors').findOne({ uid: token.uid });
+      if (adminUser?.role !== 'admin' && adminDist?.rank !== 'Admin') throw new HttpError(403, 'Administrator access required.');
+      if (!adminDist) throw new HttpError(400, 'Admin member profile not found.');
+      if (body.precheck) {
+        // Run before payment so the Admin is never charged for a duplicate email/phone or a taken slot.
+        const db0 = await getMongoDb(), em = String(body.email || '').trim().toLowerCase(), ph = String(body.phone || '').trim();
+        if (!/^\S+@\S+\.\S+$/.test(em)) throw new HttpError(400, 'A valid email is required.');
+        if (!/^\+\d{8,15}$/.test(ph)) throw new HttpError(400, 'A valid phone number is required.');
+        if (await db0.collection('users').findOne({ email: em })) throw new HttpError(400, 'This email is already registered.');
+        if (await db0.collection('distributors').findOne({ phone: ph })) throw new HttpError(400, 'This phone number is already registered.');
+        const par: any = await db0.collection('distributors').findOne({ uid: String(body.parentId || '') });
+        if (!par || !['left', 'right'].includes(body.side) || par[`${body.side}ChildId`]) throw new HttpError(400, 'That slot is not open.');
+        return NextResponse.json({ ok: true });
+      }
+    }
+    const uid = isAdminAdded ? randomBytes(16).toString('hex') : token.uid;
+    const email = String(isAdminAdded ? body.email : token.email || '').trim().toLowerCase();
     const packageId = typeof body.packageId === 'string' ? body.packageId : '';
     const paymentOrderId = typeof body.paymentOrderId === 'string' ? body.paymentOrderId : '';
-    const registrationType = body.registrationType === 'admin' ? 'admin' : 'referral';
+    const registrationType = isAdminAdded ? 'admin_added' : body.registrationType === 'admin' ? 'admin' : 'referral';
     const isAdminRegistration = registrationType === 'admin';
     const packageInfo = isAdminRegistration ? null : await getPackageConfig(packageId);
     if (isAdminRegistration && email !== superAdminEmail()) throw new HttpError(403, 'Administrator access is restricted to the configured Super Admin email.');
@@ -42,6 +62,11 @@ export async function POST(request: NextRequest) {
           return;
         }
         if (!email) throw new Error('An authenticated email is required.');
+        if (isAdminAdded) {
+          if (!/^\S+@\S+\.\S+$/.test(email)) throw new HttpError(400, 'A valid email is required.');
+          if (String(body.password || '').length < 6) throw new HttpError(400, 'Password must be at least 6 characters.');
+          if (await db.collection('users').findOne({ email }, { session })) throw new HttpError(400, 'This email is already registered.');
+        }
         if (!isAdminRegistration && !packageInfo) throw new Error('A valid package is required.');
         let payment: any = null;
         if (!isAdminRegistration) {
@@ -50,21 +75,36 @@ export async function POST(request: NextRequest) {
           if (!payment || payment.status !== 'paid') throw new Error('Payment has not been verified.');
           if (!packageInfo || payment.packageId !== packageId) throw new Error('Payment package does not match registration.');
           if (payment.distributorId && payment.distributorId !== uid) throw new Error('Payment is already linked to another account.');
+          if (isAdminAdded && payment.enrolledBy !== token.uid) throw new HttpError(400, 'This payment was not made by you.');
         }
-        let phoneVerifiedBy: 'sms' | 'email' | null = null;
+        let phoneVerifiedBy: 'sms' | 'email' | 'admin' | null = null;
         if (!isAdminRegistration) {
           const phone = String(body.phone || '').trim();
           if (!/^\+\d{8,15}$/.test(phone)) throw new HttpError(400, 'A valid phone number is required.');
           if (await distributors.findOne({ phone }, { session })) throw new HttpError(400, 'This phone number is already registered.');
+          if (isAdminAdded) phoneVerifiedBy = 'admin' as any;
+          else {
           const deleted: any = await db.collection('phoneVerifications').findOneAndDelete({ _id: phone as any, verified: true }, { session });
           const proof = deleted && ('value' in deleted ? deleted.value : deleted);
           if (!proof) throw new HttpError(400, 'Please verify your phone number first.');
           // An email-based fallback proof only counts for the same account email.
           if (proof.method === 'email' && String(proof.email || '').toLowerCase() !== email) throw new HttpError(400, 'Please verify your phone number first.');
           phoneVerifiedBy = proof.method === 'email' ? 'email' : 'sms';
+          }
         }
         let sponsorId = null, parentId = null, position = null, leg = null, parent = null;
-        if (!isAdminRegistration) {
+        if (isAdminAdded) {
+          // Sponsor is the acting Admin; placement is the exact open slot the Admin clicked (any side of any member in their tree).
+          const side = body.side === 'right' ? 'right' : body.side === 'left' ? 'left' : null;
+          if (!side || typeof body.parentId !== 'string') throw new HttpError(400, 'A placement slot is required.');
+          parent = await distributors.findOne({ uid: body.parentId }, { session });
+          if (!parent) throw new HttpError(400, 'Placement member not found.');
+          if (parent[`${side}ChildId`]) throw new HttpError(400, 'That slot is no longer open.');
+          let up: any = parent, hops = 0;
+          while (up && up.uid !== token.uid && up.parentId && hops++ < 5000) up = await distributors.findOne({ uid: up.parentId }, { session });
+          if (!up || up.uid !== token.uid) throw new HttpError(400, 'Placement member is not in your tree.');
+          sponsorId = token.uid; parentId = parent.uid; position = side; leg = parent.leg || side;
+        } else if (!isAdminRegistration) {
           const referral = await db.collection('referralCodes').findOne({ code: String(body.sponsorCode || '').trim().toUpperCase().replace(/^OJAS-/, 'SJAPL-') }, { session });
           if (!referral?.ownerId || !['left', 'right'].includes(referral.position)) throw new Error('A valid referral code is required.');
           const sponsor = await distributors.findOne({ uid: referral.ownerId }, { session });
@@ -90,8 +130,9 @@ export async function POST(request: NextRequest) {
           leg = parent!.leg || position;
         }
         const leftReferralCode = makeCode('SJAPL-L'), rightReferralCode = makeCode('SJAPL-R'), now = new Date();
-        const distributor = { uid, name: String(body.name || token.name || 'SJAPL Member').trim(), email, phone: String(body.phone || '').trim(), phoneVerifiedBy, leftReferralCode, rightReferralCode, sponsorId, parentId, position, leg, treeRootId: sponsorId || uid, leftChildId: null, rightChildId: null, packageId: isAdminRegistration ? 'admin' : packageId, rank: isAdminRegistration ? 'Admin' : 'Distributor', kycStatus: isAdminRegistration ? 'verified' : 'none', leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, bvBalance: isAdminRegistration ? 0 : packageInfo!.bv, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, status: 'active', registrationType, enrollmentType: 'self', createdAt: now };
+        const distributor = { uid, name: String(body.name || token.name || 'SJAPL Member').trim(), email, phone: String(body.phone || '').trim(), phoneVerifiedBy, leftReferralCode, rightReferralCode, sponsorId, parentId, position, leg, treeRootId: sponsorId || uid, leftChildId: null, rightChildId: null, packageId: isAdminRegistration ? 'admin' : packageId, rank: isAdminRegistration ? 'Admin' : 'Distributor', kycStatus: isAdminRegistration ? 'verified' : isAdminAdded ? 'pending' : 'none', leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, bvBalance: isAdminRegistration ? 0 : packageInfo!.bv, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, status: 'active', registrationType, enrollmentType: isAdminAdded ? 'admin' : 'self', ...(isAdminAdded ? { addedBy: token.uid } : {}), createdAt: now };
         await distributors.insertOne(distributor, { session });
+        if (isAdminAdded) await db.collection('users').insertOne({ uid, email, name: distributor.name, passwordHash: hashPassword(String(body.password)), role: 'user', createdAt: now, addedBy: token.uid }, { session });
         await db.collection('users').updateOne({ uid }, { $set: { uid, name: distributor.name, email, role: isAdminRegistration ? 'admin' : 'user', createdAt: now } }, { upsert: true, session });
         await db.collection('referralCodes').insertMany([{ code: leftReferralCode, ownerId: uid, ownerName: distributor.name, ownerKycStatus: distributor.kycStatus, ownerRank: distributor.rank, treeRootId: distributor.treeRootId, position: 'left' }, { code: rightReferralCode, ownerId: uid, ownerName: distributor.name, ownerKycStatus: distributor.kycStatus, ownerRank: distributor.rank, treeRootId: distributor.treeRootId, position: 'right' }], { session });
         if (!isAdminRegistration) {

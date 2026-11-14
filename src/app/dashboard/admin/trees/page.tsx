@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, collection, query } from '@/lib/app-auth';
+import { useFirestore, useCollection, useMemoFirebase, collection, query, useUser } from '@/lib/app-auth';
 import { GenealogyTree } from '@/components/network/GenealogyTree';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 
 export default function AdminTreesPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const [rootId, setRootId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -92,10 +93,10 @@ export default function AdminTreesPage() {
           <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md overflow-hidden rounded-2xl">
             <CardHeader className="border-b bg-card p-8">
               <CardTitle className="font-headline text-3xl font-bold">Admin Tree</CardTitle>
-              <CardDescription>All users on the Admin's left and right legs. Use a member's join link to place a new member below them on the same side.</CardDescription>
+              <CardDescription>All users on the Admin's left and right legs. Click an open slot to add a member there, or copy a member's join link to place a new member below them on the same side.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              {displayRootId && <GenealogyTree rootId={displayRootId} unrestricted={true} joinCodes={{ left: adminRoot?.leftReferralCode, right: adminRoot?.rightReferralCode }} />}
+              {displayRootId && <GenealogyTree rootId={displayRootId} unrestricted={true} joinCodes={{ left: adminRoot?.leftReferralCode, right: adminRoot?.rightReferralCode }} addMemberAs={user?.uid} />}
             </CardContent>
           </Card>
         </TabsContent>

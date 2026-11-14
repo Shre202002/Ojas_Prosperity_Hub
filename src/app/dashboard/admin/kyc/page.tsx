@@ -20,7 +20,8 @@ const documents = [
 export default function AdminKYCReviewHub() {
   const { toast } = useToast();
   const [rows, setRows] = useState<KycRow[]>([]);
-  const [search, setSearch] = useState('');
+  // Arriving from the add-member popup (?member=<uid>) pre-filters to that member.
+  const [search, setSearch] = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('member') || ''));
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
 
@@ -72,7 +73,7 @@ export default function AdminKYCReviewHub() {
             const pending = status === 'pending' || status === 'not submitted';
             return <Card key={row.distributor.uid} className={`shadow-lg transition-all ${pending ? 'border-2 border-amber-300 shadow-amber-100' : 'border-muted'}`}>
               <CardHeader className="flex flex-row items-center justify-between gap-4">
-                <div><CardTitle>{row.user?.name || row.distributor.name}</CardTitle><p className="text-sm text-muted-foreground">{row.user?.email} · {row.distributor.uid.slice(0, 10)}</p></div>
+                <div><CardTitle>{row.user?.name || row.distributor.name}</CardTitle><p className="text-sm text-muted-foreground">{row.user?.email} · {row.distributor.uid.slice(0, 10)}</p>{row.distributor.addedBy && <Badge className="mt-1 bg-indigo-600">Added by Admin · documents uploaded by admin, review &amp; reject if wrong</Badge>}</div>
                 <Badge className={status === 'verified' ? 'bg-emerald-600' : status === 'rejected' ? 'bg-red-600' : 'bg-amber-500'}>{status}</Badge>
               </CardHeader>
               <CardContent className="space-y-5">
