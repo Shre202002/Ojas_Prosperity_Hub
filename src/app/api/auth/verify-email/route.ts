@@ -27,7 +27,13 @@ export async function POST(request: NextRequest) {
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
   await c.replaceOne({ _id: email }, { _id: email, codeHash: hashCode(email, code), attempts: 0, verified: false, createdAt: new Date(), expiresAt: new Date(Date.now() + 15 * 60_000) }, { upsert: true });
-  await sendMail({ to: email, subject: 'Your verification code', text: `Your verification code is ${code}. It is valid for 15 minutes.`, html: `<p>Your verification code is <b style="font-size:20px">${code}</b>. It is valid for 15 minutes.</p>` });
+  try {
+    await sendMail({ to: email, subject: 'Your verification code', text: `Your verification code is ${code}. It is valid for 15 minutes.`, html: `<p>Your verification code is <b style="font-size:20px">${code}</b>. It is valid for 15 minutes.</p>` });
+  } catch (error) {
+    console.error('Verification email failed:', error);
+    await c.deleteOne({ _id: email }).catch(() => undefined); // don't lock the user out with the resend cooldown
+    return NextResponse.json({ error: 'Could not send the verification email. Please try again shortly.' }, { status: 502 });
+  }
   return NextResponse.json({ success: true });
 }
 

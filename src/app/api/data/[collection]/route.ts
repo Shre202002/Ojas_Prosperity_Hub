@@ -44,6 +44,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (token && name === 'kycSubmissions' && !filter.distributorId && !filter.sponsorId) filter.distributorId = token.uid;
     if (token && name === 'transactions' && !ADMIN_COLLECTIONS.has(name)) filter.distributorId = token.uid;
     const docs = await store.find(filter, name === 'users' ? { projection: HIDDEN_FIELDS } : undefined).sort({ createdAt: -1, submittedAt: -1 }).limit(500).toArray();
+    // Referral code docs hold a snapshot of the owner's rank/KYC taken at creation time, which goes stale
+    // (e.g. the Super Admin or a member who later passes KYC). Report the owner's live status instead.
+    if (name === 'referralCodes' && docs.length) {
+      const owners = await (await collection<any>('distributors')).find({ uid: { $in: docs.map((d: any) => d.ownerId).filter(Boolean) } }, { projection: { uid: 1, rank: 1, kycStatus: 1 } }).toArray();
+      const byUid = new Map(owners.map((o: any) => [o.uid, o]));
+      for (const d of docs as any[]) {
+        const owner = byUid.get(d.ownerId);
+        if (owner) { d.ownerRank = owner.rank; d.ownerKycStatus = owner.kycStatus; }
+      }
+    }
     return NextResponse.json({ data: docs });
   } catch (error) { return response(error); }
 }
