@@ -24,8 +24,10 @@ export async function POST(request: NextRequest) {
     if (isAdminAdded) {
       const adminUser: any = await (await getMongoDb()).collection('users').findOne({ uid: token.uid });
       const adminDist: any = await (await getMongoDb()).collection('distributors').findOne({ uid: token.uid });
-      if (adminUser?.role !== 'admin' && adminDist?.rank !== 'Admin') throw new HttpError(403, 'Administrator access required.');
-      if (!adminDist) throw new HttpError(400, 'Admin member profile not found.');
+      const callerIsAdmin = adminUser?.role === 'admin' || adminDist?.rank === 'Admin';
+      if (!adminDist) throw new HttpError(400, 'Member profile not found.');
+      if (!callerIsAdmin && adminDist.kycStatus !== 'verified') throw new HttpError(403, 'Complete KYC before adding members.');
+      body.addedByRole = callerIsAdmin ? 'admin' : 'member';
       if (body.precheck) {
         // Run before payment so the Admin is never charged for a duplicate email/phone or a taken slot.
         const db0 = await getMongoDb(), em = String(body.email || '').trim().toLowerCase(), ph = String(body.phone || '').trim();
@@ -130,7 +132,7 @@ export async function POST(request: NextRequest) {
           leg = parent!.leg || position;
         }
         const leftReferralCode = makeCode('SJAPL-L'), rightReferralCode = makeCode('SJAPL-R'), now = new Date();
-        const distributor = { uid, name: String(body.name || token.name || 'SJAPL Member').trim(), email, phone: String(body.phone || '').trim(), phoneVerifiedBy, leftReferralCode, rightReferralCode, sponsorId, parentId, position, leg, treeRootId: sponsorId || uid, leftChildId: null, rightChildId: null, packageId: isAdminRegistration ? 'admin' : packageId, rank: isAdminRegistration ? 'Admin' : 'Distributor', kycStatus: isAdminRegistration ? 'verified' : isAdminAdded ? 'pending' : 'none', leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, bvBalance: isAdminRegistration ? 0 : packageInfo!.bv, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, status: 'active', registrationType, enrollmentType: isAdminAdded ? 'admin' : 'self', ...(isAdminAdded ? { addedBy: token.uid } : {}), createdAt: now };
+        const distributor = { uid, name: String(body.name || token.name || 'SJAPL Member').trim(), email, phone: String(body.phone || '').trim(), phoneVerifiedBy, leftReferralCode, rightReferralCode, sponsorId, parentId, position, leg, treeRootId: sponsorId || uid, leftChildId: null, rightChildId: null, packageId: isAdminRegistration ? 'admin' : packageId, rank: isAdminRegistration ? 'Admin' : 'Distributor', kycStatus: isAdminRegistration ? 'verified' : isAdminAdded ? 'pending' : 'none', leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, bvBalance: isAdminRegistration ? 0 : packageInfo!.bv, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, status: 'active', registrationType, enrollmentType: isAdminAdded ? 'admin' : 'self', ...(isAdminAdded ? { addedBy: token.uid, addedByRole: body.addedByRole } : {}), createdAt: now };
         await distributors.insertOne(distributor, { session });
         if (isAdminAdded) await db.collection('users').insertOne({ uid, email, name: distributor.name, passwordHash: hashPassword(String(body.password)), role: 'user', createdAt: now, addedBy: token.uid }, { session });
         await db.collection('users').updateOne({ uid }, { $set: { uid, name: distributor.name, email, role: isAdminRegistration ? 'admin' : 'user', createdAt: now } }, { upsert: true, session });

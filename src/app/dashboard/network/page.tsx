@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth, useUser } from '@/lib/app-auth';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase, doc } from '@/lib/app-auth';
 import { GenealogyTree } from '@/components/network/GenealogyTree';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Search, Info } from 'lucide-react';
@@ -13,6 +13,9 @@ export default function NetworkPage() {
   const auth = useAuth();
   const { user } = useUser(auth);
   const [search, setSearch] = useState('');
+  const db = useFirestore();
+  const meRef = useMemoFirebase(() => (db && user?.uid ? doc(db, 'distributors', user.uid) : null), [db, user?.uid]);
+  const { data: me } = useDoc(meRef);
 
   if (!user) return null;
   if (user.role === 'admin' || user.email === 'sriyanshgupta24@gmail.com') return <AdminTreesPage />;
@@ -40,7 +43,7 @@ export default function NetworkPage() {
 
       <div className="bg-card px-6 py-3 rounded-2xl border flex items-center gap-3 text-sm font-medium text-muted-foreground shadow-sm w-fit">
         <Info className="w-4 h-4 text-primary" />
-        <span>Node expansion is restricted to your own downline.</span>
+        <span>Node expansion is restricted to your own downline.{me?.kycStatus === 'verified' ? ' Click an open slot to add a member.' : ''}</span>
       </div>
 
       <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md overflow-hidden">
@@ -49,7 +52,7 @@ export default function NetworkPage() {
           <CardDescription>Your left and right legs, with team counts on each side.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <GenealogyTree rootId={user.uid} />
+          <GenealogyTree rootId={user.uid} addMemberAs={me?.kycStatus === 'verified' ? user.uid : undefined} />
         </CardContent>
       </Card>
     </div>

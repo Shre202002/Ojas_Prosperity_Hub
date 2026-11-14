@@ -48,6 +48,17 @@ export default function AdminKYCReviewHub() {
     finally { setWorking(null); event.target.value = ''; }
   }
 
+  async function remove(row: KycRow) {
+    if (!window.confirm(`Delete ${row.user?.name || row.distributor.uid} permanently? This cannot be undone.`)) return;
+    setWorking(row.distributor.uid);
+    try {
+      const response = await fetch('/api/admin/kyc', { method: 'DELETE', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }, body: JSON.stringify({ distributorId: row.distributor.uid }) });
+      const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Delete failed.');
+      await load(); toast({ title: 'Member deleted' });
+    } catch (error: any) { toast({ variant: 'destructive', title: 'Could not delete', description: error.message }); }
+    finally { setWorking(null); }
+  }
+
   async function decide(row: KycRow, status: 'verified' | 'rejected') {
     setWorking(row.distributor.uid);
     try {
@@ -73,12 +84,12 @@ export default function AdminKYCReviewHub() {
             const pending = status === 'pending' || status === 'not submitted';
             return <Card key={row.distributor.uid} className={`shadow-lg transition-all ${pending ? 'border-2 border-amber-300 shadow-amber-100' : 'border-muted'}`}>
               <CardHeader className="flex flex-row items-center justify-between gap-4">
-                <div><CardTitle>{row.user?.name || row.distributor.name}</CardTitle><p className="text-sm text-muted-foreground">{row.user?.email} · {row.distributor.uid.slice(0, 10)}</p>{row.distributor.addedBy && <Badge className="mt-1 bg-indigo-600">Added by Admin · documents uploaded by admin, review &amp; reject if wrong</Badge>}</div>
+                <div><CardTitle>{row.user?.name || row.distributor.name}</CardTitle><p className="text-sm text-muted-foreground">{row.user?.email} · {row.distributor.uid.slice(0, 10)}</p>{row.distributor.addedBy && <Badge className="mt-1 bg-indigo-600">Added by {row.distributor.addedByRole === 'member' ? 'Member' : 'Admin'} · self-verified, review &amp; reject or delete if wrong</Badge>}</div>
                 <Badge className={status === 'verified' ? 'bg-emerald-600' : status === 'rejected' ? 'bg-red-600' : 'bg-amber-500'}>{status}</Badge>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="flex flex-wrap gap-3">{documents.map(document => { const rejected = row.submission?.rejectedDocuments?.includes(document.type); const canUpload = status !== 'verified' && (status !== 'rejected' || rejected); return <div key={document.type} className={`flex items-center gap-2 rounded-xl border p-2 ${pending ? 'border-primary/30 bg-primary/5' : 'border-muted bg-background'}`}>{canUpload && <label className="inline-flex cursor-pointer"><span className="inline-flex items-center h-9 px-3 rounded-lg border bg-card text-xs font-bold"><FileUp className="w-4 h-4 mr-1" />{status === 'rejected' ? 'Replace' : row.submission?.[document.type]?.uploaded ? 'Replace' : 'Upload'} {document.label}</span><input type="file" accept="image/*,application/pdf" className="hidden" onChange={event => upload(row, event, document.type)} disabled={working === row.distributor.uid} /></label>}{row.submission?.[document.type]?.uploaded ? <Button size="sm" type="button" className={`h-9 gap-1 font-bold ${pending ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-2 ring-primary/20' : 'bg-slate-700 text-white'}`} onClick={() => openKycDocument(row.submission.id, document.type).catch((e: any) => toast({ variant: 'destructive', title: 'Could not open document', description: e.message }))}><FileText className="w-4 h-4" />View</Button> : <span className="text-[10px] font-bold uppercase text-muted-foreground px-2">Missing</span>}</div>; })}</div>
-                <div className="flex flex-wrap gap-3 border-t pt-4">{status !== 'verified' && <Button onClick={() => decide(row, 'verified')} disabled={working === row.distributor.uid || !row.submission} className="bg-emerald-700 text-white hover:bg-emerald-800"><CheckCircle2 className="w-4 h-4 mr-2" />Approve</Button>}{status !== 'rejected' && <Button onClick={() => decide(row, 'rejected')} disabled={working === row.distributor.uid || !row.submission} variant="destructive"><XCircle className="w-4 h-4 mr-2" />Reject</Button>}</div>
+                <div className="flex flex-wrap gap-3 border-t pt-4">{status !== 'verified' && <Button onClick={() => decide(row, 'verified')} disabled={working === row.distributor.uid || !row.submission} className="bg-emerald-700 text-white hover:bg-emerald-800"><CheckCircle2 className="w-4 h-4 mr-2" />Approve</Button>}{status !== 'rejected' && <Button onClick={() => decide(row, 'rejected')} disabled={working === row.distributor.uid || !row.submission} variant="destructive"><XCircle className="w-4 h-4 mr-2" />Reject</Button>}{row.distributor.addedBy && <Button onClick={() => remove(row)} disabled={working === row.distributor.uid} variant="outline" className="border-red-300 text-red-700">Delete user</Button>}</div>
               </CardContent>
             </Card>;
           })}

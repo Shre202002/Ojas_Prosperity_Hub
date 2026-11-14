@@ -84,7 +84,7 @@ export function AddMemberDialog({ slot, onClose }: { slot: OpenSlot | null; onCl
       clearCart();
       toast({ title: 'Member added', description: `${base.name} can now sign in with their email and password. Upload their KYC documents next.` });
       onClose();
-      router.push(`/dashboard/admin/kyc?member=${result.uid}`);
+      router.push(`/dashboard/kyc/member?uid=${result.uid}&name=${encodeURIComponent(base.name)}`);
     } catch (e: any) { toast({ variant: 'destructive', title: 'Could not add member', description: e.message }); setBusy(false); }
   }
 
