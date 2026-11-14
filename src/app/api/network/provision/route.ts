@@ -51,6 +51,13 @@ export async function POST(request: NextRequest) {
           if (!packageInfo || payment.packageId !== packageId) throw new Error('Payment package does not match registration.');
           if (payment.distributorId && payment.distributorId !== uid) throw new Error('Payment is already linked to another account.');
         }
+        if (!isAdminRegistration) {
+          const phone = String(body.phone || '').trim();
+          if (!/^\+\d{8,15}$/.test(phone)) throw new HttpError(400, 'A valid phone number is required.');
+          if (await distributors.findOne({ phone }, { session })) throw new HttpError(400, 'This phone number is already registered.');
+          const verifiedPhone = await db.collection('phoneVerifications').findOneAndDelete({ _id: phone as any, verified: true }, { session });
+          if (!(verifiedPhone && ('value' in (verifiedPhone as any) ? (verifiedPhone as any).value : verifiedPhone))) throw new HttpError(400, 'Please verify your phone number first.');
+        }
         let sponsorId = null, parentId = null, position = null, leg = null, parent = null;
         if (!isAdminRegistration) {
           const referral = await db.collection('referralCodes').findOne({ code: String(body.sponsorCode || '').trim().toUpperCase().replace(/^OJAS-/, 'SJAPL-') }, { session });

@@ -10,6 +10,7 @@ import { useAuth, useFirestore, doc, getDoc, createUserWithEmailAndPassword, upd
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { PhoneOtpDialog } from '@/components/auth/PhoneOtpDialog';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,6 +50,8 @@ function RegisterPageContent() {
 
   const { items, totalBv, plan: cartPlan, clear: clearCart } = useCart();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [verifiedPhone, setVerifiedPhone] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [emailCode, setEmailCode] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
@@ -274,6 +277,7 @@ function RegisterPageContent() {
 
   return (
     <AuthShell wide>
+      <PhoneOtpDialog open={otpOpen} phone={phone} onClose={() => setOtpOpen(false)} onVerified={() => { setVerifiedPhone(phone); setOtpOpen(false); setStep(2); }} />
       <Card className="border-border/60 shadow-xl overflow-hidden">
         <CardHeader className="space-y-2 p-6 sm:p-8 bg-secondary/50 border-b">
           <CardTitle className="text-3xl text-primary">Join {BRAND.short}</CardTitle>
@@ -375,7 +379,7 @@ function RegisterPageContent() {
               <div className="flex gap-4">
                 <Button variant="ghost" onClick={() => router.push('/join')} className="h-12 px-6">Back</Button>
                 <Button 
-                  onClick={() => setStep(2)} 
+                  onClick={() => (verifiedPhone === phone ? setStep(2) : setOtpOpen(true))}
                   disabled={!sponsorData || !email || !password || !name || !phone || !isValidPhoneNumber(phone) || validatingRef || !emailVerified} 
                   className="flex-1 h-12 font-semibold gap-2"
                 >
