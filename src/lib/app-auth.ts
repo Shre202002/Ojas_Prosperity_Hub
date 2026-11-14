@@ -29,8 +29,8 @@ export function useUser(_auth?: AppAuth | null) {
   return { user, loading };
 }
 
-async function authenticate(mode: 'login' | 'register', email: string, password: string, name?: string) {
-  const response = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, email, password, name }) });
+async function authenticate(mode: 'login' | 'register', email: string, password: string, name?: string, phone?: string) {
+  const response = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode, email, password, name, phone }) });
   const result = await response.json();
   if (!response.ok) throw Object.assign(new Error(result.error || 'Authentication failed.'), { code: result.code });
   localStorage.setItem(tokenKey, result.token);
@@ -40,7 +40,7 @@ async function authenticate(mode: 'login' | 'register', email: string, password:
 }
 
 export const signInWithEmailAndPassword = (_auth: AppAuth, email: string, password: string) => authenticate('login', email, password);
-export const createUserWithEmailAndPassword = (_auth: AppAuth, email: string, password: string) => authenticate('register', email, password);
+export const createUserWithEmailAndPassword = (_auth: AppAuth, email: string, password: string, phone?: string) => authenticate('register', email, password, undefined, phone);
 export async function signOut(_auth?: AppAuth) { localStorage.removeItem(tokenKey); currentUser = null; notify(); await fetch('/api/auth', { method: 'DELETE' }); }
 export async function updateProfile(user: AppUser, profile: { displayName?: string; photoURL?: string }) { Object.assign(user, profile); await apiRequest('/api/profile', 'PATCH', profile); notify(); }
 export async function updatePassword(_user: AppUser, password: string) { await apiRequest('/api/auth/password', 'POST', { password }); }

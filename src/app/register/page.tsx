@@ -52,11 +52,6 @@ function RegisterPageContent() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [otpOpen, setOtpOpen] = useState(false);
   const [verifiedPhone, setVerifiedPhone] = useState('');
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailCode, setEmailCode] = useState('');
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [emailBusy, setEmailBusy] = useState(false);
-  const [emailError, setEmailError] = useState('');
 
   const placementUnder = searchParams.get('under') || '';
 
@@ -160,16 +155,6 @@ function RegisterPageContent() {
     }
   }
 
-  const emailCall = async (method: 'POST' | 'PUT') => {
-    setEmailBusy(true); setEmailError('');
-    try {
-      const res = await fetch('/api/auth/verify-email', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: emailCode }) });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error || 'Could not verify email.');
-      if (method === 'POST') setEmailSent(true); else setEmailVerified(true);
-    } catch (e: any) { setEmailError(e.message); } finally { setEmailBusy(false); }
-  };
-
   const startPayment = async () => {
     if (!selectedPackage || !email || !name || password.length < 6 || !isPlanFilled(selectedPackage, totalBv)) return;
     setPickerOpen(false);
@@ -238,7 +223,7 @@ function RegisterPageContent() {
       if (!sponsorData?.uid) {
         throw new Error('A valid referral code is required before registration.');
       }
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password, phone);
       const user = userCredential.user;
       await updateProfile(user, { displayName: name });
 
@@ -277,7 +262,7 @@ function RegisterPageContent() {
 
   return (
     <AuthShell wide>
-      <PhoneOtpDialog open={otpOpen} phone={phone} onClose={() => setOtpOpen(false)} onVerified={() => { setVerifiedPhone(phone); setOtpOpen(false); setStep(2); }} />
+      <PhoneOtpDialog open={otpOpen} phone={phone} email={email.trim().toLowerCase()} onClose={() => setOtpOpen(false)} onVerified={() => { setVerifiedPhone(phone); setOtpOpen(false); setStep(2); }} />
       <Card className="border-border/60 shadow-xl overflow-hidden">
         <CardHeader className="space-y-2 p-6 sm:p-8 bg-secondary/50 border-b">
           <CardTitle className="text-3xl text-primary">Join {BRAND.short}</CardTitle>
@@ -347,21 +332,6 @@ function RegisterPageContent() {
               ) : null}
 
               <div className="space-y-2">
-                {emailVerified ? <p className="text-sm font-medium text-primary">Email verified ✓</p> : (
-                  <>
-                    <Button type="button" variant="outline" disabled={emailBusy || !/^\S+@\S+\.\S+$/.test(email)} onClick={() => emailCall('POST')}>{emailSent ? 'Resend code' : 'Send verification code'}</Button>
-                    {emailSent && (
-                      <div className="flex gap-2">
-                        <Input inputMode="numeric" maxLength={6} placeholder="6-digit code" value={emailCode} onChange={e => setEmailCode(e.target.value)} className="h-11" />
-                        <Button type="button" disabled={emailBusy || emailCode.length !== 6} onClick={() => emailCall('PUT')}>Verify</Button>
-                      </div>
-                    )}
-                    {emailError && <p role="alert" className="text-sm text-destructive">{emailError}</p>}
-                  </>
-                )}
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="password" title="Password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
                 <div className="relative">
                   <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className="h-11 pr-12" />
@@ -380,7 +350,7 @@ function RegisterPageContent() {
                 <Button variant="ghost" onClick={() => router.push('/join')} className="h-12 px-6">Back</Button>
                 <Button 
                   onClick={() => (verifiedPhone === phone ? setStep(2) : setOtpOpen(true))}
-                  disabled={!sponsorData || !email || !password || !name || !phone || !isValidPhoneNumber(phone) || validatingRef || !emailVerified} 
+                  disabled={!sponsorData || !email || !password || !name || !phone || !isValidPhoneNumber(phone) || !/^\S+@\S+\.\S+$/.test(email) || validatingRef} 
                   className="flex-1 h-12 font-semibold gap-2"
                 >
                   Choose Package <ArrowRight className="w-5 h-5" />

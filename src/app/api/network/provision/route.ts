@@ -51,12 +51,17 @@ export async function POST(request: NextRequest) {
           if (!packageInfo || payment.packageId !== packageId) throw new Error('Payment package does not match registration.');
           if (payment.distributorId && payment.distributorId !== uid) throw new Error('Payment is already linked to another account.');
         }
+        let phoneVerifiedBy: 'sms' | 'email' | null = null;
         if (!isAdminRegistration) {
           const phone = String(body.phone || '').trim();
           if (!/^\+\d{8,15}$/.test(phone)) throw new HttpError(400, 'A valid phone number is required.');
           if (await distributors.findOne({ phone }, { session })) throw new HttpError(400, 'This phone number is already registered.');
-          const verifiedPhone = await db.collection('phoneVerifications').findOneAndDelete({ _id: phone as any, verified: true }, { session });
-          if (!(verifiedPhone && ('value' in (verifiedPhone as any) ? (verifiedPhone as any).value : verifiedPhone))) throw new HttpError(400, 'Please verify your phone number first.');
+          const deleted: any = await db.collection('phoneVerifications').findOneAndDelete({ _id: phone as any, verified: true }, { session });
+          const proof = deleted && ('value' in deleted ? deleted.value : deleted);
+          if (!proof) throw new HttpError(400, 'Please verify your phone number first.');
+          // An email-based fallback proof only counts for the same account email.
+          if (proof.method === 'email' && String(proof.email || '').toLowerCase() !== email) throw new HttpError(400, 'Please verify your phone number first.');
+          phoneVerifiedBy = proof.method === 'email' ? 'email' : 'sms';
         }
         let sponsorId = null, parentId = null, position = null, leg = null, parent = null;
         if (!isAdminRegistration) {
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
           leg = parent!.leg || position;
         }
         const leftReferralCode = makeCode('SJAPL-L'), rightReferralCode = makeCode('SJAPL-R'), now = new Date();
-        const distributor = { uid, name: String(body.name || token.name || 'SJAPL Member').trim(), email, phone: String(body.phone || '').trim(), leftReferralCode, rightReferralCode, sponsorId, parentId, position, leg, treeRootId: sponsorId || uid, leftChildId: null, rightChildId: null, packageId: isAdminRegistration ? 'admin' : packageId, rank: isAdminRegistration ? 'Admin' : 'Distributor', kycStatus: isAdminRegistration ? 'verified' : 'none', leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, bvBalance: isAdminRegistration ? 0 : packageInfo!.bv, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, status: 'active', registrationType, enrollmentType: 'self', createdAt: now };
+        const distributor = { uid, name: String(body.name || token.name || 'SJAPL Member').trim(), email, phone: String(body.phone || '').trim(), phoneVerifiedBy, leftReferralCode, rightReferralCode, sponsorId, parentId, position, leg, treeRootId: sponsorId || uid, leftChildId: null, rightChildId: null, packageId: isAdminRegistration ? 'admin' : packageId, rank: isAdminRegistration ? 'Admin' : 'Distributor', kycStatus: isAdminRegistration ? 'verified' : 'none', leftCount: 0, rightCount: 0, leftBV: 0, rightBV: 0, bvBalance: isAdminRegistration ? 0 : packageInfo!.bv, commissionBvBalance: 0, convertedIncentiveBalance: 0, shoppingBalance: 0, status: 'active', registrationType, enrollmentType: 'self', createdAt: now };
         await distributors.insertOne(distributor, { session });
         await db.collection('users').updateOne({ uid }, { $set: { uid, name: distributor.name, email, role: isAdminRegistration ? 'admin' : 'user', createdAt: now } }, { upsert: true, session });
         await db.collection('referralCodes').insertMany([{ code: leftReferralCode, ownerId: uid, ownerName: distributor.name, ownerKycStatus: distributor.kycStatus, ownerRank: distributor.rank, treeRootId: distributor.treeRootId, position: 'left' }, { code: rightReferralCode, ownerId: uid, ownerName: distributor.name, ownerKycStatus: distributor.kycStatus, ownerRank: distributor.rank, treeRootId: distributor.treeRootId, position: 'right' }], { session });
