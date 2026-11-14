@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { PhoneOtpDialog } from '@/components/auth/PhoneOtpDialog';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,6 +23,18 @@ import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder } from '@/lib/razorpay-actions';
 import { AuthShell } from '@/components/layout/AuthShell';
 import { BRAND } from '@/lib/brand';
+
+// Razorpay only pre-fills (and so skips its own phone screen) when the number is in a format it accepts:
+// the plain 10 digits for Indian numbers, the full international number for everything else.
+function razorpayContact(phone: string) {
+  try {
+    const parsed = parsePhoneNumber(phone);
+    if (!parsed) return phone;
+    return parsed.country === 'IN' ? parsed.nationalNumber : parsed.number;
+  } catch {
+    return phone;
+  }
+}
 
 function normalizeReferralCode(value: string) {
   const trimmed = value.trim();
@@ -186,7 +198,7 @@ function RegisterPageContent() {
             name: 'Shri Jaya Ayur Neuro',
             description: `${selectedPackage.name} registration`,
             order_id: orderRes.orderId,
-            prefill: { name, email, contact: phone },
+            prefill: { name, email, contact: razorpayContact(phone) },
             theme: { color: '#21c45d' },
             handler: async (response: any) => {
               try {
